@@ -1,5 +1,5 @@
 import 'package:three_dart/three3d/extras/core/shape.dart';
-import 'package:three_dart/three3d/extras/core/ttf_font.dart';
+import 'package:three_dart/three3d/extras/core/font.dart';
 import 'package:three_dart/three3d/geometries/extrude_geometry.dart';
 
 class TextGeometry extends ExtrudeGeometry {

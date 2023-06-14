@@ -39,9 +39,9 @@ class Raycaster {
     }
 
     if (recursive == true) {
-      var children = object.children;
+      List<Object3D> children = object.children;
 
-      for (var i = 0, l = children.length; i < l; i++) {
+      for (int i = 0, l = children.length; i < l; i++) {
         intersectObject4(children[i], raycaster, intersects, true);
       }
     }
@@ -82,7 +82,7 @@ class Raycaster {
   List<Intersection> intersectObjects(List<Object3D> objects, bool recursive, [List<Intersection>? intersects]) {
     intersects = intersects ?? List<Intersection>.from([]);
 
-    for (var i = 0, l = objects.length; i < l; i++) {
+    for (int i = 0, l = objects.length; i < l; i++) {
       intersectObject4(objects[i], this, intersects, recursive);
     }
 

@@ -83,7 +83,7 @@ class WebGLMorphtargets {
         if (hasMorphNormals) vertexDataCount = 2;
         if (hasMorphColors) vertexDataCount = 3;
 
-        int width = (geometry.attributes["position"].count * vertexDataCount).toInt();
+        int width = (geometry.attributes.positionBuffer!.count * vertexDataCount).toInt();
         int height = 1;
 
         if (width > capabilities.maxTextureSize) {

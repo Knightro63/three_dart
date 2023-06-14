@@ -14,8 +14,8 @@ class SVGLoaderParser {
   var tempTransform1 = Matrix3();
   var tempTransform2 = Matrix3();
   var tempTransform3 = Matrix3();
-  var tempV2 = Vector2(null, null);
-  var tempV3 = Vector3.init();
+  var tempV2 = Vector2();
+  var tempV3 = Vector3();
 
   var currentTransform = Matrix3();
 
@@ -622,10 +622,10 @@ class SVGLoaderParser {
   ShapePath parsePath(String d) {
     var path = ShapePath();
 
-    var point = Vector2(null, null);
-    var control = Vector2(null, null);
+    var point = Vector2();
+    var control = Vector2();
 
-    var firstPoint = Vector2(null, null);
+    var firstPoint = Vector2();
     var isFirstPoint = true;
     var doSetFirstPoint = false;
 
@@ -1098,7 +1098,7 @@ class SVGLoaderParser {
     var r = parseFloatWithUnits(node.getAttribute('r'));
 
     var subpath = Path(null);
-    subpath.absarc(x, y, r, 0, Math.pi * 2, null);
+    subpath.absarc(x, y, r, 0, Math.pi * 2);
 
     var path = ShapePath();
     path.subPaths.add(subpath);
@@ -1113,7 +1113,7 @@ class SVGLoaderParser {
     var ry = parseFloatWithUnits(node.getAttribute('ry'));
 
     var subpath = Path(null);
-    subpath.absellipse(x, y, rx, ry, 0, Math.pi * 2, null, null);
+    subpath.absellipse(x, y, rx, ry, 0, Math.pi * 2);
 
     var path = ShapePath();
     path.subPaths.add(subpath);

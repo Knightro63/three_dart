@@ -5,21 +5,21 @@ import 'package:three_dart/three3d/math/index.dart';
 
 BufferGeometry? _geometry;
 
-final Vector3 _intersectPoint = Vector3.init();
-final Vector3 _worldScale = Vector3.init();
-final Vector3 _mvPosition = Vector3.init();
+final Vector3 _intersectPoint = Vector3();
+final Vector3 _worldScale = Vector3();
+final Vector3 _mvPosition = Vector3();
 
-final Vector2 _alignedPosition = Vector2(null, null);
-final Vector2 _rotatedPosition = Vector2(null, null);
+final Vector2 _alignedPosition = Vector2();
+final Vector2 _rotatedPosition = Vector2();
 final Matrix4 _viewWorldMatrix = Matrix4();
 
-final Vector3 _spritevA = Vector3.init();
-final Vector3 _spritevB = Vector3.init();
-final Vector3 _spritevC = Vector3.init();
+final Vector3 _spritevA = Vector3();
+final Vector3 _spritevB = Vector3();
+final Vector3 _spritevC = Vector3();
 
-final Vector2 _spriteuvA = Vector2(null, null);
-final Vector2 _spriteuvB = Vector2(null, null);
-final Vector2 _spriteuvC = Vector2(null, null);
+final Vector2 _spriteuvA = Vector2();
+final Vector2 _spriteuvB = Vector2();
+final Vector2 _spriteuvC = Vector2();
 
 class Sprite extends Object3D {
   Vector2 center = Vector2(0.5, 0.5);
@@ -38,8 +38,8 @@ class Sprite extends Object3D {
       var interleavedBuffer = InterleavedBuffer(float32List, 5);
 
       _geometry!.setIndex([0, 1, 2, 0, 2, 3]);
-      _geometry!.setAttribute('position', InterleavedBufferAttribute(interleavedBuffer, 3, 0, false));
-      _geometry!.setAttribute('uv', InterleavedBufferAttribute(interleavedBuffer, 2, 3, false));
+      _geometry!.setAttribute(AttributeTypes.position, InterleavedBufferAttribute(interleavedBuffer, 3, 0, false));
+      _geometry!.setAttribute(AttributeTypes.uv, InterleavedBufferAttribute(interleavedBuffer, 2, 3, false));
     }
 
     geometry = _geometry;
@@ -59,11 +59,11 @@ class Sprite extends Object3D {
 
     _mvPosition.setFromMatrixPosition(modelViewMatrix);
 
-    if (raycaster.camera?.type == "PerspectiveCamera" && material.sizeAttenuation == false) {
+    if (raycaster.camera?.type == "PerspectiveCamera" && material!.sizeAttenuation == false) {
       _worldScale.multiplyScalar(-_mvPosition.z);
     }
 
-    var rotation = material.rotation;
+    var rotation = material!.rotation;
     double? sin, cos;
 
     if (rotation != 0) {

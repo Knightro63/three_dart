@@ -46,43 +46,32 @@ class BoxGeometry extends BufferGeometry {
     numberOfVertices = 0;
     groupStart = 0;
 
-    void buildPlane(
-      String u,
-      String v,
-      String w,
-      double udir,
-      double vdir,
-      width,
-      height,
-      depth,
-      gridX,
-      gridY,
-      materialIndex,
-    ) {
-      var segmentWidth = width / gridX;
-      var segmentHeight = height / gridY;
+    void buildPlane(String u, String v, String w, double udir, double vdir,
+        width, height, depth, gridX, gridY, materialIndex) {
+      double segmentWidth = width / gridX;
+      double segmentHeight = height / gridY;
 
-      var widthHalf = width / 2;
-      var heightHalf = height / 2;
-      var depthHalf = depth / 2;
+      double widthHalf = width / 2;
+      double heightHalf = height / 2;
+      double depthHalf = depth / 2;
 
-      var gridX1 = gridX + 1;
-      var gridY1 = gridY + 1;
+      double gridX1 = gridX + 1;
+      double gridY1 = gridY + 1;
 
-      var vertexCounter = 0;
-      var groupCount = 0;
+      int vertexCounter = 0;
+      int groupCount = 0;
 
-      var vector = Vector3.init();
+      Vector3 vector = Vector3();
 
       // generate vertices, normals and uvs
 
       // print("buildPlane: u: ${u} v: ${v} w: ${w} udir: ${udir} vdir: ${vdir} width: ${width} height: ${height} depth: ${depth} gridX: ${gridX} gridY: ${gridY} materialIndex: ${materialIndex} ");
 
-      for (var iy = 0; iy < gridY1; iy++) {
-        var y = iy * segmentHeight - heightHalf;
+      for (int iy = 0; iy < gridY1; iy++) {
+        double y = iy * segmentHeight - heightHalf;
 
-        for (var ix = 0; ix < gridX1; ix++) {
-          var x = ix * segmentWidth - widthHalf;
+        for (int ix = 0; ix < gridX1; ix++) {
+          double x = ix * segmentWidth - widthHalf;
 
           // print("iy: ${iy} ix: ${ix} y: ${y} x: ${x} depthHalf: ${depthHalf} ");
 
@@ -131,12 +120,12 @@ class BoxGeometry extends BufferGeometry {
       // 2. a single segment consists of two faces
       // 3. so we need to generate six (2*3) indices per segment
 
-      for (var iy = 0; iy < gridY; iy++) {
-        for (var ix = 0; ix < gridX; ix++) {
-          var a = numberOfVertices + ix + gridX1 * iy;
-          var b = numberOfVertices + ix + gridX1 * (iy + 1);
-          var c = numberOfVertices + (ix + 1) + gridX1 * (iy + 1);
-          var d = numberOfVertices + (ix + 1) + gridX1 * iy;
+      for (int iy = 0; iy < gridY; iy++) {
+        for (int ix = 0; ix < gridX; ix++) {
+          double a = numberOfVertices + ix + gridX1 * iy;
+          double b = numberOfVertices + ix + gridX1 * (iy + 1);
+          double c = numberOfVertices + (ix + 1) + gridX1 * (iy + 1);
+          double d = numberOfVertices + (ix + 1) + gridX1 * iy;
 
           // faces
 
@@ -174,9 +163,9 @@ class BoxGeometry extends BufferGeometry {
     // build geometry
 
     setIndex(indices);
-    setAttribute('position', Float32BufferAttribute(positionsArray = Float32Array.from(vertices), 3, false));
-    setAttribute('normal', Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
-    setAttribute('uv', Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
+    setAttribute(AttributeTypes.position,Float32BufferAttribute(Float32Array.from(vertices), 3, false));
+    setAttribute(AttributeTypes.normal, Float32BufferAttribute(Float32Array.from(normals), 3, false));
+    setAttribute(AttributeTypes.uv, Float32BufferAttribute(Float32Array.from(uvs), 2, false));
   }
 
   static fromJSON(data) {

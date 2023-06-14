@@ -3,8 +3,8 @@ import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
 import 'package:three_dart/three3d/objects/line.dart';
 
-var _lsstart = Vector3.init();
-var _lsend = Vector3.init();
+var _lsstart = Vector3();
+var _lsend = Vector3();
 
 class LineSegments extends Line {
   LineSegments(BufferGeometry? geometry, material) : super(geometry, material) {
@@ -19,8 +19,8 @@ class LineSegments extends Line {
       // we assume non-indexed geometry
 
       if (geometry.index == null) {
-        var positionAttribute = geometry.attributes["position"];
-        var lineDistances = Float32Array(positionAttribute.count);
+        BufferAttribute<NativeArray<num>>? positionAttribute = geometry.attributes.positionBuffer;
+        var lineDistances = Float32Array(positionAttribute!.count);
 
         for (var i = 0, l = positionAttribute.count; i < l; i += 2) {
           _lsstart.fromBufferAttribute(positionAttribute, i);
@@ -30,7 +30,7 @@ class LineSegments extends Line {
           lineDistances[i + 1] = lineDistances[i] + _lsstart.distanceTo(_lsend);
         }
 
-        geometry.setAttribute('lineDistance', Float32BufferAttribute(lineDistances, 1, false));
+        geometry.setAttribute(AttributeTypes.lineDistances, Float32BufferAttribute(lineDistances, 1, false));
       } else {
         print('three.LineSegments.computeLineDistances(): Computation only possible with non-indexed BufferGeometry.');
       }

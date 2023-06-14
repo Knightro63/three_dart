@@ -129,8 +129,8 @@ class WebGLState {
     // currentScissor = new Vector4.init().fromArray( scissorParam );
     // currentViewport = new Vector4.init().fromArray( viewportParam );
 
-    currentScissor = Vector4.init();
-    currentViewport = Vector4.init();
+    currentScissor = Vector4();
+    currentViewport = Vector4();
   }
 
   createTexture(int type, int target, int count) {
@@ -761,7 +761,7 @@ class ColorBuffer {
   late Function enable;
   late Function disable;
 
-  Vector4 color = Vector4.init();
+  Vector4 color = Vector4();
   bool? currentColorMask;
   Vector4 currentColorClear = Vector4(0, 0, 0, 0);
 

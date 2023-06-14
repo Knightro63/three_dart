@@ -1,6 +1,6 @@
 import 'package:three_dart/three3d/math/index.dart';
 
-var _vector = Vector2(null, null);
+Vector2 _vector = Vector2();
 
 class Box2 {
   static double infinity = Math.infinity;

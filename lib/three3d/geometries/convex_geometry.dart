@@ -35,8 +35,8 @@ class ConvexGeometry extends BufferGeometry {
     }
 
     // build geometry
-    setAttribute('position', Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
-    setAttribute('normal', Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
+    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
+    setAttribute(AttributeTypes.normal, Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
   }
 
   @override

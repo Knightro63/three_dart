@@ -2,13 +2,23 @@ import 'package:flutter_gl/flutter_gl.dart';
 import 'package:three_dart/three3d/constants.dart';
 import 'package:three_dart/three3d/math/index.dart';
 
+class UpdateRange{
+  UpdateRange({
+    this.offset = 0,
+    this.count = -1,
+  });
+
+  int offset;
+  int count;
+}
+
 class InterleavedBuffer {
   NativeArray array;
   int stride;
 
   late int count;
   late int usage;
-  late Map<String, dynamic> updateRange;
+  late UpdateRange updateRange;
   late int version;
   late String uuid;
   bool isInterleavedBuffer = true;
@@ -20,7 +30,7 @@ class InterleavedBuffer {
     count = array.length ~/ stride;
 
     usage = StaticDrawUsage;
-    updateRange = {"offset": 0, "count": -1};
+    updateRange = UpdateRange();//{"offset": 0, "count": -1};
 
     version = 0;
 
@@ -52,7 +62,7 @@ class InterleavedBuffer {
     index1 *= stride;
     index2 *= attribute.stride;
 
-    for (var i = 0, l = stride; i < l; i++) {
+    for (int i = 0, l = stride; i < l; i++) {
       array[index1 + i] = attribute.array[index2 + i];
     }
 
@@ -67,10 +77,12 @@ class InterleavedBuffer {
 
   // }
 
-  clone(data) {
+  InterleavedBuffer clone(data) {
     data.arrayBuffers ??= {};
 
     print("InterleavedBuffer clone todo  ");
+
+    return this;
 
     // if ( this.array.buffer._uuid == null ) {
 

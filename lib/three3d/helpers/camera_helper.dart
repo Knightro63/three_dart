@@ -1,12 +1,7 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/cameras/index.dart';
-import 'package:three_dart/three3d/core/buffer_attribute.dart';
-import 'package:three_dart/three3d/core/buffer_geometry.dart';
-import 'package:three_dart/three3d/materials/line_basic_material.dart';
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/objects/line_segments.dart';
+import 'package:three_dart/three_dart.dart';
 
-var _vector = /*@__PURE__*/ Vector3.init();
+var _vector = /*@__PURE__*/ Vector3();
 var _camera = /*@__PURE__*/ Camera();
 
 ///	- shows frustum, line of sight and up of the camera
@@ -106,8 +101,8 @@ class CameraHelper extends LineSegments {
     addLine('cf1', 'cf2', colorCross);
     addLine('cf3', 'cf4', colorCross);
 
-    geometry.setAttribute('position', Float32BufferAttribute(Float32Array.from(vertices), 3, false));
-    geometry.setAttribute('color', Float32BufferAttribute(Float32Array.from(colors), 3, false));
+    geometry.setAttribute(AttributeTypes.position, Float32BufferAttribute(Float32Array.from(vertices), 3, false));
+    geometry.setAttribute(AttributeTypes.color, Float32BufferAttribute(Float32Array.from(colors), 3, false));
 
     CameraHelper cameraHelper = CameraHelper.create(geometry, material);
     cameraHelper.camera = camera;
@@ -172,13 +167,13 @@ class CameraHelper extends LineSegments {
     setPoint('cn3', pointMap, geometry, _camera, 0, -h, -1);
     setPoint('cn4', pointMap, geometry, _camera, 0, h, -1);
 
-    geometry!.getAttribute('position').needsUpdate = true;
+    geometry!.attributes.positionBuffer!.needsUpdate = true;
   }
 
   @override
   dispose() {
     geometry!.dispose();
-    material.dispose();
+    material?.dispose();
   }
 }
 

@@ -19,6 +19,7 @@ export 'sphere.dart';
 export 'spherical.dart';
 export 'spherical_harmonics3.dart';
 export 'triangle.dart';
+export 'vector.dart';
 export 'vector2.dart';
 export 'vector3.dart';
 export 'vector4.dart';

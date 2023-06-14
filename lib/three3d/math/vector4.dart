@@ -1,7 +1,7 @@
-import 'package:three_dart/three3d/core/buffer_attribute.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import 'package:flutter_gl/flutter_gl.dart';
+import 'package:three_dart/three_dart.dart';
 
-class Vector4 {
+class Vector4 extends Vector{
   String type = "Vector4";
   late num x;
   late num y;
@@ -15,8 +15,6 @@ class Vector4 {
     this.w = w ?? 0;
   }
 
-  Vector4.init({this.x = 0, this.y = 0, this.z = 0, this.w = 1});
-
   Vector4.fromJSON(List<num>? json) {
     if (json != null) {
       x = json[0];
@@ -25,7 +23,7 @@ class Vector4 {
       w = json[3];
     }
   }
-
+  @override
   List<num> toJSON() {
     return [x, y, z, w];
   }
@@ -35,16 +33,17 @@ class Vector4 {
 
   get height => w;
   set height(value) => w = value;
-
-  Vector4 set(num x, num y, num z, num w) {
+  @override
+  Vector4 set(num x, num y, [num? z, num? w]) {
+    z ??= this.z;
+    w ??= this.z;
+    
     this.x = x;
     this.y = y;
-    this.z = z;
-    this.w = w;
 
     return this;
   }
-
+  @override
   Vector4 setScalar(num scalar) {
     x = scalar;
     y = scalar;
@@ -98,7 +97,7 @@ class Vector4 {
 
     return this;
   }
-
+  @override
   num getComponent(int index) {
     switch (index) {
       case 0:
@@ -113,12 +112,13 @@ class Vector4 {
         throw ('index is out of range: $index');
     }
   }
-
+  @override
   Vector4 clone() {
     return Vector4(x, y, z, w);
   }
-
-  Vector4 copy(Vector4 v) {
+  @override
+  Vector4 copy(Vector v) {
+    if(v is! Vector4) throw('v needs to be Vector4');
     x = v.x;
     y = v.y;
     z = v.z;
@@ -127,15 +127,24 @@ class Vector4 {
     return this;
   }
 
-  Vector4 add(Vector4 v) {
-    x += v.x;
-    y += v.y;
-    z += v.z;
-    w += v.w;
+  @override
+  Vector4 add(Vector a, {Vector? b}) {
+    if(a is! Vector4) throw('v needs to be Vector4');
+    if(b != null && b is! Vector4) throw('w needs to be Vector4 or null');
+    if (b != null) {
+      print(
+          'THREE.Vector4: .add() now only accepts one argument. Use .addVectors( a, b ) instead.');
+      return addVectors(a, b as Vector4);
+    }
+
+    x += a.x;
+    y += a.y;
+    z += a.z;
+    w += a.w;
 
     return this;
   }
-
+  @override
   Vector4 addScalar(num s) {
     x += s;
     y += s;
@@ -162,11 +171,14 @@ class Vector4 {
 
     return this;
   }
-
-  Vector4 sub(Vector4 v, Vector4? w) {
+  @override
+  Vector4 sub(Vector v, {Vector? w}) {
+    if(v is! Vector4) throw('v needs to be Vector4');
+    if(w != null && w is! Vector3) throw('w needs to be Vector4 or null');
     if (w != null) {
-      print('three.Vector4: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.');
-      return subVectors(v, w);
+      print(
+          'THREE.Vector4: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.');
+      return subVectors(v, w as Vector4);
     }
 
     x -= v.x;
@@ -176,7 +188,7 @@ class Vector4 {
 
     return this;
   }
-
+  @override
   Vector4 subScalar(num s) {
     x -= s;
     y -= s;
@@ -214,7 +226,7 @@ class Vector4 {
   // multiplyVectors(v, w) {
 
   // }
-
+  @override
   Vector4 multiplyScalar(num scalar) {
     x *= scalar;
     y *= scalar;
@@ -225,8 +237,8 @@ class Vector4 {
   }
 
   Vector4 applyMatrix4(Matrix4 m) {
-    var x = this.x, y = this.y, z = this.z, w = this.w;
-    var e = m.elements;
+    num x = this.x, y = this.y, z = this.z, w = this.w;
+    Float32Array e = m.elements;
 
     this.x = e[0] * x + e[4] * y + e[8] * z + e[12] * w;
     this.y = e[1] * x + e[5] * y + e[9] * z + e[13] * w;
@@ -235,7 +247,7 @@ class Vector4 {
 
     return this;
   }
-
+  @override
   Vector4 divideScalar(num scalar) {
     return multiplyScalar(1 / scalar);
   }
@@ -247,7 +259,7 @@ class Vector4 {
 
     w = 2 * Math.acos(q.w);
 
-    var s = Math.sqrt(1 - q.w * q.w);
+    double s = Math.sqrt(1 - q.w * q.w);
 
     if (s < 0.0001) {
       x = 1;
@@ -303,12 +315,12 @@ class Vector4 {
 
       angle = Math.pi;
 
-      var xx = (m11 + 1) / 2;
-      var yy = (m22 + 1) / 2;
-      var zz = (m33 + 1) / 2;
-      var xy = (m12 + m21) / 4;
-      var xz = (m13 + m31) / 4;
-      var yz = (m23 + m32) / 4;
+      double xx = (m11 + 1) / 2;
+      double yy = (m22 + 1) / 2;
+      double zz = (m33 + 1) / 2;
+      double xy = (m12 + m21) / 4;
+      double xz = (m13 + m31) / 4;
+      double yz = (m23 + m32) / 4;
 
       if ((xx > yy) && (xx > zz)) {
         // m11 is the largest diagonal term
@@ -356,8 +368,9 @@ class Vector4 {
 
     // as we have reached here there are no singularities so we can handle normally
 
-    var s = Math.sqrt(
-        (m32 - m23) * (m32 - m23) + (m13 - m31) * (m13 - m31) + (m21 - m12) * (m21 - m12)); // used to normalize
+    double s = Math.sqrt((m32 - m23) * (m32 - m23) +
+        (m13 - m31) * (m13 - m31) +
+        (m21 - m12) * (m21 - m12)); // used to normalize
 
     if (Math.abs(s) < 0.001) s = 1;
 
@@ -400,7 +413,7 @@ class Vector4 {
 
     return this;
   }
-
+  @override
   Vector4 clampScalar(num minVal, num maxVal) {
     x = Math.max(minVal, Math.min(maxVal, x));
     y = Math.max(minVal, Math.min(maxVal, y));
@@ -409,13 +422,13 @@ class Vector4 {
 
     return this;
   }
-
+  @override
   Vector4 clampLength(num min, num max) {
-    var length = this.length();
+    double length = this.length();
 
     return divideScalar(length).multiplyScalar(Math.max(min, Math.min(max, length)));
   }
-
+  @override
   Vector4 floor() {
     x = Math.floor(x);
     y = Math.floor(y);
@@ -424,7 +437,7 @@ class Vector4 {
 
     return this;
   }
-
+  @override
   Vector4 ceil() {
     x = Math.ceil(x);
     y = Math.ceil(y);
@@ -433,7 +446,7 @@ class Vector4 {
 
     return this;
   }
-
+  @override
   Vector4 round() {
     x = Math.round(x);
     y = Math.round(y);
@@ -442,7 +455,7 @@ class Vector4 {
 
     return this;
   }
-
+  @override
   Vector4 roundToZero() {
     x = (x < 0) ? Math.ceil(x) : Math.floor(x);
     y = (y < 0) ? Math.ceil(y) : Math.floor(y);
@@ -451,7 +464,7 @@ class Vector4 {
 
     return this;
   }
-
+  @override
   Vector4 negate() {
     x = -x;
     y = -y;
@@ -464,23 +477,23 @@ class Vector4 {
   num dot(Vector4 v) {
     return x * v.x + y * v.y + z * v.z + w * v.w;
   }
-
+  @override
   num lengthSq() {
     return x * x + y * y + z * z + w * w;
   }
-
+  @override
   double length() {
     return Math.sqrt(x * x + y * y + z * z + w * w);
   }
-
+  @override
   num manhattanLength() {
     return Math.abs(x) + Math.abs(y) + Math.abs(z) + Math.abs(w);
   }
-
+  @override
   Vector4 normalize() {
     return divideScalar(length());
   }
-
+  @override
   Vector4 setLength(num length) {
     return normalize().multiplyScalar(length);
   }
@@ -502,11 +515,12 @@ class Vector4 {
 
     return this;
   }
-
-  bool equals(Vector4 v) {
+  @override
+  bool equals(Vector v) {
+    if(v is! Vector4) throw('v needs to be Vector4');
     return ((v.x == x) && (v.y == y) && (v.z == z) && (v.w == w));
   }
-
+  @override
   Vector4 fromArray(List<num> array, [int offset = 0]) {
     x = array[offset];
     y = array[offset + 1];
@@ -515,8 +529,15 @@ class Vector4 {
 
     return this;
   }
-
-  List<num> toArray(List<num> array, [int offset = 0]) {
+  @override
+  List<num> toArray([List<num>? array, int offset = 0]) {
+    if (array == null) {
+      array = List<num>.filled(offset + 4, 0);
+    } else {
+      while (array.length < offset + 4) {
+        array.add(0.0);
+      }
+    }
     array[offset] = x;
     array[offset + 1] = y;
     array[offset + 2] = z;
@@ -525,6 +546,7 @@ class Vector4 {
     return array;
   }
 
+  @override
   Vector4 fromBufferAttribute(BufferAttribute attribute, int index) {
     x = attribute.getX(index)!;
     y = attribute.getY(index)!;
@@ -533,7 +555,7 @@ class Vector4 {
 
     return this;
   }
-
+  @override
   Vector4 random() {
     x = Math.random();
     y = Math.random();
@@ -549,7 +571,7 @@ class Vector4 {
     z = json['z'];
     w = json['w'];
   }
-
+  @override
   Map<String, dynamic> toJson() {
     return {'x': x, 'y': y, 'z': z, 'w': w};
   }

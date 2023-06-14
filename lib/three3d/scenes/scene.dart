@@ -22,7 +22,7 @@ class Scene extends Object3D {
     List<Shape> shapes = [];
     List<Map<String, dynamic>> shapesJSON = json["shapes"];
     for (var shape in shapesJSON) {
-      shapes.add(Curve.castJSON(shape));
+      shapes.add(Curve.castJSON(shape) as Shape);
     }
     rootJSON["shapes"] = shapes;
 

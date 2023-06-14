@@ -5,9 +5,9 @@ import 'package:three_dart/three3d/materials/line_basic_material.dart';
 import 'package:three_dart/three3d/math/index.dart';
 import 'package:three_dart/three3d/objects/line.dart';
 
-var _v1 = /*@__PURE__*/ Vector3.init();
-var _v2 = /*@__PURE__*/ Vector3.init();
-var _v3 = /*@__PURE__*/ Vector3.init();
+var _v1 = /*@__PURE__*/ Vector3();
+var _v2 = /*@__PURE__*/ Vector3();
+var _v3 = /*@__PURE__*/ Vector3();
 
 class DirectionalLightHelper extends Object3D {
   late DirectionalLight light;
@@ -28,7 +28,7 @@ class DirectionalLightHelper extends Object3D {
 
     List<double> posData = [-s, s, 0.0, s, s, 0.0, s, -s, 0.0, -s, -s, 0.0, -s, s, 0.0];
 
-    geometry.setAttribute('position', Float32BufferAttribute(Float32Array.from(posData), 3, false));
+    geometry.setAttribute(AttributeTypes.position, Float32BufferAttribute(Float32Array.from(posData), 3, false));
 
     var material = LineBasicMaterial({"fog": false, "toneMapped": false});
 
@@ -37,7 +37,7 @@ class DirectionalLightHelper extends Object3D {
 
     geometry = BufferGeometry();
     List<double> d2 = [0, 0, 0, 0, 0, 1];
-    geometry.setAttribute('position', Float32BufferAttribute(Float32Array.from(d2), 3, false));
+    geometry.setAttribute(AttributeTypes.position, Float32BufferAttribute(Float32Array.from(d2), 3, false));
 
     targetLine = Line(geometry, material);
     add(targetLine);
@@ -48,9 +48,9 @@ class DirectionalLightHelper extends Object3D {
   @override
   dispose() {
     lightPlane.geometry!.dispose();
-    lightPlane.material.dispose();
+    lightPlane.material?.dispose();
     targetLine.geometry!.dispose();
-    targetLine.material.dispose();
+    targetLine.material?.dispose();
   }
 
   update() {
@@ -61,11 +61,11 @@ class DirectionalLightHelper extends Object3D {
     lightPlane.lookAt(_v2);
 
     if (color != null) {
-      lightPlane.material.color.set(color);
-      targetLine.material.color.set(color);
+      lightPlane.material?.color.set(color);
+      targetLine.material?.color.set(color);
     } else {
-      lightPlane.material.color.copy(light.color);
-      targetLine.material.color.copy(light.color);
+      lightPlane.material?.color.copy(light.color!);
+      targetLine.material?.color.copy(light.color!);
     }
 
     targetLine.lookAt(_v2);

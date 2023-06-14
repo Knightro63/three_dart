@@ -3,9 +3,11 @@ import 'package:three_dart/three3d/constants.dart';
 import 'package:three_dart/three3d/core/base_buffer_attribute.dart';
 import 'package:three_dart/three3d/math/index.dart';
 
-abstract class BufferAttribute<TData extends NativeArray> extends BaseBufferAttribute<TData> {
-  final _vector = Vector3.init();
-  final _vector2 = Vector2(null, null);
+
+abstract class BufferAttribute<TData extends NativeArray>
+    extends BaseBufferAttribute<TData> {
+  final _vector = Vector3();
+  final _vector2 = Vector2();
 
   bool isBufferAttribute = true;
 
@@ -49,7 +51,7 @@ abstract class BufferAttribute<TData extends NativeArray> extends BaseBufferAttr
     index1 *= itemSize;
     index2 *= attribute.itemSize;
 
-    for (var i = 0, l = itemSize; i < l; i++) {
+    for (int i = 0, l = itemSize; i < l; i++) {
       array[index1 + i] = attribute.array[index2 + i];
     }
 
@@ -62,11 +64,11 @@ abstract class BufferAttribute<TData extends NativeArray> extends BaseBufferAttr
   }
 
   BufferAttribute copyColorsArray(List<Color> colors) {
-    var array = this.array;
-    var offset = 0;
+    TData array = this.array;
+    int offset = 0;
 
-    for (var i = 0, l = colors.length; i < l; i++) {
-      var color = colors[i];
+    for (int i = 0, l = colors.length; i < l; i++) {
+      Color color = colors[i];
       array[offset++] = color.r;
       array[offset++] = color.g;
       array[offset++] = color.b;
@@ -75,12 +77,12 @@ abstract class BufferAttribute<TData extends NativeArray> extends BaseBufferAttr
     return this;
   }
 
-  BufferAttribute copyVector2sArray(List<Vector2> vectors) {
-    var array = this.array;
-    var offset = 0;
+  BufferAttribute copyVector2sArray(List<Vector2> vectors){
+    TData array = this.array;
+    int offset = 0;
 
-    for (var i = 0, l = vectors.length; i < l; i++) {
-      var vector = vectors[i];
+    for (int i = 0, l = vectors.length; i < l; i++) {
+      Vector2 vector = vectors[i];
       array[offset++] = vector.x;
       array[offset++] = vector.y;
     }
@@ -89,11 +91,11 @@ abstract class BufferAttribute<TData extends NativeArray> extends BaseBufferAttr
   }
 
   BufferAttribute copyVector3sArray(List<Vector3> vectors) {
-    var array = this.array;
-    var offset = 0;
+    TData array = this.array;
+    int offset = 0;
 
-    for (var i = 0, l = vectors.length; i < l; i++) {
-      var vector = vectors[i];
+    for (int i = 0, l = vectors.length; i < l; i++) {
+      Vector3 vector = vectors[i];
       array[offset++] = vector.x;
       array[offset++] = vector.y;
       array[offset++] = vector.z;
@@ -103,11 +105,11 @@ abstract class BufferAttribute<TData extends NativeArray> extends BaseBufferAttr
   }
 
   BufferAttribute copyVector4sArray(List<Vector4> vectors) {
-    var array = this.array;
-    var offset = 0;
+    TData array = this.array;
+    int offset = 0;
 
-    for (var i = 0, l = vectors.length; i < l; i++) {
-      var vector = vectors[i];
+    for (int i = 0, l = vectors.length; i < l; i++) {
+      Vector4 vector = vectors[i];
       array[offset++] = vector.x;
       array[offset++] = vector.y;
       array[offset++] = vector.z;
@@ -119,14 +121,14 @@ abstract class BufferAttribute<TData extends NativeArray> extends BaseBufferAttr
 
   BufferAttribute applyMatrix3(Matrix3 m) {
     if (itemSize == 2) {
-      for (var i = 0, l = count; i < l; i++) {
+      for (int i = 0, l = count; i < l; i++) {
         _vector2.fromBufferAttribute(this, i);
         _vector2.applyMatrix3(m);
 
         setXY(i, _vector2.x, _vector2.y);
       }
     } else if (itemSize == 3) {
-      for (var i = 0, l = count; i < l; i++) {
+      for (int i = 0, l = count; i < l; i++) {
         _vector.fromBufferAttribute(this, i);
         _vector.applyMatrix3(m);
 
@@ -138,7 +140,7 @@ abstract class BufferAttribute<TData extends NativeArray> extends BaseBufferAttr
   }
 
   void applyMatrix4(Matrix4 m) {
-    for (var i = 0, l = count; i < l; i++) {
+    for (int i = 0, l = count; i < l; i++) {
       _vector.fromBufferAttribute(this, i);
 
       _vector.applyMatrix4(m);
@@ -148,7 +150,8 @@ abstract class BufferAttribute<TData extends NativeArray> extends BaseBufferAttr
   }
 
   BufferAttribute applyNormalMatrix(m) {
-    for (var i = 0, l = count; i < l; i++) {
+    for (int i = 0, l = count; i < l; i++) {
+
       _vector.fromBufferAttribute(this, i);
 
       _vector.applyNormalMatrix(m);
@@ -160,7 +163,7 @@ abstract class BufferAttribute<TData extends NativeArray> extends BaseBufferAttr
   }
 
   BufferAttribute transformDirection(Matrix4 m) {
-    for (var i = 0, l = count; i < l; i++) {
+    for (int i = 0, l = count; i < l; i++) {
       _vector.x = getX(i)!.toDouble();
       _vector.y = getY(i)!.toDouble();
       _vector.z = getZ(i)!.toDouble();
@@ -267,13 +270,16 @@ abstract class BufferAttribute<TData extends NativeArray> extends BaseBufferAttr
     // } else
     if (type == "Float32BufferAttribute") {
       final typed = array as Float32Array;
-      return Float32BufferAttribute(Float32Array(typed.length), itemSize, false).copy(this);
+      return Float32BufferAttribute(Float32Array(typed.length), itemSize, false)
+          .copy(this);
     } else if (type == "Uint8BufferAttribute") {
       final typed = array as Uint8Array;
-      return Uint8BufferAttribute(Uint8Array(typed.length), itemSize, false).copy(this);
+      return Uint8BufferAttribute(Uint8Array(typed.length), itemSize, false)
+          .copy(this);
     } else if (type == "Uint16BufferAttribute") {
       final typed = array as Uint16Array;
-      return Uint16BufferAttribute(Uint16Array(typed.length), itemSize, false).copy(this);
+      return Uint16BufferAttribute(Uint16Array(typed.length), itemSize, false)
+          .copy(this);
     } else {
       throw ("BufferAttribute type: $type clone need support ....  ");
     }

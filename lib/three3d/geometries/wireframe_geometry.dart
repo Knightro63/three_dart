@@ -14,19 +14,19 @@ class WireframeGeometry extends BufferGeometry {
 
     // helper variables
 
-    var start = Vector3.init();
-    var end = Vector3.init();
+    var start = Vector3();
+    var end = Vector3();
 
     if (geometry.index != null) {
       // indexed BufferGeometry
 
-      var position = geometry.attributes["position"];
+      var position = geometry.attributes.positionBuffer;
       var indices = geometry.index;
       var groups = geometry.groups;
 
       if (groups.isEmpty) {
         groups = [
-          {"start": 0, "count": indices!.count, "materialIndex": 0}
+          GroupGeometry(start: 0, count: indices!.count, materialIndex: 0)
         ];
       }
 
@@ -35,15 +35,15 @@ class WireframeGeometry extends BufferGeometry {
       for (var o = 0, ol = groups.length; o < ol; ++o) {
         var group = groups[o];
 
-        var groupStart = group["start"];
-        var groupCount = group["count"];
+        var groupStart = group.start;
+        var groupCount = group.count;
 
         for (var i = groupStart, l = (groupStart + groupCount); i < l; i += 3) {
           for (var j = 0; j < 3; j++) {
             int index1 = indices!.getX(i + j)!.toInt();
             int index2 = indices.getX(i + (j + 1) % 3)!.toInt();
 
-            start.fromBufferAttribute(position, index1);
+            start.fromBufferAttribute(position!, index1);
             end.fromBufferAttribute(position, index2);
 
             if (isUniqueEdge(start, end, edges) == true) {
@@ -56,7 +56,7 @@ class WireframeGeometry extends BufferGeometry {
     } else {
       // non-indexed BufferGeometry
 
-      var position = geometry.attributes["position"];
+      var position = geometry.attributes.positionBuffer!;
 
       for (var i = 0, l = (position.count / 3); i < l; i++) {
         for (var j = 0; j < 3; j++) {
@@ -79,7 +79,7 @@ class WireframeGeometry extends BufferGeometry {
 
     // build geometry
 
-    setAttribute('position', Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
+    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
   }
 
   @override

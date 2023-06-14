@@ -1,6 +1,5 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/buffer_attribute.dart';
-import 'package:three_dart/three3d/core/buffer_geometry.dart';
+import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/materials/line_basic_material.dart';
 import 'package:three_dart/three3d/math/box3.dart';
 import 'package:three_dart/three3d/objects/line_segments.dart';
@@ -19,7 +18,7 @@ class Box3Helper extends LineSegments {
 
     geometry.setIndex(Uint16BufferAttribute(indices, 1, false));
 
-    geometry.setAttribute('position', Float32BufferAttribute(Float32Array.from(positions), 3, false));
+    geometry.setAttribute(AttributeTypes.position, Float32BufferAttribute(Float32Array.from(positions), 3, false));
 
     var box3Helper = Box3Helper.create(geometry, LineBasicMaterial({"color": color, "toneMapped": false}));
 

@@ -6,7 +6,7 @@ import 'package:three_dart/three3d/math/sphere.dart';
 import 'package:three_dart/three3d/math/vector3.dart';
 
 var _sphere = Sphere(null, null);
-var _vectorFrustum = Vector3.init();
+var _vectorFrustum = Vector3();
 
 class Frustum {
   late List<Plane> planes;

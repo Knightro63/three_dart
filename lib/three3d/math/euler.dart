@@ -48,10 +48,10 @@ class Euler {
     onChangeCallback();
   }
 
-  Euler set(double x, double y, double z, [String? order]) {
-    _x = x;
-    _y = y;
-    _z = z;
+  Euler set(num x, num y, num z, [String? order]) {
+    _x = x.toDouble();
+    _y = y.toDouble();
+    _z = z.toDouble();
     _order = order ?? _order;
 
     onChangeCallback();

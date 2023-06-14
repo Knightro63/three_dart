@@ -23,8 +23,8 @@ class CircleGeometry extends BufferGeometry {
 
     // helper variables
 
-    var vertex = Vector3.init();
-    var uv = Vector2(null, null);
+    Vector3 vertex = Vector3();
+    Vector2 uv = Vector2();
 
     // center point
 
@@ -32,7 +32,7 @@ class CircleGeometry extends BufferGeometry {
     normals.addAll([0, 0, 1]);
     uvs.addAll([0.5, 0.5]);
 
-    for (var s = 0, i = 3; s <= segments; s++, i += 3) {
+    for (int s = 0, i = 3; s <= segments; s++, i += 3) {
       var segment = thetaStart + s / segments * thetaLength;
 
       // vertex
@@ -56,16 +56,16 @@ class CircleGeometry extends BufferGeometry {
 
     // indices
 
-    for (var i = 1; i <= segments; i++) {
+    for (int i = 1; i <= segments; i++) {
       indices.addAll([i, i + 1, 0]);
     }
 
     // build geometry
 
     setIndex(indices);
-    setAttribute('position', Float32BufferAttribute(positionsArray = Float32Array.from(vertices), 3, false));
-    setAttribute('normal', Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
-    setAttribute('uv', Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
+    setAttribute(AttributeTypes.position, Float32BufferAttribute(positionsArray = Float32Array.from(vertices), 3, false));
+    setAttribute(AttributeTypes.normal, Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
+    setAttribute(AttributeTypes.uv, Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
   }
 
   @override

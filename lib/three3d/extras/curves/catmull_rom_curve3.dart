@@ -31,21 +31,21 @@ class CubicPoly {
 	 *  and
 	 *   p'(0) = t0, p'(1) = t1.
 	 */
-  init(x0, x1, t0, t1) {
+  void init(x0, x1, t0, t1) {
     c0 = x0;
     c1 = t0;
     c2 = -3 * x0 + 3 * x1 - 2 * t0 - t1;
     c3 = 2 * x0 - 2 * x1 + t0 + t1;
   }
 
-  initCatmullRom(x0, x1, x2, x3, tension) {
+  void initCatmullRom(x0, x1, x2, x3, tension) {
     init(x1, x2, tension * (x2 - x0), tension * (x3 - x1));
   }
 
-  initNonuniformCatmullRom(x0, x1, x2, x3, dt0, dt1, dt2) {
+  void initNonuniformCatmullRom(x0, x1, x2, x3, dt0, dt1, dt2) {
     // compute tangents when parameterized in [t1,t2]
-    var t1 = (x1 - x0) / dt0 - (x2 - x0) / (dt0 + dt1) + (x2 - x1) / dt1;
-    var t2 = (x2 - x1) / dt1 - (x3 - x1) / (dt1 + dt2) + (x3 - x2) / dt2;
+    double t1 = (x1 - x0) / dt0 - (x2 - x0) / (dt0 + dt1) + (x2 - x1) / dt1;
+    double t2 = (x2 - x1) / dt1 - (x3 - x1) / (dt1 + dt2) + (x3 - x2) / dt2;
 
     // rescale tangents for parametrization in [0,1]
     t1 *= dt1;
@@ -54,45 +54,44 @@ class CubicPoly {
     init(x1, x2, t1, t2);
   }
 
-  calc(t) {
-    var t2 = t * t;
-    var t3 = t2 * t;
+  double calc(double t) {
+    double t2 = t * t;
+    double t3 = t2 * t;
     return c0 + c1 * t + c2 * t2 + c3 * t3;
   }
 }
 
 //
 
-var tmp = Vector3.init();
-var px = CubicPoly(), py = CubicPoly(), pz = CubicPoly();
+Vector3 tmp = Vector3();
+CubicPoly px = CubicPoly(), py = CubicPoly(), pz = CubicPoly();
 
-class CatmullRomCurve3 extends Curve {
-  bool isCatmullRomCurve3 = true;
-
+class CatmullRomCurve3 extends Curve { 
   late bool closed;
   late String curveType;
   late num tension;
 
   CatmullRomCurve3({
     points,
-    this.closed = false,
-    this.curveType = 'centripetal',
-    this.tension = 0.5,
-  }) : super() {
-    type = 'CatmullRomCurve3';
+    this.closed = false, 
+    this.curveType = 'centripetal', 
+    this.tension = 0.5
+  }):super(){
     this.points = points ?? [];
+    type = 'CatmullRomCurve3';
+    isCatmullRomCurve3 = true;
   }
 
   @override
-  getPoint(t, [optionalTarget]) {
-    var point = optionalTarget ?? Vector3.init();
+  Vector getPoint(num t, [Vector? optionalTarget]) {
+    Vector3 point = (optionalTarget as Vector3?) ?? Vector3();
 
-    var points = this.points;
-    var l = points.length;
+    List<Vector3> points = this.points as List<Vector3>;
+    int l = points.length;
 
-    var p = (l - (closed ? 0 : 1)) * t;
-    var intPoint = Math.floor(p);
-    var weight = p - intPoint;
+    double p = (l - (closed ? 0 : 1)) * t.toDouble();
+    int intPoint = Math.floor(p);
+    double weight = p - intPoint;
 
     if (closed) {
       intPoint += intPoint > 0 ? 0 : (Math.floor(Math.abs(intPoint) / l) + 1) * l;
@@ -101,7 +100,7 @@ class CatmullRomCurve3 extends Curve {
       weight = 1;
     }
 
-    var p0, p3; // 4 points (p1 & p2 defined below)
+    Vector3 p0, p3; // 4 points (p1 & p2 defined below)
 
     if (closed || intPoint > 0) {
       p0 = points[(intPoint - 1) % l];
@@ -111,8 +110,8 @@ class CatmullRomCurve3 extends Curve {
       p0 = tmp;
     }
 
-    var p1 = points[intPoint % l];
-    var p2 = points[(intPoint + 1) % l];
+    Vector3 p1 = points[intPoint % l];
+    Vector3 p2 = points[(intPoint + 1) % l];
 
     if (closed || intPoint + 2 < l) {
       p3 = points[(intPoint + 2) % l];
@@ -124,10 +123,10 @@ class CatmullRomCurve3 extends Curve {
 
     if (curveType == 'centripetal' || curveType == 'chordal') {
       // init Centripetal / Chordal Catmull-Rom
-      var pow = curveType == 'chordal' ? 0.5 : 0.25;
-      var dt0 = Math.pow(p0.distanceToSquared(p1), pow);
-      var dt1 = Math.pow(p1.distanceToSquared(p2), pow);
-      var dt2 = Math.pow(p2.distanceToSquared(p3), pow);
+      double pow = curveType == 'chordal' ? 0.5 : 0.25;
+      double dt0 = Math.pow(p0.distanceToSquared(p1), pow).toDouble();
+      double dt1 = Math.pow(p1.distanceToSquared(p2), pow).toDouble();
+      double dt2 = Math.pow(p2.distanceToSquared(p3), pow).toDouble();
 
       // safety check for repeated points
       if (dt1 < 1e-4) dt1 = 1.0;
@@ -149,18 +148,19 @@ class CatmullRomCurve3 extends Curve {
   }
 
   @override
-  clone() {
+  CatmullRomCurve3 clone() {
     return CatmullRomCurve3().copy(this);
   }
 
   @override
-  copy(source) {
+  CatmullRomCurve3 copy(Curve source) {
+    if(source is! CatmullRomCurve3) throw('source Curve must be CatmullRomCurve3');
     super.copy(source);
 
     points = [];
 
-    for (var i = 0, l = source.points.length; i < l; i++) {
-      var point = source.points[i];
+    for (int i = 0, l = source.points.length; i < l; i++) {
+      Vector point = source.points[i];
 
       points.add(point.clone());
     }
@@ -171,47 +171,4 @@ class CatmullRomCurve3 extends Curve {
 
     return this;
   }
-
-  // toJSON() {
-
-  //   var data = Curve.prototype.toJSON.call( this );
-
-  //   data.points = [];
-
-  //   for ( var i = 0, l = this.points.length; i < l; i ++ ) {
-
-  //     var point = this.points[ i ];
-  //     data.points.push( point.toArray() );
-
-  //   }
-
-  //   data.closed = this.closed;
-  //   data.curveType = this.curveType;
-  //   data.tension = this.tension;
-
-  //   return data;
-
-  // }
-
-  // fromJSON( json ) {
-
-  //   Curve.prototype.fromJSON.call( this, json );
-
-  //   this.points = [];
-
-  //   for ( var i = 0, l = json.points.length; i < l; i ++ ) {
-
-  //     var point = json.points[ i ];
-  //     this.points.push( new Vector3().fromArray( point ) );
-
-  //   }
-
-  //   this.closed = json.closed;
-  //   this.curveType = json.curveType;
-  //   this.tension = json.tension;
-
-  //   return this;
-
-  // }
-
 }

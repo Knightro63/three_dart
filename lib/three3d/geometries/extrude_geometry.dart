@@ -61,9 +61,9 @@ class ExtrudeGeometry extends BufferGeometry {
 
         // console.log(splineTube, 'splineTube', splineTube.normals.length, 'steps', steps, 'extrudePts', extrudePts.length);
 
-        binormal = Vector3.init();
-        normal = Vector3.init();
-        position2 = Vector3.init();
+        binormal = Vector3();
+        normal = Vector3();
+        position2 = Vector3();
       }
 
       // Safeguards if bevels are not enabled
@@ -77,10 +77,10 @@ class ExtrudeGeometry extends BufferGeometry {
 
       // Variables initialization
 
-      var shapePoints = shape.extractPoints(curveSegments);
+      ShapeExtractPoints shapePoints = shape.extractPoints(curveSegments);
 
-      List vertices = shapePoints["shape"];
-      List holes = shapePoints["holes"];
+      List<Vector> vertices = shapePoints.shape;
+      List<List<Vector>?> holes = shapePoints.holes;
 
       var reverse = !ShapeUtils.isClockWise(vertices);
 
@@ -92,7 +92,7 @@ class ExtrudeGeometry extends BufferGeometry {
         for (var h = 0, hl = holes.length; h < hl; h++) {
           var ahole = holes[h];
 
-          if (ShapeUtils.isClockWise(ahole)) {
+          if (ShapeUtils.isClockWise(ahole!)) {
             holes[h] = ahole.reversed.toList();
           }
         }
@@ -106,7 +106,7 @@ class ExtrudeGeometry extends BufferGeometry {
       List contour = vertices.sublist(0); // vertices has all points but contour has only points of circumference
 
       for (var h = 0, hl = holes.length; h < hl; h++) {
-        List ahole = holes[h];
+        List<Vector> ahole = holes[h]!;
         vertices.addAll(ahole);
       }
 
@@ -229,8 +229,8 @@ class ExtrudeGeometry extends BufferGeometry {
       var holesMovements = [];
       var oneHoleMovements, verticesMovements = contourMovements.sublist(0);
 
-      for (var h = 0, hl = holes.length; h < hl; h++) {
-        var ahole = holes[h];
+      for (int h = 0, hl = holes.length; h < hl; h++) {
+        List<Vector> ahole = holes[h]!;
 
         oneHoleMovements = List<Vector2>.filled(ahole.length, Vector2(0, 0));
 
@@ -263,7 +263,7 @@ class ExtrudeGeometry extends BufferGeometry {
 
         // contract shape
 
-        for (var i = 0, il = contour.length; i < il; i++) {
+        for (int i = 0, il = contour.length; i < il; i++) {
           var vert = scalePt2(contour[i], contourMovements[i], bs);
 
           v(vert.x, vert.y, -z);
@@ -271,11 +271,11 @@ class ExtrudeGeometry extends BufferGeometry {
 
         // expand holes
 
-        for (var h = 0, hl = holes.length; h < hl; h++) {
-          var ahole = holes[h];
+        for (int h = 0, hl = holes.length; h < hl; h++) {
+          List<Vector> ahole = holes[h]!;
           oneHoleMovements = holesMovements[h];
 
-          for (var i = 0, il = ahole.length; i < il; i++) {
+          for (int i = 0, il = ahole.length; i < il; i++) {
             var vert = scalePt2(ahole[i], oneHoleMovements[i], bs);
 
             v(vert.x, vert.y, -z);
@@ -336,17 +336,17 @@ class ExtrudeGeometry extends BufferGeometry {
 
         // contract shape
 
-        for (var i = 0, il = contour.length; i < il; i++) {
+        for (int i = 0, il = contour.length; i < il; i++) {
           var vert = scalePt2(contour[i], contourMovements[i], bs);
           v(vert.x, vert.y, depth + z);
         }
 
         // expand holes
-        for (var h = 0, hl = holes.length; h < hl; h++) {
-          var ahole = holes[h];
+        for (int h = 0, hl = holes.length; h < hl; h++) {
+          List<Vector> ahole = holes[h]!;
           oneHoleMovements = holesMovements[h];
 
-          for (var i = 0, il = ahole.length; i < il; i++) {
+          for (int i = 0, il = ahole.length; i < il; i++) {
             var vert = scalePt2(ahole[i], oneHoleMovements[i], bs);
 
             if (!extrudeByPath) {
@@ -497,7 +497,7 @@ class ExtrudeGeometry extends BufferGeometry {
         layeroffset = layeroffset + contour.length;
 
         for (var h = 0, hl = holes.length; h < hl; h++) {
-          List ahole = holes[h];
+          List<Vector> ahole = holes[h]!;
 
           sidewalls(ahole, layeroffset);
 
@@ -533,8 +533,8 @@ class ExtrudeGeometry extends BufferGeometry {
     final nativeUv = Float32Array.from(uvArray);
     arrays.addAll([nativeVertices, nativeUv]);
 
-    setAttribute('position', Float32BufferAttribute(nativeVertices, 3, false));
-    setAttribute('uv', Float32BufferAttribute(nativeUv, 2, false));
+    setAttribute(AttributeTypes.position, Float32BufferAttribute(nativeVertices, 3, false));
+    setAttribute(AttributeTypes.uv, Float32BufferAttribute(nativeUv, 2, false));
 
     computeVertexNormals();
 

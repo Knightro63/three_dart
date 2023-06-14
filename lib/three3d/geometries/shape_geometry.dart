@@ -138,9 +138,9 @@ class ShapeGeometry extends BufferGeometry {
     // build geometry
 
     setIndex(indices);
-    setAttribute('position', Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
-    setAttribute('normal', Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
-    setAttribute('uv', Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
+    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
+    setAttribute(AttributeTypes.normal, Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
+    setAttribute(AttributeTypes.uv, Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
 
     // helper functions
   }

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter_gl/flutter_gl.dart';
 import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/extras/index.dart';
@@ -10,12 +8,45 @@ import 'package:three_dart/extra/console.dart';
 
 int _bufferGeometryId = 1; // BufferGeometry uses odd numbers as Id
 
-var _bufferGeometrym1 = Matrix4();
-var _bufferGeometryobj = Object3D();
-var _bufferGeometryoffset = Vector3.init();
-var _bufferGeometrybox = Box3(null, null);
-var _bufferGeometryboxMorphTargets = Box3(null, null);
-var _bufferGeometryvector = Vector3.init();
+Matrix4 _bufferGeometrym1 = Matrix4();
+Object3D _bufferGeometryobj = Object3D();
+Vector3 _bufferGeometryoffset = Vector3();
+Box3 _bufferGeometrybox = Box3();
+Box3 _bufferGeometryboxMorphTargets = Box3();
+Vector3 _bufferGeometryvector = Vector3();
+
+class GroupGeometry{
+  GroupGeometry.fromJson(json){
+    start = json['start'] ?? 0;
+    count = json['count'] ?? 0;
+    materialIndex = json['materialIndex'] ?? 0;
+  }
+  GroupGeometry({
+    required this.start,
+    required this.count,
+    this.materialIndex = 0
+  });
+  
+  late int start;
+  late int count;
+  late int materialIndex;
+
+  GroupGeometry clone(){
+    return GroupGeometry(
+      start: start, 
+      count: count,
+      materialIndex: materialIndex
+    );
+  }
+
+  Map<String,dynamic> toJson(){
+    return {
+      'start': start,
+      'count': count,
+      'materialIndex': materialIndex
+    };
+  }
+}
 
 Matrix4 _m1 = Matrix4();
 
@@ -26,13 +57,13 @@ class BufferGeometry with EventDispatcher {
   String type = "BufferGeometry";
   Box3? boundingBox;
   String name = "";
-  Map<String, dynamic> attributes = {};
+  Attributes attributes = Attributes();
   Map<String, List<BufferAttribute>> morphAttributes = {};
   bool morphTargetsRelative = false;
   Sphere? boundingSphere;
-  Map<String, int> drawRange = {"start": 0, "count": double.maxFinite.toInt()};
+  GroupGeometry drawRange = GroupGeometry(start: 0, count: double.maxFinite.toInt());
   Map<String, dynamic> userData = {};
-  List<Map<String, dynamic>> groups = [];
+  List<GroupGeometry> groups = [];
   BufferAttribute? index;
 
   late var morphTargets;
@@ -106,32 +137,32 @@ class BufferGeometry with EventDispatcher {
     }
   }
 
-  dynamic getAttribute(String name) {
-    return attributes[name];
-  }
-
-  BufferGeometry setAttribute(String name, attribute) {
-    attributes[name] = attribute;
-
+  dynamic getAttribute(AttributeTypes type) {
+    attributes.getAttribute(type);
     return this;
   }
 
-  BufferGeometry deleteAttribute(String name) {
-    attributes.remove(name);
-
+  BufferGeometry setAttribute(AttributeTypes type, BufferAttribute<NativeArray<num>>? attribute) {
+    //attributes[name] = attribute;
+    attributes.setAttribute(type, attribute);
     return this;
   }
 
-  bool hasAttribute(String name) {
-    return attributes[name] != null;
+  BufferGeometry deleteAttribute(AttributeTypes type) {
+    attributes.setAttribute(type);
+    return this;
   }
+
+  // bool hasAttribute(String name) {
+  //   return attributes[name] != null;
+  // }
 
   void addGroup(int start, int count, [int materialIndex = 0]) {
-    groups.add({
-      "start": start,
-      "count": count,
-      "materialIndex": materialIndex,
-    });
+    groups.add(GroupGeometry(
+      start: start,
+      count: count,
+      materialIndex: materialIndex,
+    ));
   }
 
   void clearGroups() {
@@ -139,28 +170,28 @@ class BufferGeometry with EventDispatcher {
   }
 
   void setDrawRange(int start, int count) {
-    drawRange["start"] = start;
-    drawRange["count"] = count;
+    drawRange.start = start;
+    drawRange.count = count;
   }
 
   void applyMatrix4(Matrix4 matrix) {
-    var position = attributes["position"];
+    BufferAttribute<NativeArray<num>>? position = attributes.positionBuffer;
     if (position != null) {
       position.applyMatrix4(matrix);
       position.needsUpdate = true;
     }
 
-    var normal = attributes["normal"];
+    BufferAttribute<NativeArray<num>>? normal = attributes.normalBuffer;
 
     if (normal != null) {
-      var normalMatrix = Matrix3().getNormalMatrix(matrix);
+      Matrix3 normalMatrix = Matrix3().getNormalMatrix(matrix);
 
       normal.applyNormalMatrix(normalMatrix);
 
       normal.needsUpdate = true;
     }
 
-    var tangent = attributes["tangent"];
+    BufferAttribute<NativeArray<num>>? tangent = attributes.tangentBuffer;
 
     if (tangent != null) {
       tangent.transformDirection(matrix);
@@ -257,31 +288,32 @@ class BufferGeometry with EventDispatcher {
     translate(_bufferGeometryoffset.x, _bufferGeometryoffset.y, _bufferGeometryoffset.z);
   }
 
-  BufferGeometry setFromPoints(points) {
+  BufferGeometry setFromPoints(List<Vector> points) {
     List<double> position = [];
 
-    for (var i = 0, l = points.length; i < l; i++) {
-      var point = points[i];
+    for (int i = 0, l = points.length; i < l; i++) {
+      Vector point = points[i];
 
-      if (point.type == "Vector2") {
-        position.addAll([point.x, point.y, 0.0]);
+      if (point is Vector3) {
+        position.addAll([point.x.toDouble(), point.y.toDouble(), point.z.toDouble()]);
+      } else if (point is Vector4) {
+        position.addAll([point.x.toDouble(), point.y.toDouble(), point.z.toDouble()]);
       } else {
-        position.addAll([point.x, point.y, point.z ?? 0]);
+        position.addAll([point.x.toDouble(), point.y.toDouble(), 0.0]);
       }
     }
 
-    array?.dispose();
-    array = Float32Array.from(position);
-    setAttribute('position', Float32BufferAttribute(array!, 3, false));
-
+    final array = Float32Array.from(position);
+    //setAttribute('position', );
+    attributes.positionBuffer = Float32BufferAttribute(array, 3, false);
     return this;
   }
 
   void computeBoundingBox() {
-    boundingBox ??= Box3(null, null);
+    boundingBox ??= Box3();
 
-    var position = attributes["position"];
-    var morphAttributesPosition = morphAttributes["position"];
+    BufferAttribute<NativeArray<num>>? position = attributes.positionBuffer;
+    List<BufferAttribute<NativeArray<num>>>? morphAttributesPosition = morphAttributes['position'];
 
     if (position != null && position is GLBufferAttribute) {
       print(
@@ -300,8 +332,8 @@ class BufferGeometry with EventDispatcher {
       // process morph attributes if present
 
       if (morphAttributesPosition != null) {
-        for (var i = 0, il = morphAttributesPosition.length; i < il; i++) {
-          var morphAttribute = morphAttributesPosition[i];
+        for (int i = 0, il = morphAttributesPosition.length; i < il; i++) {
+          BufferAttribute<NativeArray<num>> morphAttribute = morphAttributesPosition[i];
           _bufferGeometrybox.setFromBufferAttribute(morphAttribute);
 
           if (morphTargetsRelative) {
@@ -329,13 +361,13 @@ class BufferGeometry with EventDispatcher {
   }
 
   void computeBoundingSphere() {
-    boundingSphere ??= Sphere(null, null);
+    boundingSphere ??= Sphere();
 
-    var position = attributes["position"];
-    var morphAttributesPosition = morphAttributes["position"];
+    BufferAttribute<NativeArray<num>>? position = attributes.positionBuffer;
+    List<BufferAttribute<NativeArray<num>>>? morphAttributesPosition = morphAttributes["position"];
 
     if (position != null && position is GLBufferAttribute) {
-      boundingSphere!.set(Vector3.init(), 99999999999);
+      boundingSphere!.set(Vector3(), 99999999999);
 
       return;
     }
@@ -343,15 +375,15 @@ class BufferGeometry with EventDispatcher {
     if (position != null) {
       // first, find the center of the bounding sphere
 
-      var center = boundingSphere!.center;
+      Vector3 center = boundingSphere!.center;
 
       _bufferGeometrybox.setFromBufferAttribute(position);
 
       // process morph attributes if present
 
       if (morphAttributesPosition != null) {
-        for (var i = 0, il = morphAttributesPosition.length; i < il; i++) {
-          var morphAttribute = morphAttributesPosition[i];
+        for (int i = 0, il = morphAttributesPosition.length; i < il; i++) {
+          BufferAttribute<NativeArray<num>> morphAttribute = morphAttributesPosition[i];
           _bufferGeometryboxMorphTargets.setFromBufferAttribute(morphAttribute);
 
           if (morphTargetsRelative) {
@@ -372,7 +404,7 @@ class BufferGeometry with EventDispatcher {
       // second, try to find a boundingSphere with a radius smaller than the
       // boundingSphere of the boundingBox: sqrt(3) smaller in the best case
       num maxRadiusSq = 0;
-      for (var i = 0, il = position.count; i < il; i++) {
+      for (int i = 0, il = position.count; i < il; i++) {
         _bufferGeometryvector.fromBufferAttribute(position, i);
         maxRadiusSq = Math.max(
           maxRadiusSq,
@@ -383,11 +415,11 @@ class BufferGeometry with EventDispatcher {
       // process morph attributes if present
 
       if (morphAttributesPosition != null) {
-        for (var i = 0, il = morphAttributesPosition.length; i < il; i++) {
-          var morphAttribute = morphAttributesPosition[i];
-          var morphTargetsRelative = this.morphTargetsRelative;
+        for (int i = 0, il = morphAttributesPosition.length; i < il; i++) {
+          BufferAttribute<NativeArray<num>>? morphAttribute = morphAttributesPosition[i];
+          bool morphTargetsRelative = this.morphTargetsRelative;
 
-          for (var j = 0, jl = morphAttribute.count; j < jl; j++) {
+          for (int j = 0, jl = morphAttribute.count; j < jl; j++) {
             _bufferGeometryvector.fromBufferAttribute(morphAttribute, j);
 
             if (morphTargetsRelative) {
@@ -417,55 +449,60 @@ class BufferGeometry with EventDispatcher {
   }
 
   void computeTangents() {
-    var index = this.index;
-    var attributes = this.attributes;
+    BufferAttribute<NativeArray<num>>? index = this.index;
+    Attributes attributes = this.attributes;
 
     // based on http://www.terathon.com/code/tangent.html
     // (per vertex tangents)
 
-    if (index == null || attributes["position"] == null || attributes["normal"] == null || attributes["uv"] == null) {
+    if (index == null ||
+        attributes.position == null ||
+        attributes.normal == null ||
+        attributes.uv == null) {
       console.error(
           'three.BufferGeometry: .computeTangents() failed. Missing required attributes (index, position, normal or uv)');
       return;
     }
 
     final indices = index.array;
-    var positions = attributes["position"].array;
-    var normals = attributes["normal"].array;
-    var uvs = attributes["uv"].array;
+    List<num>? positions = attributes.positionBuffer?.array.toDartList();
+    List<num>? normals = attributes.normalBuffer?.array.toDartList();
+    List<num>? uvs = attributes.uvBuffer?.array.toDartList();
 
-    int nVertices = positions.length ~/ 3;
-
-    if (attributes["tangent"] == null) {
-      setAttribute('tangent', Float32BufferAttribute(Float32Array(4 * nVertices), 4));
+    int nVertices = positions!.length ~/ 3;
+    if (attributes.tangent == null) {
+      // setAttribute(
+      //     'tangent', Float32BufferAttribute(Float32Array(4 * nVertices), 4));
+      attributes.tangentBuffer = Float32BufferAttribute(Float32Array(4 * nVertices), 4);
     }
 
-    var tangents = attributes["tangent"].array;
+    List<num>? tangents = attributes.tangentBuffer?.array.toDartList();
 
-    var tan1 = [], tan2 = [];
+    List<Vector3> tan1 = [], tan2 = [];
 
-    for (var i = 0; i < nVertices; i++) {
+    for (int i = 0; i < nVertices; i++) {
       tan1.add(Vector3());
       tan2.add(Vector3());
     }
 
-    var vA = Vector3(),
+    Vector3 vA = Vector3(),
         vB = Vector3(),
         vC = Vector3(),
-        uvA = Vector2(),
-        uvB = Vector2(),
-        uvC = Vector2(),
         sdir = Vector3(),
         tdir = Vector3();
+    Vector2 uvA = Vector2(),
+        uvB = Vector2(),
+        uvC = Vector2();
+
 
     void handleTriangle(int a, int b, int c) {
-      vA.fromArray(positions, a * 3);
-      vB.fromArray(positions, b * 3);
-      vC.fromArray(positions, c * 3);
+      vA = Vector3().fromArray(positions,a * 3);
+      vB = Vector3().fromArray(positions, b * 3);
+      vC = Vector3().fromArray(positions, c * 3);
 
-      uvA.fromArray(uvs, a * 2);
-      uvB.fromArray(uvs, b * 2);
-      uvC.fromArray(uvs, c * 2);
+      uvA = Vector2().fromArray(uvs!, a * 2);
+      uvB = Vector2().fromArray(uvs, b * 2);
+      uvC = Vector2().fromArray(uvs, c * 2);
 
       vB.sub(vA);
       vC.sub(vA);
@@ -491,21 +528,21 @@ class BufferGeometry with EventDispatcher {
       tan2[c].add(tdir);
     }
 
-    var groups = this.groups;
+    List<GroupGeometry> groups = this.groups;
 
     if (groups.isEmpty) {
       groups = [
-        {"start": 0, "count": indices.length}
+        GroupGeometry(start: 0, count: indices.length)
       ];
     }
 
-    for (var i = 0, il = groups.length; i < il; ++i) {
-      var group = groups[i];
+    for (int i = 0, il = groups.length; i < il; ++i) {
+      GroupGeometry group = groups[i];
 
-      var start = group["start"];
-      var count = group["count"];
+      int start = group.start;
+      int count = group.count;
 
-      for (var j = start, jl = start + count; j < jl; j += 3) {
+      for (int j = start, jl = start + count; j < jl; j += 3) {
         handleTriangle(
           indices[j + 0].toInt(),
           indices[j + 1].toInt(),
@@ -514,14 +551,14 @@ class BufferGeometry with EventDispatcher {
       }
     }
 
-    var tmp = Vector3(), tmp2 = Vector3();
-    var n = Vector3(), n2 = Vector3();
+    Vector3 tmp = Vector3(), tmp2 = Vector3();
+    Vector3 n = Vector3(), n2 = Vector3();
 
     void handleVertex(int v) {
-      n.fromArray(normals, v * 3);
+      n.fromArray(normals!, v * 3);
       n2.copy(n);
 
-      var t = tan1[v];
+      Vector3 t = tan1[v];
 
       // Gram-Schmidt orthogonalize
 
@@ -531,22 +568,22 @@ class BufferGeometry with EventDispatcher {
       // Calculate handedness
 
       tmp2.crossVectors(n2, t);
-      var test = tmp2.dot(tan2[v]);
-      var w = (test < 0.0) ? -1.0 : 1.0;
+      num test = tmp2.dot(tan2[v]);
+      double w = (test < 0.0) ? -1.0 : 1.0;
 
-      tangents[v * 4] = tmp.x;
+      tangents![v * 4] = tmp.x;
       tangents[v * 4 + 1] = tmp.y;
       tangents[v * 4 + 2] = tmp.z;
       tangents[v * 4 + 3] = w;
     }
 
-    for (var i = 0, il = groups.length; i < il; ++i) {
-      var group = groups[i];
+    for (int i = 0, il = groups.length; i < il; ++i) {
+      GroupGeometry group = groups[i];
 
-      var start = group["start"];
-      var count = group["count"];
+      int start = group.start;
+      int count = group.count;
 
-      for (var j = start, jl = start + count; j < jl; j += 3) {
+      for (int j = start, jl = start + count; j < jl; j += 3) {
         handleVertex(indices[j + 0].toInt());
         handleVertex(indices[j + 1].toInt());
         handleVertex(indices[j + 2].toInt());
@@ -555,35 +592,37 @@ class BufferGeometry with EventDispatcher {
   }
 
   void computeVertexNormals() {
-    var index = this.index;
-    var positionAttribute = getAttribute('position');
+    BufferAttribute<NativeArray<num>>? index = this.index;
+    BufferAttribute<NativeArray<num>>? positionAttribute = attributes.positionBuffer;//getAttribute('position');
 
     if (positionAttribute != null) {
-      var normalAttribute = getAttribute('normal');
+      BufferAttribute<NativeArray<num>>? normalAttribute = attributes.normalBuffer;//getAttribute('normal');
 
       if (normalAttribute == null) {
         final array = List<double>.filled(positionAttribute.count * 3, 0);
-        normalAttribute = Float32BufferAttribute(Float32Array.from(array), 3, false);
-        setAttribute('normal', normalAttribute);
+        normalAttribute =
+            Float32BufferAttribute(Float32Array.from(array), 3, false);
+        //setAttribute('normal', normalAttribute);
+        attributes.normalBuffer = normalAttribute;
       } else {
         // reset existing normals to zero
 
-        for (var i = 0, il = normalAttribute.count; i < il; i++) {
+        for (int i = 0, il = normalAttribute.count; i < il; i++) {
           normalAttribute.setXYZ(i, 0, 0, 0);
         }
       }
 
-      var pA = Vector3.init(), pB = Vector3.init(), pC = Vector3.init();
-      var nA = Vector3.init(), nB = Vector3.init(), nC = Vector3.init();
-      var cb = Vector3.init(), ab = Vector3.init();
+      Vector3 pA = Vector3(), pB = Vector3(), pC = Vector3();
+      Vector3 nA = Vector3(), nB = Vector3(), nC = Vector3();
+      Vector3 cb = Vector3(), ab = Vector3();
 
       // indexed elements
 
       if (index != null) {
-        for (var i = 0, il = index.count; i < il; i += 3) {
-          var vA = index.getX(i + 0)!.toInt();
-          var vB = index.getX(i + 1)!.toInt();
-          var vC = index.getX(i + 2)!.toInt();
+        for (int i = 0, il = index.count; i < il; i += 3) {
+          int vA = index.getX(i + 0)!.toInt();
+          int vB = index.getX(i + 1)!.toInt();
+          int vC = index.getX(i + 2)!.toInt();
 
           pA.fromBufferAttribute(positionAttribute, vA);
           pB.fromBufferAttribute(positionAttribute, vB);
@@ -608,7 +647,7 @@ class BufferGeometry with EventDispatcher {
       } else {
         // non-indexed elements (unconnected triangle soup)
 
-        for (var i = 0, il = positionAttribute.count; i < il; i += 3) {
+        for (int i = 0, il = positionAttribute.count; i < il; i += 3) {
           pA.fromBufferAttribute(positionAttribute, i + 0);
           pB.fromBufferAttribute(positionAttribute, i + 1);
           pC.fromBufferAttribute(positionAttribute, i + 2);
@@ -643,20 +682,22 @@ class BufferGeometry with EventDispatcher {
           'Use BufferGeometryUtils.mergeBufferGeometries() for lossless merge.');
     }
 
-    var attributes = this.attributes;
+    Attributes attributes = this.attributes;
 
-    for (var key in attributes.keys) {
-      if (geometry.attributes[key] != null) {
-        var attribute1 = attributes[key];
-        var attributeArray1 = attribute1.array;
+    for (int type = 0; type < AttributeTypes.values.length; type++) {
+      AttributeTypes ty = AttributeTypes.values[type];
+      if (geometry.attributes.hasAttribute(ty)) {
+        BufferAttribute<NativeArray<num>> attribute1 = attributes.getAttribute(ty)!;
+        NativeArray<num> attributeArray1 = attribute1.array;
 
-        var attribute2 = geometry.attributes[key];
-        var attributeArray2 = attribute2.array;
+        BufferAttribute<NativeArray<num>> attribute2 = geometry.attributes.getAttribute(ty)!;
+        NativeArray<num> attributeArray2 = attribute2.array;
 
-        var attributeOffset = attribute2.itemSize * offset;
-        var length = Math.min<int>(attributeArray2.length, attributeArray1.length - attributeOffset);
+        int attributeOffset = attribute2.itemSize * offset;
+        int length = Math.min<int>(
+            attributeArray2.length, attributeArray1.length - attributeOffset);
 
-        for (var i = 0, j = attributeOffset; i < length; i++, j++) {
+        for (int i = 0, j = attributeOffset; i < length; i++, j++) {
           attributeArray1[j] = attributeArray2[i];
         }
       }
@@ -666,9 +707,9 @@ class BufferGeometry with EventDispatcher {
   }
 
   void normalizeNormals() {
-    var normals = attributes["normal"];
+    BufferAttribute<NativeArray<num>>? normals = attributes.normalBuffer;
 
-    for (var i = 0, il = normals.count; i < il; i++) {
+    for (int i = 0, il = normals!.count; i < il; i++) {
       _bufferGeometryvector.fromBufferAttribute(normals, i);
 
       _bufferGeometryvector.normalize();
@@ -678,26 +719,26 @@ class BufferGeometry with EventDispatcher {
   }
 
   BufferGeometry toNonIndexed() {
-    convertBufferAttribute(attribute, indices) {
+    Float32BufferAttribute convertBufferAttribute(BufferAttribute attribute, List<num> indices) {
       print("BufferGeometry.convertBufferAttribute todo  ");
 
-      var array = attribute.array;
-      var itemSize = attribute.itemSize;
-      var normalized = attribute.normalized;
+      NativeArray<num> array = attribute.array;
+      int itemSize = attribute.itemSize;
+      bool normalized = attribute.normalized;
 
-      var array2 = Float32Array(indices.length * itemSize);
+      Float32Array array2 = Float32Array(indices.length * itemSize);
 
-      var index = 0, index2 = 0;
+      int index = 0, index2 = 0;
 
-      for (var i = 0, l = indices.length; i < l; i++) {
+      for (int i = 0, l = indices.length; i < l; i++) {
         if (attribute is InterleavedBufferAttribute) {
-          index = indices[i] * attribute.data!.stride + attribute.offset;
+          index = indices[i].toInt() * attribute.data!.stride + attribute.offset;
         } else {
-          index = indices[i] * itemSize;
+          index = indices[i].toInt() * itemSize;
         }
 
-        for (var j = 0; j < itemSize; j++) {
-          array2[index2++] = array[index++];
+        for (int j = 0; j < itemSize; j++) {
+          array2[index2++] = array[index++].toDouble();
         }
       }
 
@@ -711,33 +752,33 @@ class BufferGeometry with EventDispatcher {
       return this;
     }
 
-    var geometry2 = BufferGeometry();
+    BufferGeometry geometry2 = BufferGeometry();
 
-    var indices = index!.array;
-    var attributes = this.attributes;
+    List<num> indices = index!.array.toDartList();
+    Attributes attributes = this.attributes;
 
     // attributes
+    geometry2.attributes = attributes.clone();
+    // for (var name in attributes.keys) {
+    //   var attribute = attributes[name];
 
-    for (var name in attributes.keys) {
-      var attribute = attributes[name];
+    //   Float32BufferAttribute newAttribute = convertBufferAttribute(attribute, indices);
 
-      var newAttribute = convertBufferAttribute(attribute, indices);
-
-      geometry2.setAttribute(name, newAttribute);
-    }
+    //   geometry2.setAttribute(name, newAttribute);
+    // }
 
     // morph attributes
 
-    var morphAttributes = this.morphAttributes;
+    Map<String,List<BufferAttribute<NativeArray<num>>>> morphAttributes = this.morphAttributes;
 
-    for (var name in morphAttributes.keys) {
+    for (String name in morphAttributes.keys) {
       List<BufferAttribute> morphArray = [];
       List<BufferAttribute> morphAttribute = morphAttributes[name]!; // morphAttribute: array of Float32BufferAttributes
 
-      for (var i = 0, il = morphAttribute.length; i < il; i++) {
-        var attribute = morphAttribute[i];
+      for (int i = 0, il = morphAttribute.length; i < il; i++) {
+        BufferAttribute<NativeArray<num>> attribute = morphAttribute[i];
 
-        var newAttribute = convertBufferAttribute(attribute, indices);
+        Float32BufferAttribute newAttribute = convertBufferAttribute(attribute, indices);
 
         morphArray.add(newAttribute);
       }
@@ -748,12 +789,11 @@ class BufferGeometry with EventDispatcher {
     geometry2.morphTargetsRelative = morphTargetsRelative;
 
     // groups
-
-    var groups = this.groups;
-
-    for (var i = 0, l = groups.length; i < l; i++) {
-      var group = groups[i];
-      geometry2.addGroup(group["start"], group["count"], group["materialIndex"]);
+    List<GroupGeometry> groups = this.groups;
+    for (int i = 0, l = groups.length; i < l; i++) {
+      GroupGeometry group = groups[i].clone();
+      //geometry2.addGroup(group["start"], group["count"], group["materialIndex"]);
+      geometry2.groups.add(group);
     }
 
     return geometry2;
@@ -772,7 +812,7 @@ class BufferGeometry with EventDispatcher {
     if (userData.keys.isNotEmpty) data["userData"] = userData;
 
     if (parameters != null) {
-      for (var key in parameters!.keys) {
+      for (String key in parameters!.keys) {
         if (parameters![key] != null) data[key] = parameters![key];
       }
 
@@ -784,7 +824,7 @@ class BufferGeometry with EventDispatcher {
     data["data"] = {};
     data["data"]["attributes"] = {};
 
-    var index = this.index;
+    BufferAttribute<NativeArray<num>>? index = this.index;
 
     if (index != null) {
       // TODO
@@ -794,26 +834,29 @@ class BufferGeometry with EventDispatcher {
       };
     }
 
-    var attributes = this.attributes;
+    Attributes attributes = this.attributes;
 
-    for (var key in attributes.keys) {
-      var attribute = attributes[key];
+    for (int type = 0; type < AttributeTypes.values.length; type++) {
+      BufferAttribute<NativeArray<num>>? attribute = 
+        attributes.getAttribute(AttributeTypes.values[type]);
 
       // TODO
       // data["data"]["attributes"][ key ] = attribute.toJSON( data["data"] );
-      data["data"]["attributes"][key] = attribute.toJSON();
+      if(attribute != null){
+        data["data"]["attributes"][AttributeTypes.values[type].name] = attribute.toJSON();
+      }
     }
 
     Map<String, List<BufferAttribute>> morphAttributes = {};
     bool hasMorphAttributes = false;
 
-    for (var key in morphAttributes.keys) {
-      var attributeArray = this.morphAttributes[key]!;
+    for (String key in morphAttributes.keys) {
+      List<BufferAttribute<NativeArray<num>>> attributeArray = this.morphAttributes[key]!;
 
       List<BufferAttribute> array = [];
 
-      for (var i = 0, il = attributeArray.length; i < il; i++) {
-        var attribute = attributeArray[i];
+      for (int i = 0, il = attributeArray.length; i < il; i++) {
+        BufferAttribute<NativeArray<num>> attribute = attributeArray[i];
 
         // TODO
         // var attributeData = attribute.toJSON( data["data"] );
@@ -834,13 +877,17 @@ class BufferGeometry with EventDispatcher {
       data["data"].morphTargetsRelative = morphTargetsRelative;
     }
 
-    var groups = this.groups;
+    List<GroupGeometry> groups = this.groups;
 
     if (groups.isNotEmpty) {
-      data["data"]["groups"] = json.decode(json.encode(groups));
+      data["data"]["groups"] = <Map>[];
+      for(int hmg = 0; hmg < groups.length; hmg++){
+        data["data"]["groups"].add(groups[hmg].toJson());
+      }
+      //data["data"]["groups"] = ;//json.decode(json.encode(groups));
     }
 
-    var boundingSphere = this.boundingSphere;
+    Sphere? boundingSphere = this.boundingSphere;
 
     if (boundingSphere != null) {
       data["data"]["boundingSphere"] = {
@@ -867,16 +914,13 @@ class BufferGeometry with EventDispatcher {
     // this.boundingSphere = null;
 
     // used for storing cloned, shared data
-
-    // var data = {};
-
     // name
 
     name = source.name;
 
     // index
 
-    var index = source.index;
+    BufferAttribute<NativeArray<num>>? index = source.index;
 
     if (index != null) {
       setIndex(index.clone());
@@ -884,23 +928,23 @@ class BufferGeometry with EventDispatcher {
 
     // attributes
 
-    var attributes = source.attributes;
+    Attributes attributes = source.attributes;
 
-    for (var name in attributes.keys) {
-      var attribute = attributes[name];
-      setAttribute(name, attribute.clone());
+    for (int type = 0; type < AttributeTypes.values.length;type++) {
+      BufferAttribute<NativeArray<num>>? attribute = attributes.getAttribute(AttributeTypes.values[type]);
+      setAttribute(AttributeTypes.values[type], attribute?.clone());
     }
 
     // morph attributes
 
-    var morphAttributes = source.morphAttributes;
+    Map<String, List<BufferAttribute<NativeArray<num>>>> morphAttributes = source.morphAttributes;
 
-    for (var name in morphAttributes.keys) {
+    for (String name in morphAttributes.keys) {
       List<BufferAttribute> array = [];
-      var morphAttribute = morphAttributes[name]!;
+      List<BufferAttribute<NativeArray<num>>> morphAttribute = morphAttributes[name]!;
       // morphAttribute: array of Float32BufferAttributes
 
-      for (var i = 0, l = morphAttribute.length; i < l; i++) {
+      for (int i = 0, l = morphAttribute.length; i < l; i++) {
         array.add(morphAttribute[i].clone());
       }
 
@@ -911,16 +955,16 @@ class BufferGeometry with EventDispatcher {
 
     // groups
 
-    var groups = source.groups;
+    List<GroupGeometry> groups = source.groups;
 
-    for (var i = 0, l = groups.length; i < l; i++) {
-      var group = groups[i];
-      addGroup(group["start"], group["count"], group["materialIndex"]);
+    for (int i = 0, l = groups.length; i < l; i++) {
+      GroupGeometry group = groups[i];
+      addGroup(group.start, group.count, group.materialIndex);
     }
 
     // bounding box
 
-    var boundingBox = source.boundingBox;
+    Box3? boundingBox = source.boundingBox;
 
     if (boundingBox != null) {
       this.boundingBox = boundingBox.clone();
@@ -928,7 +972,7 @@ class BufferGeometry with EventDispatcher {
 
     // bounding sphere
 
-    var boundingSphere = source.boundingSphere;
+    Sphere? boundingSphere = source.boundingSphere;
 
     if (boundingSphere != null) {
       this.boundingSphere = boundingSphere.clone();
@@ -936,8 +980,8 @@ class BufferGeometry with EventDispatcher {
 
     // draw range
 
-    drawRange["start"] = source.drawRange["start"]!;
-    drawRange["count"] = source.drawRange["count"]!;
+    drawRange.start = source.drawRange.start;
+    drawRange.count = source.drawRange.count;
 
     // user data
 
@@ -951,18 +995,17 @@ class BufferGeometry with EventDispatcher {
 
     dispatchEvent(Event({"type": "dispose"}));
 
-    if (attributes["color"] is BufferAttribute) {
-      (attributes["color"] as BufferAttribute).array.dispose();
+    if (attributes.colorBuffer != null) {
+      attributes.colorBuffer!.array.dispose();
     }
-    if (attributes["position"] is BufferAttribute) {
-      (attributes["position"] as BufferAttribute).array.dispose();
+    if (attributes.positionBuffer != null) {
+      attributes.positionBuffer!.array.dispose();
     }
-
-    if (attributes["normal"] is BufferAttribute) {
-      (attributes["normal"] as BufferAttribute).array.dispose();
+    if (attributes.normalBuffer != null) {
+      attributes.normalBuffer!.array.dispose();
     }
-    if (attributes["uv"] is BufferAttribute) {
-      (attributes["uv"] as BufferAttribute).array.dispose();
+    if (attributes.uvBuffer != null) {
+      attributes.uvBuffer!.array.dispose();
     }
 
     index?.array.dispose();

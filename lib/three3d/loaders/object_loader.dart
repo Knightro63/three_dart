@@ -3,6 +3,7 @@ import 'package:three_dart/three3d/animation/index.dart';
 import 'package:three_dart/three3d/cameras/index.dart';
 import 'package:three_dart/three3d/constants.dart';
 import 'package:three_dart/three3d/core/index.dart';
+import 'package:three_dart/three3d/core/instanced_buffer_attribute.dart';
 import 'package:three_dart/three3d/extras/index.dart';
 import 'package:three_dart/three3d/geometries/index.dart';
 import 'package:three_dart/three3d/lights/index.dart';

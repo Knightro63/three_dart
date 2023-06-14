@@ -6,7 +6,7 @@ import 'package:three_dart/three3d/math/index.dart';
 import 'package:three_dart/three3d/objects/line.dart';
 import 'package:three_dart/three3d/objects/mesh.dart';
 
-var _axis = /*@__PURE__*/ Vector3.init();
+var _axis = /*@__PURE__*/ Vector3();
 var _lineGeometry, _coneGeometry;
 
 class ArrowHelper extends Object3D {

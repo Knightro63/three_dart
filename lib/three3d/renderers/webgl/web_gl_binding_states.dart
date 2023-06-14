@@ -1,5 +1,7 @@
 import 'package:three_dart/extra/console.dart';
 import 'package:three_dart/three3d/core/index.dart';
+import 'package:three_dart/three3d/core/instanced_buffer_attribute.dart';
+import 'package:three_dart/three3d/core/instanced_buffer_geometry.dart';
 import 'package:three_dart/three3d/materials/index.dart';
 import 'package:three_dart/three3d/objects/index.dart';
 import 'package:three_dart/three3d/renderers/webgl/index.dart';
@@ -182,7 +184,7 @@ class WebGLBindingStates {
 
       if (programAttribute["location"] >= 0) {
         var cachedAttribute = cachedAttributes[name];
-        var geometryAttribute = geometryAttributes[name];
+        var geometryAttribute = geometryAttributes.getAttributefromString(name);
 
         if (geometryAttribute == undefined) {
           if (name == 'instanceMatrix' && object.instanceMatrix != null) geometryAttribute = object.instanceMatrix;
@@ -215,7 +217,7 @@ class WebGLBindingStates {
       Map programAttribute = programAttributes[name];
 
       if (programAttribute["location"] >= 0) {
-        var attribute = attributes[name];
+        var attribute = attributes.getAttributefromString(name);
 
         if (attribute == undefined) {
           if (name == 'instanceMatrix' && object.instanceMatrix != null) attribute = object.instanceMatrix;
@@ -317,7 +319,7 @@ class WebGLBindingStates {
 
       if (programAttribute["location"] >= 0) {
         // var geometryAttribute = geometryAttributes[ name ];
-        BufferAttribute? geometryAttribute = geometryAttributes[name];
+        BufferAttribute? geometryAttribute = geometryAttributes.getAttributefromString(name);
 
         if (geometryAttribute == null) {
           if (name == 'instanceMatrix' && object is InstancedMesh) {

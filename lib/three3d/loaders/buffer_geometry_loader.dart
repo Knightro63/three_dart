@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert' as convert;
 import 'package:flutter_gl/flutter_gl.dart';
 import 'package:three_dart/three3d/core/index.dart';
+import 'package:three_dart/three3d/core/instanced_buffer_attribute.dart';
+import 'package:three_dart/three3d/core/instanced_buffer_geometry.dart';
 import 'package:three_dart/three3d/loaders/file_loader.dart';
 import 'package:three_dart/three3d/loaders/loader.dart';
 import 'package:three_dart/three3d/math/index.dart';
@@ -90,9 +92,9 @@ class BufferGeometryLoader extends Loader {
 
     var attributes = json["data"]["attributes"];
 
-    for (var key in attributes.keys) {
+    for (String key in attributes.keys) {
       var attribute = attributes[key];
-      BaseBufferAttribute bufferAttribute;
+      BufferAttribute bufferAttribute;
 
       if (attribute["isInterleavedBufferAttribute"] == true) {
         var interleavedBuffer = getInterleavedBuffer(json["data"], attribute["data"]);
@@ -122,7 +124,10 @@ class BufferGeometryLoader extends Loader {
         }
       }
 
-      geometry.setAttribute(key, bufferAttribute);
+      AttributeTypes? type = Attributes().getAttributeTypefromString(key);
+      if(type != null){
+        geometry.setAttribute(type, bufferAttribute);
+      }
     }
 
     var morphAttributes = json["data"]["morphAttributes"];

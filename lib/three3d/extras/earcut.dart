@@ -3,9 +3,7 @@ import 'package:three_dart/three3d/math/index.dart';
 /// Port from https://github.com/mapbox/earcut (v2.2.2)
 
 class Earcut {
-  static triangulate(data, List<num>? holeIndices, dim) {
-    dim = dim ?? 2;
-
+  static triangulate(List<Vector> data, List<num>? holeIndices, [int dim = 2]) {
     var hasHoles = holeIndices != null && holeIndices.isNotEmpty;
     var outerLen = hasHoles ? holeIndices![0] * dim : data.length;
 

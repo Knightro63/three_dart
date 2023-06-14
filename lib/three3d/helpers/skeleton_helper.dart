@@ -1,12 +1,7 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/buffer_attribute.dart';
-import 'package:three_dart/three3d/core/buffer_geometry.dart';
-import 'package:three_dart/three3d/materials/line_basic_material.dart';
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/objects/bone.dart';
-import 'package:three_dart/three3d/objects/line_segments.dart';
+import 'package:three_dart/three_dart.dart';
 
-var _shvector = /*@__PURE__*/ Vector3.init();
+var _shvector = /*@__PURE__*/ Vector3();
 var _boneMatrix = /*@__PURE__*/ Matrix4();
 var _matrixWorldInv = /*@__PURE__*/ Matrix4();
 
@@ -43,8 +38,8 @@ class SkeletonHelper extends LineSegments {
       }
     }
 
-    geometry.setAttribute('position', Float32BufferAttribute(Float32Array.from(vertices), 3, false));
-    geometry.setAttribute('color', Float32BufferAttribute(Float32Array.from(colors), 3, false));
+    geometry.setAttribute(AttributeTypes.position, Float32BufferAttribute(Float32Array.from(vertices), 3, false));
+    geometry.setAttribute(AttributeTypes.color, Float32BufferAttribute(Float32Array.from(colors), 3, false));
 
     var material = LineBasicMaterial(
         {"vertexColors": true, "depthTest": false, "depthWrite": false, "toneMapped": false, "transparent": true});
@@ -64,7 +59,7 @@ class SkeletonHelper extends LineSegments {
     var bones = this.bones;
 
     var geometry = this.geometry!;
-    var position = geometry.getAttribute('position');
+    var position = geometry.getAttribute(AttributeTypes.position);
 
     _matrixWorldInv.copy(root.matrixWorld).invert();
 
@@ -84,7 +79,7 @@ class SkeletonHelper extends LineSegments {
       }
     }
 
-    geometry.getAttribute('position').needsUpdate = true;
+    geometry.getAttribute(AttributeTypes.position).needsUpdate = true;
 
     super.updateMatrixWorld(force);
   }

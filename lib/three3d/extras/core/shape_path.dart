@@ -13,30 +13,30 @@ class ShapePath {
 
   ShapePath();
 
-  moveTo(double x, double y) {
+  ShapePath moveTo(num x, num y) {
     currentPath = Path(null);
     subPaths.add(currentPath);
     currentPath.moveTo(x, y);
     return this;
   }
 
-  lineTo(double x, double y) {
+  ShapePath lineTo(num x, num y) {
     currentPath.lineTo(x, y);
     return this;
   }
 
-  quadraticCurveTo(double aCPx, double aCPy, double aX, double aY) {
+  ShapePath quadraticCurveTo(double aCPx, double aCPy, double aX, double aY) {
     currentPath.quadraticCurveTo(aCPx, aCPy, aX, aY);
     return this;
   }
 
-  bezierCurveTo(num aCP1x, num aCP1y, num aCP2x, num aCP2y, num aX, num aY) {
+  ShapePath bezierCurveTo(num aCP1x, num aCP1y, num aCP2x, num aCP2y, num aX, num aY) {
     currentPath.bezierCurveTo(aCP1x, aCP1y, aCP2x, aCP2y, aX, aY);
 
     return this;
   }
 
-  splineThru(pts) {
+  ShapePath splineThru(List<Vector2> pts) {
     currentPath.splineThru(pts);
 
     return this;
@@ -46,10 +46,10 @@ class ShapePath {
     toShapesNoHoles(inSubpaths) {
       List<Shape> shapes = [];
 
-      for (var i = 0, l = inSubpaths.length; i < l; i++) {
-        var tmpPath = inSubpaths[i];
+      for (int i = 0, l = inSubpaths.length; i < l; i++) {
+        Path tmpPath = inSubpaths[i];
 
-        var tmpShape = Shape(null);
+        Shape tmpShape = Shape();
         tmpShape.curves = tmpPath.curves;
 
         shapes.add(tmpShape);
@@ -58,20 +58,20 @@ class ShapePath {
       return shapes;
     }
 
-    isPointInsidePolygon(inPt, inPolygon) {
-      var polyLen = inPolygon.length;
+    bool isPointInsidePolygon(Vector inPt, List<Vector> inPolygon) {
+      int polyLen = inPolygon.length;
 
       // inPt on polygon contour => immediate success    or
       // toggling of inside/outside at every single! intersection point of an edge
       //  with the horizontal line through inPt, left of inPt
       //  not counting lowerY endpoints of edges and whole edges on that line
-      var inside = false;
-      for (var p = polyLen - 1, q = 0; q < polyLen; p = q++) {
-        var edgeLowPt = inPolygon[p];
-        var edgeHighPt = inPolygon[q];
+      bool inside = false;
+      for (int p = polyLen - 1, q = 0; q < polyLen; p = q++) {
+        Vector edgeLowPt = inPolygon[p];
+        Vector edgeHighPt = inPolygon[q];
 
-        var edgeDx = edgeHighPt.x - edgeLowPt.x;
-        var edgeDy = edgeHighPt.y - edgeLowPt.y;
+        double edgeDx = edgeHighPt.x - edgeLowPt.x.toDouble();
+        double edgeDy = edgeHighPt.y - edgeLowPt.y.toDouble();
 
         if (Math.abs(edgeDy) > Math.epsilon) {
           // not parallel
@@ -89,7 +89,8 @@ class ShapePath {
             // continue;				// no intersection or edgeLowPt => doesn't count !!!
 
           } else {
-            var perpEdge = edgeDy * (inPt.x - edgeLowPt.x) - edgeDx * (inPt.y - edgeLowPt.y);
+            double perpEdge = edgeDy * (inPt.x - edgeLowPt.x) -
+                edgeDx * (inPt.y - edgeLowPt.y);
             if (perpEdge == 0) return true; // inPt is on contour ?
             if (perpEdge < 0) continue;
             inside = !inside; // true intersection left of inPt
@@ -111,9 +112,9 @@ class ShapePath {
       return inside;
     }
 
-    var isClockWise = ShapeUtils.isClockWise;
+    bool Function(List<Vector>) isClockWise = ShapeUtils.isClockWise;
 
-    var subPaths = this.subPaths;
+    List<Path> subPaths = this.subPaths;
     if (subPaths.isEmpty) return [];
 
     if (noHoles == true) return toShapesNoHoles(subPaths);
@@ -123,13 +124,13 @@ class ShapePath {
 
     if (subPaths.length == 1) {
       tmpPath = subPaths[0];
-      tmpShape = Shape(null);
+      tmpShape = Shape();
       tmpShape.curves = tmpPath.curves;
       shapes.add(tmpShape);
       return shapes;
     }
 
-    var holesFirst = !isClockWise(subPaths[0].getPoints());
+    bool holesFirst = !isClockWise(subPaths[0].getPoints());
     holesFirst = isCCW ? !holesFirst : holesFirst;
 
     // console.log("Holes first", holesFirst);
@@ -137,7 +138,7 @@ class ShapePath {
     var betterShapeHoles = [];
     var newShapes = [];
     var newShapeHoles = [];
-    var mainIdx = 0;
+    int mainIdx = 0;
     var tmpPoints;
 
     // newShapes[ mainIdx ] = null;
@@ -146,7 +147,7 @@ class ShapePath {
     // newShapeHoles[ mainIdx ] = [];
     listSetter(newShapeHoles, mainIdx, []);
 
-    for (var i = 0, l = subPaths.length; i < l; i++) {
+    for (int i = 0, l = subPaths.length; i < l; i++) {
       tmpPath = subPaths[i];
       tmpPoints = tmpPath.getPoints();
       solid = isClockWise(tmpPoints);
@@ -180,24 +181,24 @@ class ShapePath {
     }
 
     if (newShapes.length > 1) {
-      var ambiguous = false;
-      var toChange = 0;
+      bool ambiguous = false;
+      int toChange = 0;
 
-      for (var sIdx = 0, sLen = newShapes.length; sIdx < sLen; sIdx++) {
+      for (int sIdx = 0, sLen = newShapes.length; sIdx < sLen; sIdx++) {
         // betterShapeHoles[ sIdx ] = [];
         listSetter(betterShapeHoles, sIdx, []);
       }
 
-      for (var sIdx = 0, sLen = newShapes.length; sIdx < sLen; sIdx++) {
+      for (int sIdx = 0, sLen = newShapes.length; sIdx < sLen; sIdx++) {
         var sho = newShapeHoles[sIdx];
 
-        for (var hIdx = 0; hIdx < sho.length; hIdx++) {
+        for (int hIdx = 0; hIdx < sho.length; hIdx++) {
           var ho = sho[hIdx];
-          var holeUnassigned = true;
+          bool holeUnassigned = true;
 
-          for (var s2Idx = 0; s2Idx < newShapes.length; s2Idx++) {
+          for (int s2Idx = 0; s2Idx < newShapes.length; s2Idx++) {
             if (isPointInsidePolygon(ho["p"], newShapes[s2Idx]["p"])) {
-              if (sIdx != s2Idx) toChange++;
+              if ( sIdx != s2Idx ) toChange ++;
               if (holeUnassigned) {
                 holeUnassigned = false;
                 betterShapeHoles[s2Idx].add(ho);
@@ -212,19 +213,19 @@ class ShapePath {
           }
         }
       }
-      if (toChange > 0 && ambiguous == false) {
-        newShapeHoles = betterShapeHoles;
+      if ( toChange > 0 && ambiguous == false ) {
+				newShapeHoles = betterShapeHoles;
       }
     }
 
     var tmpHoles;
 
-    for (var i = 0, il = newShapes.length; i < il; i++) {
+    for (int i = 0, il = newShapes.length; i < il; i++) {
       tmpShape = newShapes[i]["s"];
       shapes.add(tmpShape);
       tmpHoles = newShapeHoles[i];
 
-      for (var j = 0, jl = tmpHoles.length; j < jl; j++) {
+      for (int j = 0, jl = tmpHoles.length; j < jl; j++) {
         tmpShape.holes.add(tmpHoles[j]["h"]);
       }
     }

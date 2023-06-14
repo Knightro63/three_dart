@@ -1,6 +1,7 @@
 import 'package:three_dart/three3d/cameras/index.dart';
 import 'package:three_dart/three3d/constants.dart';
 import 'package:three_dart/three3d/core/index.dart';
+import 'package:three_dart/three3d/core/instanced_buffer_attribute.dart';
 import 'package:three_dart/three3d/lights/index.dart';
 import 'package:three_dart/three3d/materials/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
@@ -93,8 +94,8 @@ class WebGLRenderer {
   int _currentMaterialId = -1;
   Camera? _currentCamera;
 
-  final _currentViewport = Vector4.init();
-  final _currentScissor = Vector4.init();
+  final _currentViewport = Vector4();
+  final _currentScissor = Vector4();
   bool? _currentScissorTest;
 
   double _pixelRatio = 1;
@@ -478,7 +479,7 @@ class WebGLRenderer {
     BufferGeometry geometry,
     Material material,
     Object3D object,
-    Map<String, dynamic>? group,
+    GroupGeometry? group,
   ) {
     // print("renderBufferDirect .............material: ${material.runtimeType}  ");
     // renderBufferDirect second parameter used to be fog (could be null)
@@ -490,7 +491,7 @@ class WebGLRenderer {
     state.setMaterial(material, frontFaceCW);
 
     BufferAttribute? index = geometry.index;
-    BufferAttribute? position = geometry.attributes["position"];
+    BufferAttribute? position = geometry.attributes.positionBuffer;
 
     // print(" WebGLRenderer.renderBufferDirect geometry.index ${index?.count} - ${index} position: - ${position}  ");
     if (index == null) {
@@ -524,11 +525,11 @@ class WebGLRenderer {
 
     int dataCount = (index != null) ? index.count : position!.count;
 
-    var rangeStart = geometry.drawRange["start"]! * rangeFactor;
-    var rangeCount = geometry.drawRange["count"]! * rangeFactor;
+    var rangeStart = geometry.drawRange.start * rangeFactor;
+    var rangeCount = geometry.drawRange.count * rangeFactor;
 
-    var groupStart = group != null ? group["start"] * rangeFactor : 0;
-    var groupCount = group != null ? group["count"] * rangeFactor : double.maxFinite;
+    var groupStart = group != null ? group.start * rangeFactor : 0;
+    var groupCount = group != null ? group.count * rangeFactor : double.maxFinite;
 
     var drawStart = Math.max<num>(rangeStart, groupStart);
 
@@ -567,7 +568,7 @@ class WebGLRenderer {
 
     if (object is InstancedMesh) {
       renderer.renderInstances(drawStart, drawCount, object.count);
-    } else if (geometry is InstancedBufferGeometry) {
+    } else if (geometry is InstancedBufferAttribute) {
       var instanceCount = Math.min(geometry.instanceCount!, geometry.maxInstanceCount!);
 
       renderer.renderInstances(drawStart, drawCount, instanceCount);
@@ -771,7 +772,7 @@ class WebGLRenderer {
           BufferGeometry geometry = objects.update(object);
           var material = object.material;
 
-          if (material.visible) {
+          if (material!.visible) {
             currentRenderList!.push(object, geometry, material, groupOrder, _vector3.z, null);
           }
         }
@@ -796,20 +797,20 @@ class WebGLRenderer {
           var material = object.material;
 
           // TODO material 类型可能为 各种Material 或者各种List<Material>
-          if (material is List) {
+          if (material is GroupMaterial) {
             var groups = geometry.groups;
 
             if (groups.isNotEmpty) {
               for (var i = 0, l = groups.length; i < l; i++) {
-                Map<String, dynamic> group = groups[i];
-                var groupMaterial = material[group["materialIndex"]];
+                GroupGeometry group = groups[i];
+                var groupMaterial = material.children[group.materialIndex];
 
-                if (groupMaterial != null && groupMaterial.visible) {
+                if (groupMaterial.visible) {
                   currentRenderList!.push(object, geometry, groupMaterial, groupOrder, _vector3.z, group);
                 }
               }
             } else {
-              for (var element in material) {
+              for (var element in material.children) {
                 if (element.visible) {
                   currentRenderList!.push(object, geometry, element, groupOrder, _vector3.z, null);
                 }
@@ -923,7 +924,7 @@ class WebGLRenderer {
   }
 
   void renderObject(
-      Object3D object, scene, Camera camera, BufferGeometry geometry, Material material, Map<String, dynamic>? group) {
+      Object3D object, scene, Camera camera, BufferGeometry geometry, Material material, GroupGeometry? group) {
     // print(" render renderObject  type: ${object.type} material: ${material} name: ${object.name}  geometry: ${geometry}");
     // print("1 render renderObject type: ${object.type} name: ${object.name}  ${DateTime.now().millisecondsSinceEpoch}");
 
@@ -1114,9 +1115,9 @@ class WebGLRenderer {
 
     bool vertexAlphas = material.vertexColors == true &&
         geometry != null &&
-        geometry.attributes["color"] != null &&
-        geometry.attributes["color"].itemSize == 4;
-    bool vertexTangents = material.normalMap != null && geometry != null && geometry.attributes["tangent"] != null;
+        geometry.attributes.colorBuffer != null &&
+        geometry.attributes.colorBuffer!.itemSize == 4;
+    bool vertexTangents = material.normalMap != null && geometry != null && geometry.attributes.tangent != null;
     bool morphTargets = geometry != null && geometry.morphAttributes["position"] != null;
     bool morphNormals = geometry != null && geometry.morphAttributes["normal"] != null;
     bool morphColors = geometry != null && geometry.morphAttributes["color"] != null;

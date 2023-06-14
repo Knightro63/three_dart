@@ -14,24 +14,25 @@ class Path extends CurvePath {
     currentPoint.fromArray(json["currentPoint"]);
   }
 
-  setFromPoints(points) {
+  Path setFromPoints(List<Vector> points) {
     moveTo(points[0].x, points[0].y);
 
-    for (var i = 1, l = points.length; i < l; i++) {
+    for (int i = 1, l = points.length; i < l; i++) {
       lineTo(points[i].x, points[i].y);
     }
 
     return this;
   }
 
-  moveTo(num x, num y) {
-    currentPoint.set(x.toDouble(), y.toDouble()); // TODO consider referencing vectors instead of copying?
-
+  Path moveTo(num x, num y) {
+    currentPoint.set(x.toDouble(),
+        y.toDouble()); // TODO consider referencing vectors instead of copying?
     return this;
   }
 
-  lineTo(num x, num y) {
-    var curve = LineCurve(currentPoint.clone(), Vector2(x.toDouble(), y.toDouble()));
+  Path lineTo(num x, num y) {
+    LineCurve curve =
+        LineCurve(currentPoint.clone(), Vector2(x.toDouble(), y.toDouble()));
     curves.add(curve);
 
     currentPoint.set(x.toDouble(), y.toDouble());
@@ -39,9 +40,11 @@ class Path extends CurvePath {
     return this;
   }
 
-  quadraticCurveTo(num aCPx, num aCPy, num aX, num aY) {
-    var curve = QuadraticBezierCurve(
-        currentPoint.clone(), Vector2(aCPx.toDouble(), aCPy.toDouble()), Vector2(aX.toDouble(), aY.toDouble()));
+  Path quadraticCurveTo(num aCPx, num aCPy, num aX, num aY) {
+    QuadraticBezierCurve curve = QuadraticBezierCurve(
+        currentPoint.clone(),
+        Vector2(aCPx.toDouble(), aCPy.toDouble()),
+        Vector2(aX.toDouble(), aY.toDouble()));
 
     curves.add(curve);
 
@@ -50,9 +53,12 @@ class Path extends CurvePath {
     return this;
   }
 
-  bezierCurveTo(num aCP1x, num aCP1y, num aCP2x, num aCP2y, num aX, num aY) {
-    var curve = CubicBezierCurve(currentPoint.clone(), Vector2(aCP1x.toDouble(), aCP1y.toDouble()),
-        Vector2(aCP2x.toDouble(), aCP2y.toDouble()), Vector2(aX.toDouble(), aY.toDouble()));
+  Path bezierCurveTo(num aCP1x, num aCP1y, num aCP2x, num aCP2y, num aX, num aY) {
+    CubicBezierCurve curve = CubicBezierCurve(
+        currentPoint.clone(),
+        Vector2(aCP1x.toDouble(), aCP1y.toDouble()),
+        Vector2(aCP2x.toDouble(), aCP2y.toDouble()),
+        Vector2(aX.toDouble(), aY.toDouble()));
 
     curves.add(curve);
 
@@ -61,11 +67,11 @@ class Path extends CurvePath {
     return this;
   }
 
-  splineThru(pts /*Array of Vector*/) {
-    var npts = [currentPoint.clone()];
+  Path splineThru(List<Vector2> pts /*Array of Vector*/) {
+    List<Vector2> npts = [currentPoint.clone()];
     npts.addAll(pts);
 
-    var curve = SplineCurve(npts);
+    SplineCurve curve = SplineCurve(npts);
     curves.add(curve);
 
     currentPoint.copy(pts[pts.length - 1]);
@@ -73,36 +79,69 @@ class Path extends CurvePath {
     return this;
   }
 
-  arc(aX, aY, aRadius, aStartAngle, aEndAngle, aClockwise) {
-    var x0 = currentPoint.x;
-    var y0 = currentPoint.y;
+  Path arc([
+    double aX = 0,
+    double aY = 0, 
+    double aRadius = 1,     
+    double aStartAngle = 0,
+    double aEndAngle =2*Math.pi,
+    bool aClockwise = false
+  ]) {
+    double x0 = currentPoint.x.toDouble();
+    double y0 = currentPoint.y.toDouble();
 
     absarc(aX + x0, aY + y0, aRadius, aStartAngle, aEndAngle, aClockwise);
 
     return this;
   }
 
-  absarc(aX, aY, aRadius, aStartAngle, aEndAngle, aClockwise) {
-    absellipse(aX, aY, aRadius, aRadius, aStartAngle, aEndAngle, aClockwise, null);
+  Path absarc([
+    double aX = 0,
+    double aY = 0, 
+    double aRadius = 1,     
+    double aStartAngle = 0,
+    double aEndAngle =2*Math.pi,
+    bool aClockwise = false
+  ]) {
+    absellipse(
+        aX, aY, aRadius, aRadius, aStartAngle, aEndAngle, aClockwise);
 
     return this;
   }
 
-  ellipse(aX, aY, xRadius, yRadius, aStartAngle, aEndAngle, aClockwise, aRotation) {
-    var x0 = currentPoint.x;
-    var y0 = currentPoint.y;
+  Path ellipse([
+    double aX = 0,
+    double aY = 0,
+    double xRadius = 1,
+    double yRadius = 1,
+    double aStartAngle = 0,
+    double aEndAngle =2*Math.pi,
+    bool aClockwise = false,
+    double aRotation = 0
+  ]) {
+    double x0 = currentPoint.x.toDouble();
+    double y0 = currentPoint.y.toDouble();
 
     absellipse(aX + x0, aY + y0, xRadius, yRadius, aStartAngle, aEndAngle, aClockwise, aRotation);
 
     return this;
   }
 
-  absellipse(aX, aY, xRadius, yRadius, aStartAngle, aEndAngle, aClockwise, aRotation) {
-    var curve = EllipseCurve(aX, aY, xRadius, yRadius, aStartAngle, aEndAngle, aClockwise, aRotation);
-
+  Path absellipse([
+    double aX = 0,
+    double aY = 0,
+    double xRadius = 1,
+    double yRadius = 1,
+    double aStartAngle = 0,
+    double aEndAngle =2*Math.pi,
+    bool aClockwise = false,
+    double aRotation = 0
+  ]) {
+    EllipseCurve curve = EllipseCurve(aX, aY, xRadius, yRadius, aStartAngle, aEndAngle,
+        aClockwise, aRotation);
     if (curves.isNotEmpty) {
       // if a previous curve is present, attempt to join
-      var firstPoint = curve.getPoint(0, null);
+      Vector2 firstPoint = curve.getPoint(0)! as Vector2;
 
       if (!firstPoint.equals(currentPoint)) {
         lineTo(firstPoint.x, firstPoint.y);
@@ -111,14 +150,19 @@ class Path extends CurvePath {
 
     curves.add(curve);
 
-    var lastPoint = curve.getPoint(1, null);
+    Vector lastPoint = curve.getPoint(1)!;
     currentPoint.copy(lastPoint);
 
     return this;
   }
 
   @override
-  copy(source) {
+  Path clone() {
+    return Path(points).copy(this);
+  }
+  @override
+  Path copy(Curve source) {
+    if(source is! Path) throw('source Curve must be Path');
     super.copy(source);
 
     currentPoint.copy(source.currentPoint);
@@ -127,11 +171,20 @@ class Path extends CurvePath {
   }
 
   @override
-  toJSON() {
-    var data = super.toJSON();
+  Map<String,dynamic> toJSON() {
+    Map<String,dynamic> data = super.toJSON();
 
     data["currentPoint"] = currentPoint.toArray();
 
     return data;
+  }
+
+  @override
+  Path fromJSON(json) {
+    super.fromJSON(json);
+
+    currentPoint.fromArray(json.currentPoint);
+
+    return this;
   }
 }

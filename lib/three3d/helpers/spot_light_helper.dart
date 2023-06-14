@@ -1,13 +1,7 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/buffer_attribute.dart';
-import 'package:three_dart/three3d/core/buffer_geometry.dart';
-import 'package:three_dart/three3d/core/object_3d.dart';
-import 'package:three_dart/three3d/lights/light.dart';
-import 'package:three_dart/three3d/materials/line_basic_material.dart';
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/objects/line_segments.dart';
+import 'package:three_dart/three_dart.dart';
 
-var _spotLightHelpervector = Vector3.init();
+var _spotLightHelpervector = /*@__PURE__*/ Vector3();
 
 class SpotLightHelper extends Object3D {
   late Light light;
@@ -63,7 +57,7 @@ class SpotLightHelper extends Object3D {
       positions.addAll([Math.cos(p1), Math.sin(p1), 1, Math.cos(p2), Math.sin(p2), 1]);
     }
 
-    geometry.setAttribute('position', Float32BufferAttribute(Float32Array.from(positions), 3, false));
+    geometry.setAttribute(AttributeTypes.position, Float32BufferAttribute(Float32Array.from(positions), 3, false));
 
     var material = LineBasicMaterial({"fog": false, "toneMapped": false});
 
@@ -76,7 +70,7 @@ class SpotLightHelper extends Object3D {
   @override
   dispose() {
     cone.geometry!.dispose();
-    cone.material.dispose();
+    cone.material?.dispose();
   }
 
   update() {
@@ -92,9 +86,9 @@ class SpotLightHelper extends Object3D {
     cone.lookAt(_spotLightHelpervector);
 
     if (color != null) {
-      cone.material.color.copy(color);
+      cone.material?.color.copy(color!);
     } else {
-      cone.material.color.copy(light.color);
+      cone.material?.color.copy(light.color!);
     }
   }
 }

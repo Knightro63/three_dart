@@ -36,8 +36,8 @@ class TubeGeometry extends BufferGeometry {
 
     // helper variables
 
-    var vertex = Vector3.init();
-    var normal = Vector3.init();
+    var vertex = Vector3();
+    var normal = Vector3();
     var uv = Vector2();
     var P = Vector3();
 
@@ -57,12 +57,12 @@ class TubeGeometry extends BufferGeometry {
         normal.y = (cos * N.y + sin * B.y);
         normal.z = (cos * N.z + sin * B.z);
         normal.normalize();
-        normals.addAll([normal.x, normal.y, normal.z]);
+        normals.addAll(List<double>.from([normal.x, normal.y, normal.z]));
         // vertex
         vertex.x = P.x + radius * normal.x;
         vertex.y = P.y + radius * normal.y;
         vertex.z = P.z + radius * normal.z;
-        vertices.addAll([vertex.x, vertex.y, vertex.z]);
+        vertices.addAll(List<double>.from([vertex.x, vertex.y, vertex.z]));
       }
     }
 
@@ -88,7 +88,7 @@ class TubeGeometry extends BufferGeometry {
           uv.x = i / tubularSegments;
           uv.y = j / radialSegments;
 
-          uvs.addAll([uv.x, uv.y]);
+          uvs.addAll(List<double>.from([uv.x, uv.y]));
         }
       }
     }
@@ -120,9 +120,9 @@ class TubeGeometry extends BufferGeometry {
     generateBufferData();
 
     setIndex(indices);
-    setAttribute('position', Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
-    setAttribute('normal', Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
-    setAttribute('uv', Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
+    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
+    setAttribute(AttributeTypes.normal, Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
+    setAttribute(AttributeTypes.uv, Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
   }
 
   @override

@@ -4,7 +4,7 @@ import 'package:three_dart/three3d/math/index.dart';
 var _pointsinverseMatrix = Matrix4();
 var _pointsray = Ray(null, null);
 var _pointssphere = Sphere(null, null);
-var _position = Vector3.init();
+var _position = Vector3();
 
 class Points extends Object3D {
   Points(BufferGeometry geometry, material) {
@@ -57,11 +57,11 @@ class Points extends Object3D {
 
     var index = geometry.index;
     var attributes = geometry.attributes;
-    var positionAttribute = attributes["position"];
+    var positionAttribute = attributes.positionBuffer!;
 
     if (index != null) {
-      var start = Math.max(0, drawRange["start"]!);
-      var end = Math.min(index.count, (drawRange["start"]! + drawRange["count"]!));
+      var start = Math.max(0, drawRange.start);
+      var end = Math.min(index.count, (drawRange.start + drawRange.count));
 
       for (var i = start, il = end; i < il; i++) {
         var a = index.getX(i)!;
@@ -71,8 +71,8 @@ class Points extends Object3D {
         testPoint(_position, a, localThresholdSq, matrixWorld, raycaster, intersects, this);
       }
     } else {
-      var start = Math.max(0, drawRange["start"]!);
-      var end = Math.min<int>(positionAttribute.count, (drawRange["start"]! + drawRange["count"]!));
+      var start = Math.max(0, drawRange.start);
+      var end = Math.min<int>(positionAttribute.count, (drawRange.start + drawRange.count));
 
       for (var i = start, l = end; i < l; i++) {
         _position.fromBufferAttribute(positionAttribute, i);
@@ -121,7 +121,7 @@ void testPoint(Vector3 point, num index, num localThresholdSq, Matrix4 matrixWor
   var rayPointDistanceSq = _pointsray.distanceSqToPoint(point);
 
   if (rayPointDistanceSq < localThresholdSq) {
-    var intersectPoint = Vector3.init();
+    var intersectPoint = Vector3();
 
     _pointsray.closestPointToPoint(point, intersectPoint);
     intersectPoint.applyMatrix4(matrixWorld);

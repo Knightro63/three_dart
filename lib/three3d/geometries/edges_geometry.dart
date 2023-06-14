@@ -3,9 +3,9 @@ import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
 
 class EdgesGeometry extends BufferGeometry {
-  final _v0 = Vector3.init();
-  final _v1 = Vector3.init();
-  final _normal = Vector3.init();
+  final _v0 = Vector3();
+  final _v1 = Vector3();
+  final _normal = Vector3();
   final _triangle = Triangle.init();
 
   NativeArray? verticesArray;
@@ -19,7 +19,7 @@ class EdgesGeometry extends BufferGeometry {
     var thresholdDot = Math.cos(MathUtils.deg2rad * thresholdAngle);
 
     var indexAttr = geometry.getIndex();
-    var positionAttr = geometry.getAttribute('position');
+    var positionAttr = geometry.attributes.positionBuffer!;
     var indexCount = indexAttr != null ? indexAttr.count : positionAttr.count;
 
     var indexArr = [0, 0, 0];
@@ -104,7 +104,7 @@ class EdgesGeometry extends BufferGeometry {
       }
     }
 
-    setAttribute('position', Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
+    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
   }
 
   @override

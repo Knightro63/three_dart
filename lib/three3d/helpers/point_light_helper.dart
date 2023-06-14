@@ -55,14 +55,14 @@ class PointLightHelper extends Mesh {
   @override
   dispose() {
     geometry!.dispose();
-    material.dispose();
+    material?.dispose();
   }
 
   update() {
     if (color != null) {
-      material.color.set(color);
+      material?.color.set(color);
     } else {
-      material.color.copy(light.color);
+      material?.color.copy(light.color!);
     }
 
     /*

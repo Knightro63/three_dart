@@ -10,24 +10,24 @@ var _meshinverseMatrix = Matrix4();
 var _meshray = Ray(null, null);
 var _meshsphere = Sphere(null, null);
 
-var _vA = Vector3.init();
-var _vB = Vector3.init();
-var _vC = Vector3.init();
+var _vA = Vector3();
+var _vB = Vector3();
+var _vC = Vector3();
 
-var _tempA = Vector3.init();
-var _tempB = Vector3.init();
-var _tempC = Vector3.init();
+var _tempA = Vector3();
+var _tempB = Vector3();
+var _tempC = Vector3();
 
-var _morphA = Vector3.init();
-var _morphB = Vector3.init();
-var _morphC = Vector3.init();
+var _morphA = Vector3();
+var _morphB = Vector3();
+var _morphC = Vector3();
 
-var _uvA = Vector2(null, null);
-var _uvB = Vector2(null, null);
-var _uvC = Vector2(null, null);
+var _uvA = Vector2();
+var _uvB = Vector2();
+var _uvC = Vector2();
 
-var _intersectionPoint = Vector3.init();
-var _intersectionPointWorld = Vector3.init();
+var _intersectionPoint = Vector3();
+var _intersectionPointWorld = Vector3();
 
 class Mesh extends Object3D {
   Mesh(BufferGeometry? geometry, material) : super() {
@@ -133,44 +133,44 @@ class Mesh extends Object3D {
 
     Intersection? intersection;
     var index = geometry.index;
-    var position = geometry.attributes["position"];
+    var position = geometry.attributes.positionBuffer;
     var morphPosition = geometry.morphAttributes["position"];
     var morphTargetsRelative = geometry.morphTargetsRelative;
-    var uv = geometry.attributes["uv"];
-    var uv2 = geometry.attributes["uv2"];
+    var uv = geometry.attributes.uvBuffer;
+    var uv2 = geometry.attributes.uv2Buffer;
     var groups = geometry.groups;
     var drawRange = geometry.drawRange;
 
     if (index != null) {
       // indexed buffer geometry
 
-      if (material is List) {
+      if (material is GroupMaterial && material.children.isNotEmpty) {
         for (var i = 0, il = groups.length; i < il; i++) {
-          var group = groups[i];
-          var groupMaterial = material[group["materialIndex"]];
+          GroupGeometry group = groups[i];
+          Material groupMaterial = material.children[group.materialIndex];
 
-          var start = Math.max<int>(group["start"], drawRange["start"]!);
-          var end = Math.min<int>((group["start"] + group["count"]), (drawRange["start"]! + drawRange["count"]!));
+          var start = Math.max<int>(group.start, drawRange.start);
+          var end = Math.min<int>((group.start + group.count), (drawRange.start + drawRange.count));
 
           for (var j = start, jl = end; j < jl; j += 3) {
             int a = index.getX(j)!.toInt();
             int b = index.getX(j + 1)!.toInt();
             int c = index.getX(j + 2)!.toInt();
 
-            intersection = checkBufferGeometryIntersection(this, groupMaterial, raycaster, _meshray, position,
+            intersection = checkBufferGeometryIntersection(this, groupMaterial, raycaster, _meshray, position!,
                 morphPosition, morphTargetsRelative, uv, uv2, a, b, c);
 
             if (intersection != null) {
               intersection.faceIndex = Math.floor(j / 3);
               // triangle number in indexed buffer semantics
-              intersection.face?.materialIndex = group["materialIndex"];
+              intersection.face?.materialIndex = group.materialIndex;
               intersects.add(intersection);
             }
           }
         }
       } else {
-        var start = Math.max(0, drawRange["start"]!);
-        var end = Math.min(index.count, (drawRange["start"]! + drawRange["count"]!));
+        var start = Math.max(0, drawRange.start);
+        var end = Math.min(index.count, (drawRange.start + drawRange.count));
 
         for (var i = start, il = end; i < il; i += 3) {
           int a = index.getX(i)!.toInt();
@@ -178,7 +178,7 @@ class Mesh extends Object3D {
           int c = index.getX(i + 2)!.toInt();
 
           intersection = checkBufferGeometryIntersection(
-              this, material, raycaster, _meshray, position, morphPosition, morphTargetsRelative, uv, uv2, a, b, c);
+              this, material, raycaster, _meshray, position!, morphPosition, morphTargetsRelative, uv, uv2, a, b, c);
 
           if (intersection != null) {
             intersection.faceIndex = Math.floor(i / 3);
@@ -190,13 +190,13 @@ class Mesh extends Object3D {
     } else if (position != null) {
       // non-indexed buffer geometry
 
-      if (material is List) {
+      if (material is GroupMaterial && material.children.isNotEmpty) {
         for (var i = 0, il = groups.length; i < il; i++) {
           var group = groups[i];
-          var groupMaterial = material[group["materialIndex"]];
+          Material groupMaterial = material.children[group.materialIndex];
 
-          var start = Math.max<int>(group["start"], drawRange["start"]!);
-          var end = Math.min<int>((group["start"] + group["count"]), (drawRange["start"]! + drawRange["count"]!));
+          var start = Math.max<int>(group.start, drawRange.start);
+          var end = Math.min<int>((group.start + group.count), (drawRange.start + drawRange.count));
 
           for (var j = start, jl = end; j < jl; j += 3) {
             var a = j;
@@ -209,14 +209,14 @@ class Mesh extends Object3D {
             if (intersection != null) {
               intersection.faceIndex = Math.floor(j / 3);
               // triangle number in non-indexed buffer semantics
-              intersection.face?.materialIndex = group["materialIndex"];
+              intersection.face?.materialIndex = group.materialIndex;
               intersects.add(intersection);
             }
           }
         }
       } else {
-        var start = Math.max(0, drawRange["start"]!);
-        var end = Math.min<int>(position.count, (drawRange["start"]! + drawRange["count"]!));
+        var start = Math.max(0, drawRange.start);
+        var end = Math.min<int>(position.count, (drawRange.start + drawRange.count));
 
         for (var i = start, il = end; i < il; i += 3) {
           var a = i;
@@ -311,7 +311,7 @@ Intersection? checkBufferGeometryIntersection(Object3D object, Material material
       _uvB.fromBufferAttribute(uv, b);
       _uvC.fromBufferAttribute(uv, c);
 
-      intersection.uv = Triangle.staticGetUV(_intersectionPoint, _vA, _vB, _vC, _uvA, _uvB, _uvC, Vector2(null, null));
+      intersection.uv = Triangle.staticGetUV(_intersectionPoint, _vA, _vB, _vC, _uvA, _uvB, _uvC, Vector2());
     }
 
     if (uv2 != null) {
@@ -319,10 +319,10 @@ Intersection? checkBufferGeometryIntersection(Object3D object, Material material
       _uvB.fromBufferAttribute(uv2, b);
       _uvC.fromBufferAttribute(uv2, c);
 
-      intersection.uv2 = Triangle.staticGetUV(_intersectionPoint, _vA, _vB, _vC, _uvA, _uvB, _uvC, Vector2(null, null));
+      intersection.uv2 = Triangle.staticGetUV(_intersectionPoint, _vA, _vB, _vC, _uvA, _uvB, _uvC, Vector2());
     }
 
-    var face = Face.fromJSON({"a": a, "b": b, "c": c, "normal": Vector3.init(), "materialIndex": 0});
+    var face = Face.fromJSON({"a": a, "b": b, "c": c, "normal": Vector3(), "materialIndex": 0});
 
     Triangle.staticGetNormal(_vA, _vB, _vC, face.normal);
 

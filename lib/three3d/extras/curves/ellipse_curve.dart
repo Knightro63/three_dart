@@ -2,44 +2,32 @@ import 'package:three_dart/three3d/extras/core/curve.dart';
 import 'package:three_dart/three3d/math/index.dart';
 
 class EllipseCurve extends Curve {
-  late num aX;
-  late num aY;
-  late num xRadius;
-  late num yRadius;
+  late double aX;
+  late double aY;
+  late double xRadius;
+  late double yRadius;
 
-  late num aStartAngle;
-  late num aEndAngle;
+  late double aStartAngle;
+  late double aEndAngle;
 
   late bool aClockwise;
 
-  late num aRotation;
+  late double aRotation;
 
   @override
-  EllipseCurve(
-    aX,
-    aY,
-    xRadius,
-    yRadius, [
-    aStartAngle,
-    aEndAngle,
-    aClockwise,
-    aRotation,
+  bool isEllipseCurve = true;
+
+  EllipseCurve([
+    this.aX = 0, 
+    this.aY = 0, 
+    this.xRadius = 1, 
+    this.yRadius = 1, 
+    this.aStartAngle = 0, 
+    this.aEndAngle = 2*Math.pi, 
+    this.aClockwise = false, 
+    this.aRotation = 0
   ]) {
     type = 'EllipseCurve';
-    isEllipseCurve = true;
-
-    this.aX = aX ?? 0;
-    this.aY = aY ?? 0;
-
-    this.xRadius = xRadius ?? 1;
-    this.yRadius = yRadius ?? 1;
-
-    this.aStartAngle = aStartAngle ?? 0;
-    this.aEndAngle = aEndAngle ?? 2 * Math.pi;
-
-    this.aClockwise = aClockwise ?? false;
-
-    this.aRotation = aRotation ?? 0;
   }
 
   EllipseCurve.fromJSON(Map<String, dynamic> json) : super.fromJSON(json) {
@@ -61,12 +49,11 @@ class EllipseCurve extends Curve {
   }
 
   @override
-  getPoint(t, optionalTarget) {
-    var point = optionalTarget ?? Vector2(null, null);
-
-    var twoPi = Math.pi * 2;
-    var deltaAngle = aEndAngle - aStartAngle;
-    var samePoints = Math.abs(deltaAngle) < Math.epsilon;
+  Vector? getPoint(num t, [Vector? optionalTarget]) {
+    Vector2 point = (optionalTarget as Vector2?) ?? Vector2();
+    double twoPi = Math.pi * 2;
+    double deltaAngle = aEndAngle - aStartAngle;
+    bool samePoints = Math.abs(deltaAngle) < Math.epsilon;
 
     // ensures that deltaAngle is 0 .. 2 PI
     while (deltaAngle < 0) {
@@ -92,16 +79,16 @@ class EllipseCurve extends Curve {
       }
     }
 
-    var angle = aStartAngle + t * deltaAngle;
-    var x = aX + xRadius * Math.cos(angle);
-    var y = aY + yRadius * Math.sin(angle);
+    double angle = aStartAngle + t * deltaAngle;
+    double x = aX + xRadius * Math.cos(angle);
+    double y = aY + yRadius * Math.sin(angle);
 
     if (aRotation != 0) {
-      var cos = Math.cos(aRotation);
-      var sin = Math.sin(aRotation);
+      double cos = Math.cos(aRotation);
+      double sin = Math.sin(aRotation);
 
-      var tx = x - aX;
-      var ty = y - aY;
+      double tx = x - aX;
+      double ty = y - aY;
 
       // Rotate the point about the center of the ellipse.
       x = tx * cos - ty * sin + aX;
@@ -112,7 +99,8 @@ class EllipseCurve extends Curve {
   }
 
   @override
-  copy(source) {
+  EllipseCurve copy(Curve source) {
+    if(source is! EllipseCurve) throw('source Curve must be EllipseCurve');
     super.copy(source);
 
     aX = source.aX;
@@ -132,8 +120,8 @@ class EllipseCurve extends Curve {
   }
 
   @override
-  toJSON() {
-    var data = super.toJSON();
+  Map<String, dynamic> toJSON() {
+    Map<String, dynamic> data = super.toJSON();
 
     data["aX"] = aX;
     data["aY"] = aY;

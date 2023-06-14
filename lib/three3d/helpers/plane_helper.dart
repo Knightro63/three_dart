@@ -53,7 +53,7 @@ class PlaneHelper extends Line {
 
     var geometry = BufferGeometry();
     geometry.setAttribute(
-      'position',
+      AttributeTypes.position,
       Float32BufferAttribute(Float32Array.from(positions), 3, false),
     );
     geometry.computeBoundingSphere();
@@ -71,7 +71,7 @@ class PlaneHelper extends Line {
 
     var geometry2 = BufferGeometry();
     geometry2.setAttribute(
-      'position',
+      AttributeTypes.position,
       Float32BufferAttribute(Float32Array.from(positions2), 3, false),
     );
     geometry2.computeBoundingSphere();
@@ -102,7 +102,7 @@ class PlaneHelper extends Line {
 
     this.scale.set(0.5 * size, 0.5 * size, scale);
 
-    children[0].material.side =
+    children[0].material?.side =
         (scale < 0) ? BackSide : FrontSide; // renderer flips side when determinant < 0; flipping not wanted here
 
     lookAt(plane!.normal);

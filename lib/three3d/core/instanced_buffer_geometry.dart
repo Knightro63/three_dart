@@ -22,7 +22,7 @@ class InstancedBufferGeometry extends BufferGeometry {
 
   @override
   Map<String, dynamic> toJSON({Object3dMeta? meta}) {
-    var data = super.toJSON(meta: meta);
+    Map<String, dynamic> data = super.toJSON(meta: meta);
     data['instanceCount'] = instanceCount;
     data['isInstancedBufferGeometry'] = true;
     return data;

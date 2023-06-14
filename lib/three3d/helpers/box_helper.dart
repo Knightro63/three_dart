@@ -17,7 +17,7 @@ class BoxHelper extends LineSegments {
 
     var geometry = BufferGeometry();
     geometry.setIndex(Uint16BufferAttribute(indices, 1, false));
-    geometry.setAttribute('position', Float32BufferAttribute(positions, 3, false));
+    geometry.setAttribute(AttributeTypes.position, Float32BufferAttribute(positions, 3, false));
 
     var helper = BoxHelper.create(geometry, LineBasicMaterial({"color": color, "toneMapped": false}));
 
@@ -57,7 +57,7 @@ class BoxHelper extends LineSegments {
 		7: max.x, min.y, min.z
 		*/
 
-    var position = geometry!.attributes["position"];
+    var position = geometry!.attributes.positionBuffer!;
     var array = position.array;
 
     array[0] = max.x;

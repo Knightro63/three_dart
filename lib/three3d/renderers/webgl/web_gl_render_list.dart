@@ -11,7 +11,7 @@ class RenderItem {
   int groupOrder = 0;
   int renderOrder = 0;
   double z = 0;
-  Map<String, dynamic>? group;
+  GroupGeometry? group;
 
   RenderItem(Map<String, dynamic> json) {
     if (json["id"] != null) {
@@ -40,7 +40,7 @@ class RenderItem {
       z = json["z"];
     }
     if (json["group"] != null) {
-      group = json["group"];
+      group = GroupGeometry.fromJson(json["group"]);
     }
   }
 }
@@ -65,8 +65,8 @@ class WebGLRenderList {
     transparent.length = 0;
   }
 
-  RenderItem getNextRenderItem(Object3D object, BufferGeometry? geometry, Material? material, int groupOrder, double z,
-      Map<String, dynamic>? group) {
+  RenderItem getNextRenderItem(Object3D object, BufferGeometry? geometry, Material? material, int groupOrder, num z,
+      GroupGeometry? group) {
     var renderItem = renderItems[renderItemsIndex];
 
     if (renderItem == null) {
@@ -89,7 +89,7 @@ class WebGLRenderList {
       renderItem.material = material;
       renderItem.groupOrder = groupOrder;
       renderItem.renderOrder = object.renderOrder;
-      renderItem.z = z;
+      renderItem.z = z.toDouble();
       renderItem.group = group;
     }
 
@@ -98,7 +98,7 @@ class WebGLRenderList {
     return renderItem;
   }
 
-  void push(Object3D object, BufferGeometry geometry, material, int groupOrder, double z, Map<String, dynamic>? group) {
+  void push(Object3D object, BufferGeometry geometry, material, int groupOrder, num z, GroupGeometry? group) {
     var renderItem = getNextRenderItem(object, geometry, material, groupOrder, z, group);
 
     if (material.transmission > 0.0) {
@@ -113,7 +113,7 @@ class WebGLRenderList {
   }
 
   void unshift(Object3D object, BufferGeometry? geometry, Material material, int groupOrder, double z,
-      Map<String, dynamic>? group) {
+      GroupGeometry? group) {
     var renderItem = getNextRenderItem(object, geometry, material, groupOrder, z, group);
 
     if (material.transmission > 0.0) {

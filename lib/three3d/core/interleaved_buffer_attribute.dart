@@ -3,7 +3,7 @@ import 'package:three_dart/three3d/core/buffer_attribute.dart';
 import 'package:three_dart/three3d/core/interleaved_buffer.dart';
 import 'package:three_dart/three3d/math/index.dart';
 
-var _vector = Vector3.init();
+Vector3 _vector = Vector3();
 
 class InterleavedBufferAttribute extends BufferAttribute {
   int offset;
@@ -38,8 +38,8 @@ class InterleavedBufferAttribute extends BufferAttribute {
 
   @override
   InterleavedBufferAttribute applyMatrix4(Matrix4 m) {
-    for (var i = 0, l = data!.count; i < l; i++) {
-      _vector.fromBufferAttribute(this, i);
+    for (int i = 0, l = data!.count; i < l; i++) {
+      _vector.fromBufferAttribute( this, i );
 
       _vector.applyMatrix4(m);
 
@@ -51,8 +51,8 @@ class InterleavedBufferAttribute extends BufferAttribute {
 
   @override
   InterleavedBufferAttribute applyNormalMatrix(m) {
-    for (var i = 0, l = count; i < l; i++) {
-      _vector.fromBufferAttribute(this, i);
+    for (int i = 0, l = count; i < l; i++) {
+      _vector.fromBufferAttribute( this, i );
 
       _vector.applyNormalMatrix(m);
 
@@ -64,7 +64,7 @@ class InterleavedBufferAttribute extends BufferAttribute {
 
   @override
   InterleavedBufferAttribute transformDirection(Matrix4 m) {
-    for (var i = 0, l = count; i < l; i++) {
+    for (int i = 0, l = count; i < l; i++) {
       _vector.x = getX(i)!.toDouble();
       _vector.y = getY(i)!.toDouble();
       _vector.z = getZ(i)!.toDouble();
@@ -206,12 +206,12 @@ class InterleavedBufferAttribute extends BufferAttribute {
       print(
           'three.InterleavedBufferAttribute.toJSON(): Serializing an interlaved buffer attribute will deinterleave buffer data!.');
 
-      var array = [];
+      List array = [];
 
-      for (var i = 0; i < count; i++) {
-        var index = i * this.data!.stride + offset;
+      for (int i = 0; i < count; i++) {
+        int index = i * this.data!.stride + offset;
 
-        for (var j = 0; j < itemSize; j++) {
+        for (int j = 0; j < itemSize; j++) {
           array.add(this.data!.array[index + j]);
         }
       }

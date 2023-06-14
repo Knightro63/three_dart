@@ -540,9 +540,9 @@ class PMREMGenerator {
       }
 
       var planes = BufferGeometry();
-      planes.setAttribute('position', Float32BufferAttribute(position, positionSize, false));
-      planes.setAttribute('uv', Float32BufferAttribute(uv, uvSize, false));
-      planes.setAttribute('faceIndex', Float32BufferAttribute(faceIndex, faceIndexSize, false));
+      planes.setAttribute(AttributeTypes.position, Float32BufferAttribute(position, positionSize, false));
+      planes.setAttribute(AttributeTypes.uv, Float32BufferAttribute(uv, uvSize, false));
+      planes.setAttribute(AttributeTypes.faceIndex, Float32BufferAttribute(faceIndex, faceIndexSize, false));
       lodPlanes.add(planes);
 
       if (lod > lodMin) {

@@ -1,9 +1,5 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/buffer_attribute.dart';
-import 'package:three_dart/three3d/core/buffer_geometry.dart';
-import 'package:three_dart/three3d/materials/line_basic_material.dart';
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/objects/line_segments.dart';
+import 'package:three_dart/three_dart.dart';
 
 class PolarGridHelper extends LineSegments {
   PolarGridHelper.create(geomertey, material) : super(geomertey, material);
@@ -64,8 +60,8 @@ class PolarGridHelper extends LineSegments {
     }
 
     var geometry = BufferGeometry();
-    geometry.setAttribute('position', Float32BufferAttribute(Float32Array.from(vertices), 3));
-    geometry.setAttribute('color', Float32BufferAttribute(Float32Array.from(colors), 3));
+    geometry.setAttribute(AttributeTypes.position, Float32BufferAttribute(Float32Array.from(vertices), 3));
+    geometry.setAttribute(AttributeTypes.color, Float32BufferAttribute(Float32Array.from(colors), 3));
 
     var material = LineBasicMaterial({"vertexColors": true, "toneMapped": false});
 

@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:flutter_gl/flutter_gl.dart';
 import 'package:three_dart/three3d/cameras/index.dart';
 import 'package:three_dart/three3d/core/index.dart';
+import 'package:three_dart/three3d/core/instanced_buffer_attribute.dart';
 import 'package:three_dart/three3d/geometries/index.dart';
 import 'package:three_dart/three3d/lights/index.dart';
 import 'package:three_dart/three3d/materials/index.dart';
@@ -13,13 +15,13 @@ import 'package:three_dart/three3d/textures/texture.dart';
 
 int _object3DId = 0;
 
-Vector3 _v1 = Vector3.init();
+Vector3 _v1 = Vector3();
 Quaternion _q1 = Quaternion();
 Matrix4 _m1 = Matrix4();
-Vector3 _target = Vector3.init();
+Vector3 _target = Vector3();
 
-Vector3 _position = Vector3.init();
-Vector3 _scale = Vector3.init();
+Vector3 _position = Vector3();
+Vector3 _scale = Vector3();
 Quaternion _quaternion = Quaternion();
 
 Vector3 _xAxis = Vector3(1, 0, 0);
@@ -82,7 +84,7 @@ class Object3D with EventDispatcher {
   Matrix3 normalMatrix = Matrix3();
 
   // how to handle material is a single material or List<Material>
-  dynamic material;
+  Material? material;
 
   List<num>? morphTargetInfluences;
   Map<String, dynamic>? morphTargetDictionary;
@@ -96,13 +98,15 @@ class Object3D with EventDispatcher {
   Material? overrideMaterial;
   Material? customDistanceMaterial;
 
-  /// Custom depth material to be used when rendering to the depth map. Can only be used in context of meshes.
-  /// When shadow-casting with a DirectionalLight or SpotLight, if you are (a) modifying vertex positions in
-  /// the vertex shader, (b) using a displacement map, (c) using an alpha map with alphaTest, or (d) using a
-  /// transparent texture with alphaTest, you must specify a customDepthMaterial for proper shadows.
+  /**
+	 * Custom depth material to be used when rendering to the depth map. Can only be used in context of meshes.
+	 * When shadow-casting with a DirectionalLight or SpotLight, if you are (a) modifying vertex positions in
+	 * the vertex shader, (b) using a displacement map, (c) using an alpha map with alphaTest, or (d) using a
+	 * transparent texture with alphaTest, you must specify a customDepthMaterial for proper shadows.
+	 */
   Material? customDepthMaterial;
 
-  // onBeforeRender({WebGLRenderer? renderer, scene, Camera? camera, RenderTarget? renderTarget, dynamic geometry, Material? material, dynamic group}) {
+  // onBeforeRender({WebGLRenderer? renderer, scene, Camera? camera, RenderTarget? renderTarget, dynamic? geometry, Material? material, dynamic group}) {
   // print(" Object3D.onBeforeRender ${type} ${id} ");
   // }
   Function? onBeforeRender;
@@ -133,7 +137,9 @@ class Object3D with EventDispatcher {
       List<BufferGeometry>? geometries = rootJSON["geometries"];
 
       if (geometries != null) {
-        geometry = geometries.firstWhere((element) => element.uuid == json["geometry"]);
+        BufferGeometry _geometry = geometries
+            .firstWhere((element) => element.uuid == json["geometry"]);
+        geometry = _geometry;
       }
     }
 
@@ -141,17 +147,18 @@ class Object3D with EventDispatcher {
       List<Material>? materials = rootJSON["materials"];
 
       if (materials != null) {
-        Material material = materials.firstWhere((element) => element.uuid == json["material"]);
-        material = material;
+        Material _material =
+            materials.firstWhere((element) => element.uuid == json["material"]);
+        material = _material;
       }
     }
 
     init();
 
     if (json["children"] != null) {
-      List<Map<String, dynamic>> jsonChildren = json["children"];
-      for (var child in jsonChildren) {
-        final obj = Object3D.castJSON(child, rootJSON);
+      List<Map<String, dynamic>> _children = json["children"];
+      for (var _child in _children) {
+        final obj = Object3D.castJSON(_child, rootJSON);
         if (obj is Object3D) children.add(obj);
       }
     }
@@ -163,44 +170,45 @@ class Object3D with EventDispatcher {
     quaternion.onChange(onQuaternionChange);
   }
 
-  static EventDispatcher castJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON) {
-    String? type = json["type"];
+  static EventDispatcher castJSON(
+      Map<String, dynamic> json, Map<String, dynamic> rootJSON) {
+    String? _type = json["type"];
 
-    if (type == null) {
-      Map<String, dynamic>? object = json["object"];
-      if (object != null) {
-        type = object["type"];
-        json = object;
-        print(" object is not null use object as json type: $type ");
+    if (_type == null) {
+      Map<String, dynamic>? _object = json["object"];
+      if (_object != null) {
+        _type = _object["type"];
+        json = _object;
+        print(" object is not null use object as json type: $_type ");
       }
     }
 
-    if (type == "Camera") {
+    if (_type == "Camera") {
       return Camera.fromJSON(json, rootJSON);
-    } else if (type == "PerspectiveCamera") {
+    } else if (_type == "PerspectiveCamera") {
       return PerspectiveCamera.fromJSON(json, rootJSON);
-    } else if (type == "Scene") {
+    } else if (_type == "Scene") {
       return Scene.fromJSON(json, rootJSON);
-    } else if (type == "PointLight") {
+    } else if (_type == "PointLight") {
       return PointLight.fromJSON(json, rootJSON);
-    } else if (type == "Group") {
+    } else if (_type == "Group") {
       return Group.fromJSON(json, rootJSON);
-    } else if (type == "Mesh") {
+    } else if (_type == "Mesh") {
       return Mesh.fromJSON(json, rootJSON);
-    } else if (type == "Line") {
+    } else if (_type == "Line") {
       return Line.fromJSON(json, rootJSON);
-    } else if (type == "Points") {
+    } else if (_type == "Points") {
       return Points.fromJSON(json, rootJSON);
-    } else if (type == "AmbientLight") {
+    } else if (_type == "AmbientLight") {
       return AmbientLight.fromJSON(json, rootJSON);
-    } else if (type == "Sprite") {
+    } else if (_type == "Sprite") {
       return Sprite.fromJSON(json, rootJSON);
-    } else if (type == "SpriteMaterial") {
+    } else if (_type == "SpriteMaterial") {
       return SpriteMaterial.fromJSON(json, rootJSON);
-    } else if (type == "ShapeGeometry") {
+    } else if (_type == "ShapeGeometry") {
       return ShapeGeometry.fromJSON(json, rootJSON);
     } else {
-      throw " type: $type Object3D.castJSON is not support yet... ";
+      throw " type: $_type Object3D.castJSON is not support yet... ";
     }
   }
 
@@ -349,26 +357,32 @@ class Object3D with EventDispatcher {
     return this;
   }
 
-  Object3D add(Object3D object) {
+  Object3D add(Object3D? object) {
     if (object == this) {
-      print('three.Object3D.add: object can\'t be added as a child of itself. $object');
+      print(
+          'THREE.Object3D.add: object can\'t be added as a child of itself. $object');
       return this;
     }
 
-    if (object.parent != null) {
-      object.parent!.remove(object);
+    if (object != null) {
+      if (object.parent != null) {
+        object.parent!.remove(object);
+      }
+
+      object.parent = this;
+      children.add(object);
+
+      object.dispatchEvent(_addedEvent);
+    } else {
+      print(
+          'THREE.Object3D.add: object not an instance of THREE.Object3D. $object');
     }
-
-    object.parent = this;
-    children.add(object);
-
-    object.dispatchEvent(_addedEvent);
 
     return this;
   }
 
   Object3D removeList(List<Object3D> objects) {
-    for (var i = 0; i < objects.length; i++) {
+    for (int i = 0; i < objects.length; i++) {
       remove(objects[i]);
     }
 
@@ -376,7 +390,7 @@ class Object3D with EventDispatcher {
   }
 
   Object3D remove(Object3D object) {
-    var index = children.indexOf(object);
+    int index = children.indexOf(object);
 
     if (index != -1) {
       object.parent = null;
@@ -389,7 +403,7 @@ class Object3D with EventDispatcher {
   }
 
   Object3D removeFromParent() {
-    var parent = this.parent;
+    Object3D? parent = this.parent;
 
     if (parent != null) {
       parent.remove(this);
@@ -399,8 +413,8 @@ class Object3D with EventDispatcher {
   }
 
   Object3D clear() {
-    for (var i = 0; i < children.length; i++) {
-      var object = children[i];
+    for (int i = 0; i < children.length; i++) {
+      Object3D? object = children[i];
 
       object.parent = null;
 
@@ -445,9 +459,9 @@ class Object3D with EventDispatcher {
   Object3D? getObjectByProperty(String name, String value) {
     if (getProperty(name) == value) return this;
 
-    for (var i = 0, l = children.length; i < l; i++) {
-      var child = children[i];
-      var object = child.getObjectByProperty(name, value);
+    for (int i = 0, l = children.length; i < l; i++) {
+      Object3D? child = children[i];
+      Object3D? object = child.getObjectByProperty(name, value);
 
       if (object != null) {
         return object;
@@ -459,8 +473,8 @@ class Object3D with EventDispatcher {
 
   Vector3 getWorldPosition(Vector3? target) {
     if (target == null) {
-      print('three.Object3D: .getWorldPosition() target is now required');
-      target = Vector3.init();
+      print('THREE.Object3D: .getWorldPosition() target is now required');
+      target = Vector3();
     }
 
     updateWorldMatrix(true, false);
@@ -487,7 +501,7 @@ class Object3D with EventDispatcher {
   Vector3 getWorldDirection(Vector3 target) {
     updateWorldMatrix(true, false);
 
-    var e = matrixWorld.elements;
+    Float32Array e = matrixWorld.elements;
 
     return target.set(e[8], e[9], e[10]).normalize();
   }
@@ -499,9 +513,9 @@ class Object3D with EventDispatcher {
   void traverse(callback) {
     callback(this);
 
-    var children = this.children;
+    List<Object3D> children = this.children;
 
-    for (var i = 0, l = children.length; i < l; i++) {
+    for (int i = 0, l = children.length; i < l; i++) {
       children[i].traverse(callback);
     }
   }
@@ -511,15 +525,15 @@ class Object3D with EventDispatcher {
 
     callback(this);
 
-    var children = this.children;
+    List<Object3D> children = this.children;
 
-    for (var i = 0, l = children.length; i < l; i++) {
+    for (int i = 0, l = children.length; i < l; i++) {
       children[i].traverseVisible(callback);
     }
   }
 
   void traverseAncestors(callback) {
-    var parent = this.parent;
+    Object3D? parent = this.parent;
 
     if (parent != null) {
       callback(parent);
@@ -552,13 +566,13 @@ class Object3D with EventDispatcher {
 
     List<Object3D> children = this.children;
 
-    for (var i = 0, l = children.length; i < l; i++) {
+    for (int i = 0, l = children.length; i < l; i++) {
       children[i].updateMatrixWorld(force);
     }
   }
 
   void updateWorldMatrix(bool updateParents, bool updateChildren) {
-    var parent = this.parent;
+    Object3D? parent = this.parent;
 
     if (updateParents == true && parent != null) {
       parent.updateWorldMatrix(true, false);
@@ -575,9 +589,9 @@ class Object3D with EventDispatcher {
     // update children
 
     if (updateChildren == true) {
-      var children = this.children;
+      List<Object3D> children = this.children;
 
-      for (var i = 0, l = children.length; i < l; i++) {
+      for (int i = 0, l = children.length; i < l; i++) {
         children[i].updateWorldMatrix(false, true);
       }
     }
@@ -585,7 +599,7 @@ class Object3D with EventDispatcher {
 
   Map<String, dynamic> toJSON({Object3dMeta? meta}) {
     // meta is a string when called from JSON.stringify
-    var isRootObject = (meta == null || meta is String);
+    bool isRootObject = (meta == null || meta is String);
 
     Map<String, dynamic> output = <String, dynamic>{};
 
@@ -596,7 +610,11 @@ class Object3D with EventDispatcher {
       // initialize meta obj
       meta = Object3dMeta();
 
-      output["metadata"] = {"version": 4.5, "type": 'Object', "generator": 'Object3D.toJSON'};
+      output["metadata"] = {
+        "version": 4.5,
+        "type": 'Object',
+        "generator": 'Object3D.toJSON'
+      };
     }
 
     // standard Object3D serialization
@@ -622,14 +640,14 @@ class Object3D with EventDispatcher {
     // object specific properties
 
     if (type == "InstancedMesh") {
-      InstancedMesh instanceMesh = this as InstancedMesh;
+      InstancedMesh _instanceMesh = this as InstancedMesh;
 
       object["type"] = 'InstancedMesh';
-      object["count"] = instanceMesh.count;
-      object["instanceMatrix"] = instanceMesh.instanceMatrix!.toJSON();
+      object["count"] = _instanceMesh.count;
+      object["instanceMatrix"] = _instanceMesh.instanceMatrix!.toJSON();
 
-      if (instanceMesh.instanceColor != null) {
-        object["instanceColor"] = instanceMesh.instanceColor!.toJSON();
+      if (_instanceMesh.instanceColor != null) {
+        object["instanceColor"] = _instanceMesh.instanceColor!.toJSON();
       }
     }
 
@@ -646,7 +664,7 @@ class Object3D with EventDispatcher {
         object["environment"] = environment!.toJSON(meta)['uuid'];
       }
     } else if (this is Mesh || this is Line || this is Points) {
-      object["geometry"] = serialize(meta!.geometries, geometry, meta);
+      object["geometry"] = serialize(meta.geometries, geometry, meta);
 
       var parameters = geometry!.parameters;
 
@@ -654,7 +672,7 @@ class Object3D with EventDispatcher {
         var shapes = parameters["shapes"];
 
         if (shapes is List) {
-          for (var i = 0, l = shapes.length; i < l; i++) {
+          for (int i = 0, l = shapes.length; i < l; i++) {
             var shape = shapes[i];
 
             serialize(meta.shapes, shape, meta);
@@ -685,26 +703,28 @@ class Object3D with EventDispatcher {
 
     if (material != null) {
       List<String> uuids = [];
+      if (material is GroupMaterial){
+        GroupMaterial mat = material as GroupMaterial;
+        if (mat.children.isNotEmpty) {
+          for (int i = 0, l = mat.children.length; i < l; i++) {
+            uuids.add(serialize(meta.materials, mat.children[i], meta));
+          }
 
-      if (material is List) {
-        for (var i = 0, l = material.length; i < l; i++) {
-          uuids.add(serialize(meta!.materials, material[i], meta));
-        }
-
-        object["material"] = uuids;
-      } else {
-        object["material"] = serialize(meta!.materials, material, meta);
+          object["material"] = uuids;
+        } 
+      }else {
+        object["material"] = serialize(meta.materials, material, meta);
       }
     }
 
     if (children.isNotEmpty) {
-      List<Map<String, dynamic>> childrenJSON = [];
+      List<Map<String, dynamic>> _childrenJSON = [];
 
-      for (var i = 0; i < children.length; i++) {
-        childrenJSON.add(children[i].toJSON(meta: meta)["object"]);
+      for (int i = 0; i < children.length; i++) {
+        _childrenJSON.add(children[i].toJSON(meta: meta)["object"]);
       }
 
-      object["children"] = childrenJSON;
+      object["children"] = _childrenJSON;
     }
 
     // //
@@ -726,7 +746,7 @@ class Object3D with EventDispatcher {
     // }
 
     if (isRootObject) {
-      var geometries = extractFromCache(meta!.geometries);
+      var geometries = extractFromCache(meta.geometries);
       var materials = extractFromCache(meta.materials);
       var textures = extractFromCache(meta.textures);
       var images = extractFromCache(meta.images);
@@ -764,7 +784,7 @@ class Object3D with EventDispatcher {
   // and return as array
   List<Map<String, dynamic>> extractFromCache(Map<String, dynamic> cache) {
     List<Map<String, dynamic>> values = [];
-    for (var key in cache.keys) {
+    for (String key in cache.keys) {
       Map<String, dynamic> data = cache[key];
       data.remove("metadata");
 
@@ -808,8 +828,8 @@ class Object3D with EventDispatcher {
     userData = json.decode(json.encode(source.userData));
 
     if (recursive == true) {
-      for (var i = 0; i < source.children.length; i++) {
-        var child = source.children[i];
+      for (int i = 0; i < source.children.length; i++) {
+        Object3D child = source.children[i];
         add(child.clone());
       }
     }
@@ -817,7 +837,13 @@ class Object3D with EventDispatcher {
     return this;
   }
 
-  void onAfterRender({WebGLRenderer? renderer, scene, Camera? camera, geometry, material, group}) {
+  void onAfterRender(
+      {WebGLRenderer? renderer,
+      scene,
+      Camera? camera,
+      geometry,
+      material,
+      group}) {
     // print(" Object3D.onAfterRender ${type} ${id} ");
   }
 
@@ -859,7 +885,7 @@ class Object3D with EventDispatcher {
     }
   }
 
-  void setProperty(String propertyName, value) {
+  Object3D setProperty(String propertyName, value) {
     if (propertyName == "id") {
       id = value;
     } else if (propertyName == "castShadow") {
@@ -875,15 +901,11 @@ class Object3D with EventDispatcher {
     } else {
       throw ("Object3D.setProperty type: $type propertyName: $propertyName is not support ");
     }
+
+    return this;
   }
 
-  void dispose() {
-    matrix?.dispose();
-    matrixWorld?.dispose();
-    modelViewMatrix?.dispose();
-    normalMatrix?.dispose();
-    bindMatrix?.dispose();
-  }
+  void dispose() {}
 }
 
 class Object3dMeta {

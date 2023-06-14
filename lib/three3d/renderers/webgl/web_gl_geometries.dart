@@ -6,6 +6,7 @@ import 'package:three_dart/three3d/core/instanced_buffer_geometry.dart';
 import 'package:three_dart/three3d/renderers/webgl/index.dart';
 import 'package:three_dart/three3d/utils.dart';
 import 'package:three_dart/three3d/weak_map.dart';
+import 'package:three_dart/three_dart.dart';
 
 class WebGLGeometries {
   dynamic gl;
@@ -69,8 +70,8 @@ class WebGLGeometries {
 
     // Updating index buffer in VAO now. See WebGLBindingStates.
 
-    for (var name in geometryAttributes.keys) {
-      attributes.update(geometryAttributes[name], gl.ARRAY_BUFFER, name: name);
+    for (AttributeTypes name in geometryAttributes.keys) {
+      attributes.update(geometryAttributes.getAttribute(name), gl.ARRAY_BUFFER, name: name.name);
     }
 
     // morph targets
@@ -90,7 +91,7 @@ class WebGLGeometries {
     List<int> indices = [];
 
     var geometryIndex = geometry.index;
-    var geometryPosition = geometry.attributes["position"];
+    var geometryPosition = geometry.attributes.positionBuffer;
     var version = 0;
 
     if (geometryIndex != null) {
@@ -104,7 +105,7 @@ class WebGLGeometries {
         indices.addAll([a, b, b, c, c, a]);
       }
     } else {
-      var array = geometryPosition.array;
+      var array = geometryPosition!.array;
       version = geometryPosition.version;
 
       for (var i = 0, l = (array.length / 3) - 1; i < l; i += 3) {

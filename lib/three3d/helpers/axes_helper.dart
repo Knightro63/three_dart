@@ -41,8 +41,8 @@ class AxesHelper extends LineSegments {
     List<double> colors = [1, 0, 0, 1, 0.6, 0, 0, 1, 0, 0.6, 1, 0, 0, 0, 1, 0, 0.6, 1];
 
     var geometry = BufferGeometry();
-    geometry.setAttribute('position', Float32BufferAttribute(Float32Array.from(vertices), 3, false));
-    geometry.setAttribute('color', Float32BufferAttribute(Float32Array.from(colors), 3, false));
+    geometry.setAttribute(AttributeTypes.position, Float32BufferAttribute(Float32Array.from(vertices), 3, false));
+    geometry.setAttribute(AttributeTypes.color, Float32BufferAttribute(Float32Array.from(colors), 3, false));
 
     var material = LineBasicMaterial({"vertexColors": true, "toneMapped": false});
 
@@ -51,7 +51,7 @@ class AxesHelper extends LineSegments {
 
   setColors(Color xAxisColor, Color yAxisColor, Color zAxisColor) {
     var color = Color(1, 1, 1);
-    var array = geometry!.attributes["color"].array;
+    var array = geometry!.attributes.colorBuffer?.array;
 
     color.copy(xAxisColor);
     color.toArray(array, 0);
@@ -65,7 +65,7 @@ class AxesHelper extends LineSegments {
     color.toArray(array, 12);
     color.toArray(array, 15);
 
-    geometry!.attributes["color"].needsUpdate = true;
+    geometry!.attributes.colorBuffer?.needsUpdate = true;
 
     return this;
   }
@@ -73,6 +73,6 @@ class AxesHelper extends LineSegments {
   @override
   void dispose() {
     geometry?.dispose();
-    material.dispose();
+    material?.dispose();
   }
 }

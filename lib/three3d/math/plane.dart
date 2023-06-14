@@ -5,9 +5,9 @@ import 'package:three_dart/three3d/math/matrix4.dart';
 import 'package:three_dart/three3d/math/sphere.dart';
 import 'package:three_dart/three3d/math/vector3.dart';
 
-var _vector1 = Vector3.init();
-var _vector2 = Vector3.init();
-var _normalMatrix = Matrix3();
+Vector3 _vector1 = /*@__PURE__*/ Vector3();
+Vector3 _vector2 = /*@__PURE__*/ Vector3();
+Matrix3 _normalMatrix = /*@__PURE__*/ Matrix3();
 
 class Plane {
   String type = "Plane";

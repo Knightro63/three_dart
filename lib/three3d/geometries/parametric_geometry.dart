@@ -95,9 +95,9 @@ class ParametricGeometry extends BufferGeometry {
     // build geometry
 
     setIndex(indices);
-    setAttribute('position', Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3));
-    setAttribute('normal', Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3));
-    setAttribute('uv', Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2));
+    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3));
+    setAttribute(AttributeTypes.normal, Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3));
+    setAttribute(AttributeTypes.uv, Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2));
   }
 
   @override

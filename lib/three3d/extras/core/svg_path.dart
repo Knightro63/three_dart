@@ -5,8 +5,8 @@ double degsToRads = Math.pi / 180;
 num digit0 = 48, digit9 = 57, comma = 44, space = 32, period = 46, minus = 45;
 
 class SvgPath {
-  static transformSVGPath(svgPathStr) {
-    var path = ShapePath();
+  static ShapePath transformSVGPath(String svgPathStr) {
+    ShapePath path = ShapePath();
 
     int idx = 1;
     String activeCmd;
@@ -18,11 +18,11 @@ class SvgPath {
     double firstX = 0, firstY = 0;
     double x1 = 0, x2 = 0, y1 = 0, y2 = 0, rx = 0, ry = 0, xar = 0, laf = 0, sf = 0;
 
-    var len = svgPathStr.length;
+    int len = svgPathStr.length;
 
     double eatNum() {
       int sidx;
-      double c = 0.0;
+      int c = 0;
       String s;
 
       // eat delims
@@ -68,7 +68,7 @@ class SvgPath {
     }
 
     bool nextIsNum() {
-      var c;
+      int c;
 
       // do permanently eat any delims...
 
@@ -232,8 +232,9 @@ class SvgPath {
 
           // step 2, using x2 as cx'
 
-          var norm = Math.sqrt(
-              (rx * rx * ry * ry - rx * rx * y1 * y1 - ry * ry * x1 * x1) / (rx * rx * y1 * y1 + ry * ry * x1 * x1));
+          double norm = Math.sqrt(
+              (rx * rx * ry * ry - rx * rx * y1 * y1 - ry * ry * x1 * x1) /
+                  (rx * rx * y1 * y1 + ry * ry * x1 * x1));
 
           if (laf == sf) norm = -norm;
 
@@ -242,10 +243,13 @@ class SvgPath {
 
           // step 3
 
-          var u = Vector2(1, 0);
-          var v = Vector2((x1 - x2) / rx, (y1 - y2) / ry);
+          //cx = Math.cos(xar) * x2 - Math.sin(xar) * y2 + (x + nx) / 2;
+          //cy = Math.sin(xar) * x2 + Math.cos(xar) * y2 + (y + ny) / 2;
 
-          var startAng = Math.acos(u.dot(v) / u.length() / v.length());
+          Vector2 u = Vector2(1, 0);
+          Vector2 v = Vector2((x1 - x2) / rx, (y1 - y2) / ry);
+
+          double startAng = Math.acos(u.dot(v) / u.length() / v.length());
 
           if (((u.x * v.y) - (u.y * v.x)) < 0) startAng = -startAng;
 
@@ -253,7 +257,7 @@ class SvgPath {
           u.x = (-x1 - x2) / rx;
           u.y = (-y1 - y2) / ry;
 
-          var deltaAng = Math.acos(v.dot(u) / v.length() / u.length());
+          double deltaAng = Math.acos(v.dot(u) / v.length() / u.length());
 
           // This normalization ends up making our curves fail to triangulate...
 
@@ -274,8 +278,7 @@ class SvgPath {
       // just reissue the command
 
       if (canRepeat && nextIsNum()) continue;
-
-      var index = idx++;
+      int index = idx++;
 
       if (index < len) {
         activeCmd = svgPathStr[index];

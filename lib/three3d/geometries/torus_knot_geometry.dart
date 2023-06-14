@@ -37,15 +37,15 @@ class TorusKnotGeometry extends BufferGeometry {
 
     // helper variables
 
-    var vertex = Vector3.init();
-    var normal = Vector3.init();
+    var vertex = Vector3();
+    var normal = Vector3();
 
-    var p1 = Vector3.init();
-    var p2 = Vector3.init();
+    var p1 = Vector3();
+    var p2 = Vector3();
 
-    var B = Vector3.init();
-    var T = Vector3.init();
-    var N = Vector3.init();
+    var B = Vector3();
+    var T = Vector3();
+    var N = Vector3();
 
     calculatePositionOnCurve(u, p, q, radius, position) {
       var cu = Math.cos(u);
@@ -134,9 +134,9 @@ class TorusKnotGeometry extends BufferGeometry {
     // build geometry
 
     setIndex(indices);
-    setAttribute('position', Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
-    setAttribute('normal', Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
-    setAttribute('uv', Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
+    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
+    setAttribute(AttributeTypes.normal, Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
+    setAttribute(AttributeTypes.uv, Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
 
     // this function calculates the current position on the torus curve
   }

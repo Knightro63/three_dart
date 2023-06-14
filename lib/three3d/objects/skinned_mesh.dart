@@ -1,14 +1,11 @@
-import 'package:three_dart/three3d/core/object_3d.dart';
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/objects/mesh.dart';
-import 'package:three_dart/three3d/objects/skeleton.dart';
+import 'package:three_dart/three_dart.dart';
 
-var _basePosition = Vector3.init();
+var _basePosition = Vector3();
 
-var _skinIndex = Vector4.init();
-var _skinWeight = Vector4.init();
+var _skinIndex = Vector4();
+var _skinWeight = Vector4();
 
-var _vector = Vector3.init();
+var _vector = Vector3();
 var _matrix = Matrix4();
 
 class SkinnedMesh extends Mesh {
@@ -60,11 +57,11 @@ class SkinnedMesh extends Mesh {
   }
 
   void normalizeSkinWeights() {
-    var vector = Vector4.init();
+    Vector4 vector = Vector4();
 
-    var skinWeight = geometry!.attributes["skinWeight"];
+    var skinWeight = geometry!.attributes.skinWeightsBuffer!;
 
-    for (var i = 0, l = skinWeight.count; i < l; i++) {
+    for (int i = 0, l = skinWeight.count; i < l; i++) {
       vector.fromBufferAttribute(skinWeight, i);
 
       var scale = 1.0 / vector.manhattanLength();
@@ -94,11 +91,11 @@ class SkinnedMesh extends Mesh {
   }
 
   Vector3 boneTransform(int index, Vector3 target) {
-    var skeleton = this.skeleton;
-    var geometry = this.geometry!;
+    Skeleton? skeleton = this.skeleton;
+    BufferGeometry? geometry = this.geometry!;
 
-    _skinIndex.fromBufferAttribute(geometry.attributes["skinIndex"], index);
-    _skinWeight.fromBufferAttribute(geometry.attributes["skinWeight"], index);
+    _skinIndex.fromBufferAttribute(geometry.attributes.skinIndexBuffer!, index);
+    _skinWeight.fromBufferAttribute(geometry.attributes.skinWeightsBuffer!, index);
 
     _basePosition.copy(target).applyMatrix4(bindMatrix!);
 

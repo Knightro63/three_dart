@@ -1,5 +1,4 @@
-import 'package:three_dart/three3d/extras/core/curve.dart';
-import 'package:three_dart/three3d/extras/curves/line_curve.dart';
+import 'package:three_dart/three_dart.dart';
 
 /// ************************************************************
 ///	Curved Path - a curve path is simply a array of connected
@@ -7,10 +6,12 @@ import 'package:three_dart/three3d/extras/curves/line_curve.dart';
 ///*************************************************************/
 
 class CurvePath extends Curve {
+  @override
   CurvePath() : super() {
     type = 'CurvePath';
     curves = [];
     autoClose = false; // Automatically closes the path
+    type = 'CurvePath';
   }
 
   CurvePath.fromJSON(Map<String, dynamic> json) : super.fromJSON(json) {
@@ -18,20 +19,20 @@ class CurvePath extends Curve {
     type = 'CurvePath';
     curves = [];
 
-    for (var i = 0, l = json["curves"].length; i < l; i++) {
+    for (int i = 0, l = json["curves"].length; i < l; i++) {
       var curve = json["curves"][i];
       curves.add(Curve.castJSON(curve));
     }
   }
 
-  add(Curve curve) {
+  void add(CurvePath curve) {
     curves.add(curve);
   }
 
-  closePath() {
+  void closePath() {
     // Add a line curve if start and end of lines are not connected
-    var startPoint = curves[0].getPoint(0, null);
-    var endPoint = curves[curves.length - 1].getPoint(1, null);
+    Vector2 startPoint = curves[0].getPoint(0)! as Vector2;
+    Vector2 endPoint = curves[curves.length - 1].getPoint(1)! as Vector2;
 
     if (!startPoint.equals(endPoint)) {
       curves.add(LineCurve(endPoint, startPoint));
@@ -48,20 +49,20 @@ class CurvePath extends Curve {
   // 4. Return curve.getPointAt(t')
 
   @override
-  getPoint(t, optionalTarget) {
-    var d = t * getLength();
-    var curveLengths = getCurveLengths();
-    var i = 0;
+  Vector? getPoint(num t, [Vector? optionalTarget]) {
+    double d = t * getLength().toDouble();
+    List<num> curveLengths = getCurveLengths();
+    int i = 0;
 
     // To think about boundaries points.
 
     while (i < curveLengths.length) {
       if (curveLengths[i] >= d) {
-        var diff = curveLengths[i] - d;
-        var curve = curves[i];
+        double diff = curveLengths[i] - d;
+        Curve curve = curves[i];
 
-        var segmentLength = curve.getLength();
-        var u = segmentLength == 0 ? 0 : 1 - diff / segmentLength;
+        num segmentLength = curve.getLength();
+        int u = segmentLength == 0 ? 0 : 1 - diff ~/ segmentLength;
 
         return curve.getPointAt(u, optionalTarget);
       }
@@ -79,14 +80,14 @@ class CurvePath extends Curve {
   // getPoint() depends on getLength
 
   @override
-  getLength() {
-    var lens = getCurveLengths();
+  num getLength() {
+    List<num> lens = getCurveLengths();
     return lens[lens.length - 1];
   }
 
   // cacheLengths must be recalculated.
   @override
-  updateArcLengths() {
+  void updateArcLengths() {
     needsUpdate = true;
     cacheLengths = null;
     getCurveLengths();
@@ -94,7 +95,6 @@ class CurvePath extends Curve {
 
   // Compute lengths and cache them
   // We cannot overwrite getLengths() because UtoT mapping uses it.
-
   List<num> getCurveLengths() {
     // We use cache values if curves and cache array are same length
 
@@ -108,7 +108,7 @@ class CurvePath extends Curve {
     List<num> lengths = [];
     num sums = 0.0;
 
-    for (var i = 0, l = curves.length; i < l; i++) {
+    for (int i = 0, l = curves.length; i < l; i++) {
       sums += curves[i].getLength();
       lengths.add(sums);
     }
@@ -119,16 +119,16 @@ class CurvePath extends Curve {
   }
 
   @override
-  getSpacedPoints([num divisions = 40, num offset = 0.0]) {
-    var points = [];
+  List<Vector> getSpacedPoints([int divisions = 40, num offset = 0.0]) {
+    List<Vector> points = [];
 
-    for (var i = 0; i <= divisions; i++) {
-      var offset2 = offset + i / divisions;
-      if (offset2 > 1.0) {
-        offset2 = offset2 - 1.0;
+    for (int i = 0; i <= divisions; i++) {
+      double _offset = offset + i / divisions;
+      if (_offset > 1.0) {
+        _offset = _offset - 1.0;
       }
 
-      points.add(getPoint(offset2, null));
+      points.add(getPoint(_offset)!);
     }
 
     if (autoClose) {
@@ -139,24 +139,26 @@ class CurvePath extends Curve {
   }
 
   @override
-  List getPoints([num divisions = 12]) {
-    var points = [];
-    var last;
+  List<Vector> getPoints([int divisions = 12]) {
+    List<Vector> points = [];
+    Vector? last;
 
-    for (var i = 0, curves = this.curves; i < curves.length; i++) {
-      var curve = curves[i];
-      var resolution = (curve.isEllipseCurve)
+    List<Curve> curves = this.curves;
+
+    for (int i = 0; i < curves.length; i++) {
+      Curve curve = curves[i];
+      int resolution = (curve.isEllipseCurve)
           ? divisions * 2
           : ((curve is LineCurve || curve is LineCurve3))
               ? 1
               : (curve.isSplineCurve)
-                  ? divisions * curve.points.length
+                  ? divisions * curve.points.length.toInt()
                   : divisions;
 
-      var pts = curve.getPoints(resolution);
+      List<Vector> pts = curve.getPoints(resolution);
 
-      for (var j = 0; j < pts.length; j++) {
-        var point = pts[j];
+      for (int j = 0; j < pts.length; j++) {
+        Vector point = pts[j];
 
         if (last != null && last.equals(point)) {
           continue;
@@ -175,13 +177,14 @@ class CurvePath extends Curve {
   }
 
   @override
-  copy(source) {
+  CurvePath copy(Curve source) {
+    if(source is! CurvePath) throw('source Curve must be CurvePath');
     super.copy(source);
 
     curves = [];
 
-    for (var i = 0, l = source.curves.length; i < l; i++) {
-      var curve = source.curves[i];
+    for (int i = 0, l = source.curves.length; i < l; i++) {
+      Curve curve = source.curves[i];
 
       curves.add(curve.clone());
     }
@@ -192,17 +195,34 @@ class CurvePath extends Curve {
   }
 
   @override
-  toJSON() {
-    var data = super.toJSON();
+  Map<String,dynamic> toJSON() {
+    Map<String,dynamic> data = super.toJSON();
 
     data["autoClose"] = autoClose;
     data["curves"] = [];
 
-    for (var i = 0, l = curves.length; i < l; i++) {
-      var curve = curves[i];
+    for (int i = 0, l = curves.length; i < l; i++) {
+      Curve curve = curves[i];
       data["curves"].add(curve.toJSON());
     }
 
     return data;
+  }
+
+  @override
+  CurvePath fromJSON(json) {
+    super.fromJSON(json);
+
+    autoClose = json.autoClose;
+    curves = [];
+
+    for (int i = 0, l = json.curves.length; i < l; i++) {
+      var curve = json.curves[i];
+
+      throw (" CurvePath fromJSON todo ");
+      // this.curves.add( new Curves[ curve.type ]().fromJSON( curve ) );
+    }
+
+    return this;
   }
 }

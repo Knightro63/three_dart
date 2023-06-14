@@ -6,7 +6,7 @@ import 'package:three_dart/three3d/materials/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
 import 'package:three_dart/three3d/objects/index.dart';
 
-var _vectorHemisphereLightHelper = /*@__PURE__*/ Vector3.init();
+var _vectorHemisphereLightHelper = /*@__PURE__*/ Vector3();
 var _color1 = /*@__PURE__*/ Color(0, 0, 0);
 var _color2 = /*@__PURE__*/ Color(0, 0, 0);
 
@@ -24,12 +24,12 @@ class HemisphereLightHelper extends Object3D {
     geometry.rotateY(Math.pi * 0.5);
 
     material = MeshBasicMaterial({"wireframe": true, "fog": false, "toneMapped": false});
-    if (color == null) material.vertexColors = true;
+    if (color == null) material?.vertexColors = true;
 
-    var position = geometry.getAttribute('position');
+    var position = geometry.getAttribute(AttributeTypes.position);
     var colors = Float32Array(position.count * 3);
 
-    geometry.setAttribute('color', Float32BufferAttribute(colors, 3, false));
+    geometry.setAttribute(AttributeTypes.color, Float32BufferAttribute(colors, 3, false));
 
     add(Mesh(geometry, material));
 
@@ -39,16 +39,16 @@ class HemisphereLightHelper extends Object3D {
   @override
   void dispose() {
     children[0].geometry!.dispose();
-    children[0].material.dispose();
+    children[0].material?.dispose();
   }
 
   update() {
     var mesh = children[0];
 
     if (color != null) {
-      material.color.copy(color);
+      material?.color.copy(color!);
     } else {
-      var colors = mesh.geometry!.getAttribute('color');
+      var colors = mesh.geometry!.getAttribute(AttributeTypes.color);
 
       _color1.copy(light.color!);
       _color2.copy(light.groundColor!);

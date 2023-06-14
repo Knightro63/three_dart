@@ -2,27 +2,21 @@ import 'package:three_dart/three3d/extras/core/curve.dart';
 import 'package:three_dart/three3d/math/index.dart';
 
 class LineCurve extends Curve {
+  @override
+  bool isLineCurve = true;
+
   LineCurve(Vector2 v1, Vector2 v2) {
     type = 'LineCurve';
-    isLineCurve = true;
 
     this.v1 = v1;
     this.v2 = v2;
   }
 
-  LineCurve.fromJSON(Map<String, dynamic> json) {
-    super.fromJSON(json);
-
-    type = 'LineCurve';
-    isLineCurve = true;
-
-    v1 = Vector2().fromArray(json["v1"]);
-    v2 = Vector2().fromArray(json["v2"]);
-  }
+  LineCurve.fromJSON(Map<String, dynamic> json) : super.fromJSON(json);
 
   @override
-  getPoint(t, optionalTarget) {
-    var point = optionalTarget ?? Vector2(null, null);
+  Vector? getPoint(num t, [Vector? optionalTarget]) {
+    var point = optionalTarget ?? Vector2();
 
     if (t == 1) {
       point.copy(v2);
@@ -37,21 +31,20 @@ class LineCurve extends Curve {
   // Line curve is linear, so we can overwrite default getPointAt
 
   @override
-  getPointAt(u, optionalTarget) {
+  Vector? getPointAt(int u, [Vector? optionalTarget]) {
     return getPoint(u, optionalTarget);
   }
 
   @override
-  getTangent(t, [optionalTarget]) {
-    var tangent = optionalTarget ?? Vector2(null, null);
-
+  Vector? getTangent(int t, [Vector? optionalTarget]) {
+    var tangent = optionalTarget ?? Vector2();
     tangent.copy(v2).sub(v1).normalize();
-
     return tangent;
   }
 
   @override
-  copy(source) {
+  LineCurve copy(Curve source) {
+    if(source is! LineCurve) throw('source Curve must be LineCurve');
     super.copy(source);
 
     v1.copy(source.v1);
@@ -61,12 +54,11 @@ class LineCurve extends Curve {
   }
 
   @override
-  toJSON() {
-    var data = super.toJSON();
+  Map<String, dynamic> toJSON() {
+    Map<String, dynamic> data = super.toJSON();
 
     data["v1"] = v1.toArray();
     data["v2"] = v2.toArray();
-
     return data;
   }
 }
@@ -91,8 +83,8 @@ class LineCurve3 extends Curve {
   }
 
   @override
-  getPoint(t, optionalTarget) {
-    var point = optionalTarget ?? Vector3(null, null, null);
+  Vector? getPoint(num t, [Vector? optionalTarget]) {
+    Vector point = optionalTarget ?? Vector3(null, null, null);
 
     if (t == 1) {
       point.copy(vec2);
@@ -107,13 +99,13 @@ class LineCurve3 extends Curve {
   // Line curve is linear, so we can overwrite default getPointAt
 
   @override
-  getPointAt(u, optionalTarget) {
+  Vector? getPointAt(int u, [Vector? optionalTarget]) {
     return getPoint(u, optionalTarget);
   }
 
   @override
-  getTangent(t, [optionalTarget]) {
-    var tangent = optionalTarget ?? Vector3(null, null, null);
+  Vector? getTangent(int t, [Vector? optionalTarget]) {
+    Vector tangent = optionalTarget ?? Vector3(null, null, null);
 
     tangent.copy(vec2).sub(vec1).normalize();
 
@@ -121,7 +113,8 @@ class LineCurve3 extends Curve {
   }
 
   @override
-  copy(source) {
+  Curve copy(Curve source) {
+    if(source is! LineCurve3) throw('source Curve must be LineCurve3');
     super.copy(source);
 
     isLineCurve = true;
@@ -133,8 +126,8 @@ class LineCurve3 extends Curve {
   }
 
   @override
-  toJSON() {
-    var data = super.toJSON();
+  Map<String,dynamic> toJSON() {
+    Map<String,dynamic> data = super.toJSON();
 
     data["vec1"] = vec1.toArray();
     data["vec2"] = vec2.toArray();

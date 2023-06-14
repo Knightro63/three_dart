@@ -1,12 +1,10 @@
-import 'package:three_dart/three3d/math/math.dart';
-import 'package:three_dart/three3d/math/matrix3.dart';
+import 'package:flutter_gl/flutter_gl.dart';
+import 'package:three_dart/three_dart.dart';
 
-class Vector2 {
+class Vector2 extends Vector{
   String type = "Vector2";
-  double x = 0;
-  double y = 0;
 
-  Vector2([double? x, double? y]) {
+  Vector2([num? x, num? y]) {
     this.x = x ?? 0;
     this.y = y ?? 0;
   }
@@ -18,19 +16,19 @@ class Vector2 {
     }
   }
 
-  double get width => x;
+  double get width => x.toDouble();
   set width(double value) => x = value;
 
-  double get height => y;
+  double get height => y.toDouble();
   set height(double value) => y = value;
-
-  Vector2 set(double x, double y) {
+  @override
+  Vector2 set(num x, num y) {
     this.x = x;
     this.y = y;
 
     return this;
   }
-
+  @override
   Vector2 setScalar(double scalar) {
     x = scalar;
     y = scalar;
@@ -64,7 +62,7 @@ class Vector2 {
 
     return this;
   }
-
+  @override
   num getComponent(int index) {
     switch (index) {
       case 0:
@@ -75,30 +73,34 @@ class Vector2 {
         throw "index is out of range: $index";
     }
   }
-
+  @override
   Vector2 clone() {
     return Vector2(x, y);
   }
-
-  Vector2 copy(Vector2 v) {
+  @override
+  Vector2 copy(Vector v) {
+    if(v is! Vector2) throw('v needs to be Vector2');
     x = v.x;
     y = v.y;
 
     return this;
   }
-
-  Vector2 add(Vector2 v, {Vector2? w}) {
-    if (w != null) {
-      print('three.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.');
-      return addVectors(v, w);
+  @override
+  Vector2 add(Vector a, {Vector? b}) {
+    if(a is! Vector2) throw('v needs to be Vector2');
+    if(b != null && b is! Vector2) throw('w needs to be Vector2 or null');
+    if (b != null) {
+      print(
+          'THREE.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.');
+      return addVectors(a, b as Vector2);
     }
 
-    x += v.x;
-    y += v.y;
+    x += a.x;
+    y += a.y;
 
     return this;
   }
-
+  @override
   Vector2 addScalar(num s) {
     x += s;
     y += s;
@@ -119,11 +121,14 @@ class Vector2 {
 
     return this;
   }
-
-  Vector2 sub(Vector2 v, {Vector2? w}) {
+  @override
+  Vector2 sub(Vector v, {Vector? w}) {
+    if(v is! Vector2) throw('v needs to be Vector2');
+    if(w != null && w is! Vector2) throw('w needs to be Vector2 or null');
     if (w != null) {
-      print('three.Vector2: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.');
-      return subVectors(v, w);
+      print(
+          'THREE.Vector2: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.');
+      return subVectors(v, w as Vector2);
     }
 
     x -= v.x;
@@ -131,7 +136,7 @@ class Vector2 {
 
     return this;
   }
-
+  @override
   Vector2 subScalar(num s) {
     x -= s;
     y -= s;
@@ -152,7 +157,7 @@ class Vector2 {
 
     return this;
   }
-
+  @override
   Vector2 multiplyScalar(num scalar) {
     x *= scalar;
     y *= scalar;
@@ -166,15 +171,15 @@ class Vector2 {
 
     return this;
   }
-
+  @override
   Vector2 divideScalar(double scalar) {
     return multiplyScalar(1 / scalar);
   }
-
+  @override
   Vector2 applyMatrix3(Matrix3 m) {
-    var x = this.x;
-    var y = this.y;
-    var e = m.elements;
+    double x = this.x.toDouble();
+    double y = this.y.toDouble();
+    Float32Array e = m.elements;
 
     this.x = e[0] * x + e[3] * y + e[6];
     this.y = e[1] * x + e[4] * y + e[7];
@@ -204,48 +209,48 @@ class Vector2 {
 
     return this;
   }
-
+  @override
   Vector2 clampScalar(double minVal, double maxVal) {
     x = Math.max(minVal, Math.min(maxVal, x));
     y = Math.max(minVal, Math.min(maxVal, y));
 
     return this;
   }
-
+  @override
   Vector2 clampLength(double min, double max) {
-    var length = this.length();
+    double length = this.length();
 
     return divideScalar(length).multiplyScalar(Math.max(min, Math.min(max, length)));
   }
-
+  @override
   Vector2 floor() {
     x = Math.floor(x).toDouble();
     y = Math.floor(y).toDouble();
 
     return this;
   }
-
+  @override
   Vector2 ceil() {
     x = Math.ceil(x).toDouble();
     y = Math.ceil(y).toDouble();
 
     return this;
   }
-
+  @override
   Vector2 round() {
     x = Math.round(x).toDouble();
     y = Math.round(y).toDouble();
 
     return this;
   }
-
+  @override
   Vector2 roundToZero() {
     x = (x < 0) ? Math.ceil(x).toDouble() : Math.floor(x).toDouble();
     y = (y < 0) ? Math.ceil(y).toDouble() : Math.floor(y).toDouble();
 
     return this;
   }
-
+  @override
   Vector2 negate() {
     x = -x;
     y = -y;
@@ -260,28 +265,26 @@ class Vector2 {
   num cross(Vector2 v) {
     return x * v.y - y * v.x;
   }
-
+  @override
   num lengthSq() {
     return x * x + y * y;
   }
-
+  @override
   double length() {
     return Math.sqrt(x * x + y * y);
   }
-
+  @override
   num manhattanLength() {
     return (Math.abs(x) + Math.abs(y)).toDouble();
   }
-
+  @override
   Vector2 normalize() {
     return divideScalar(length());
   }
-
+  @override
   double angle() {
     // computes the angle in radians with respect to the positive x-axis
-
-    var angle = Math.atan2(-y, -x) + Math.pi;
-
+    double angle = Math.atan2(-y, -x) + Math.pi;
     return angle;
   }
 
@@ -290,14 +293,14 @@ class Vector2 {
   }
 
   num distanceToSquared(Vector2 v) {
-    var dx = x - v.x, dy = y - v.y;
+    double dx = x - v.x.toDouble(), dy = y - v.y.toDouble();
     return dx * dx + dy * dy;
   }
 
   num manhattanDistanceTo(Vector2 v) {
     return (Math.abs(x - v.x) + Math.abs(y - v.y)).toDouble();
   }
-
+  @override
   Vector2 setLength(double length) {
     return normalize().multiplyScalar(length);
   }
@@ -315,49 +318,57 @@ class Vector2 {
 
     return this;
   }
-
-  bool equals(Vector2 v) {
+  @override
+  bool equals(Vector v) {
+    if(v is! Vector2) throw('v needs to be Vector2');
     return ((v.x == x) && (v.y == y));
   }
-
-  Vector2 fromArray(array, [int offset = 0]) {
-    x = array[offset];
-    y = array[offset + 1];
+  @override
+  Vector2 fromArray(List<num> array, [int offset = 0]) {
+    x = array[offset].toDouble();
+    y = array[offset + 1].toDouble();
 
     return this;
   }
-
-  List<num> toArray([List<double>? array, int offset = 0]) {
-    array ??= List<double>.filled(2, 0.0);
+  @override
+  List<num> toArray([List<num>? array, int offset = 0]) {
+    if (array == null) {
+      array = List<num>.filled(offset + 2, 0);
+    } else {
+      while (array.length < offset + 2) {
+        array.add(0.0);
+      }
+    }
 
     array[offset] = x;
     array[offset + 1] = y;
     return array;
   }
-
+  @override
   List<num> toJSON() {
     return [x, y];
   }
 
-  Vector2 fromBufferAttribute(attribute, index) {
-    x = attribute.getX(index);
-    y = attribute.getY(index);
+  @override
+  Vector2 fromBufferAttribute(BufferAttribute attribute, int index) {
+    x = attribute.getX(index)!.toDouble();
+    y = attribute.getY(index)!.toDouble();
 
     return this;
   }
 
   Vector2 rotateAround(Vector2 center, double angle) {
-    var c = Math.cos(angle), s = Math.sin(angle);
+    double c = Math.cos(angle), s = Math.sin(angle);
 
-    var x = this.x - center.x;
-    var y = this.y - center.y;
+    double x = this.x - center.x.toDouble();
+    double y = this.y - center.y.toDouble();
 
     this.x = x * c - y * s + center.x;
     this.y = x * s + y * c + center.y;
 
     return this;
   }
-
+  @override
   Vector2 random() {
     x = Math.random();
     y = Math.random();
@@ -369,8 +380,8 @@ class Vector2 {
     x = json['x']!;
     y = json['y']!;
   }
-
-  Map<String, double> toJson() {
+  @override
+  Map<String, dynamic> toJson() {
     return {'x': x, 'y': y};
   }
 }

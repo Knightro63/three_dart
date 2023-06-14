@@ -43,7 +43,7 @@ class Clock {
     }
 
     if (running) {
-      var newTime = now();
+      int newTime = now();
 
       diff = (newTime - oldTime) / 1000;
       oldTime = newTime;

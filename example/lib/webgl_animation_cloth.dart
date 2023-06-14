@@ -49,7 +49,7 @@ class _State extends State<WebGlAnimationCloth> {
 
   int startTime = 0;
 
-  bool verbose = true;
+  bool verbose = false;
   bool disposed = false;
 
   late three.Object3D object;
@@ -269,7 +269,7 @@ class _State extends State<WebGlAnimationCloth> {
     if (params["enableWind"]) {
       var normal = three.Vector3();
       var indices = clothGeometry.index!;
-      var normals = clothGeometry.attributes["normal"];
+      var normals = clothGeometry.attributes.normalBuffer!;
 
       for (var i = 0, il = indices.count; i < il; i += 3) {
         for (var j = 0; j < 3; j++) {
@@ -378,6 +378,8 @@ class _State extends State<WebGlAnimationCloth> {
     // lights
 
     camera.lookAt(scene.position);
+    THREE_JSM.TrackballControls _controls = THREE_JSM.TrackballControls(camera, _globalKey);
+    controls = _controls;
 
     scene.add(three.AmbientLight(0x666666, 1));
 
@@ -520,10 +522,10 @@ class _State extends State<WebGlAnimationCloth> {
     for (var i = 0, il = p.length; i < il; i++) {
       var v = p[i].position;
 
-      clothGeometry.attributes["position"].setXYZ(i, v.x, v.y, v.z);
+      clothGeometry.attributes.positionBuffer!.setXYZ(i, v.x, v.y, v.z);
     }
 
-    clothGeometry.attributes["position"].needsUpdate = true;
+    clothGeometry.attributes.positionBuffer!.needsUpdate = true;
 
     clothGeometry.computeVertexNormals();
 

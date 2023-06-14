@@ -3,8 +3,8 @@ import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/materials/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
 
-var _start = Vector3.init();
-var _end = Vector3.init();
+var _start = Vector3();
+var _end = Vector3();
 var _inverseMatrix = Matrix4();
 var _ray = Ray(null, null);
 var _sphere = Sphere(null, null);
@@ -43,14 +43,14 @@ class Line extends Object3D {
       // we assume non-indexed geometry
 
       if (geometry.index == null) {
-        var positionAttribute = geometry.attributes["position"];
+        BufferAttribute<NativeArray<num>> positionAttribute = geometry.attributes.positionBuffer!;
 
         // List<num> lineDistances = [ 0.0 ];
-        var lineDistances = Float32Array(positionAttribute.count + 1);
+        Float32Array lineDistances = Float32Array(positionAttribute.count + 1);
 
         lineDistances[0] = 0.0;
 
-        for (var i = 1, l = positionAttribute.count; i < l; i++) {
+        for (int i = 1, l = positionAttribute.count; i < l; i++) {
           _start.fromBufferAttribute(positionAttribute, i - 1);
           _end.fromBufferAttribute(positionAttribute, i);
 
@@ -58,7 +58,7 @@ class Line extends Object3D {
           lineDistances[i] += _start.distanceTo(_end);
         }
 
-        geometry.setAttribute('lineDistance', Float32BufferAttribute(lineDistances, 1, false));
+        geometry.setAttribute(AttributeTypes.lineDistances, Float32BufferAttribute(lineDistances, 1, false));
       }
       // else {
       //   print(
@@ -97,21 +97,21 @@ class Line extends Object3D {
     var localThreshold = threshold / ((scale.x + scale.y + scale.z) / 3);
     var localThresholdSq = localThreshold * localThreshold;
 
-    var vStart = Vector3.init();
-    var vEnd = Vector3.init();
-    var interSegment = Vector3.init();
-    var interRay = Vector3.init();
+    var vStart = Vector3();
+    var vEnd = Vector3();
+    var interSegment = Vector3();
+    var interRay = Vector3();
     var step = type == "LineSegments" ? 2 : 1;
 
     var index = geometry.index;
     var attributes = geometry.attributes;
-    var positionAttribute = attributes["position"];
+    var positionAttribute = attributes.positionBuffer!;
 
     if (index != null) {
-      final start = Math.max<int>(0, drawRange["start"]!);
+      final start = Math.max<int>(0, drawRange.start);
       final end = Math.min<int>(
         index.count,
-        (drawRange["start"]! + drawRange["count"]!),
+        (drawRange.start + drawRange.count),
       );
 
       for (var i = start, l = end - 1; i < l; i += step) {
@@ -143,10 +143,10 @@ class Line extends Object3D {
         }));
       }
     } else {
-      final start = Math.max<int>(0, drawRange["start"]!);
+      final start = Math.max<int>(0, drawRange.start);
       final end = Math.min<int>(
         positionAttribute.count,
-        (drawRange["start"]! + drawRange["count"]!),
+        (drawRange.start + drawRange.count),
       );
 
       for (int i = start, l = end - 1; i < l; i += step) {

@@ -9,6 +9,7 @@ export 'core/shape.dart';
 export 'core/shape_path.dart';
 export 'core/svg_path.dart';
 export 'core/ttf_font.dart';
+export 'core/font.dart';
 
 export 'curves/cubic_bezier_curve.dart';
 export 'curves/ellipse_curve.dart';

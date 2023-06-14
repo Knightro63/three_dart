@@ -21,8 +21,8 @@ class InstancedInterleavedBuffer extends InterleavedBuffer {
   }
 
   @override
-  clone(data) {
-    var ib = super.clone(data);
+  InstancedInterleavedBuffer clone(data) {
+    InstancedInterleavedBuffer ib = super.clone(data) as InstancedInterleavedBuffer;
 
     ib.meshPerAttribute = meshPerAttribute;
 
@@ -30,8 +30,8 @@ class InstancedInterleavedBuffer extends InterleavedBuffer {
   }
 
   @override
-  toJSON(data) {
-    var json = super.toJSON(data);
+  Map<String,dynamic> toJSON(data) {
+    Map<String,dynamic> json = super.toJSON(data);
 
     json["isInstancedInterleavedBuffer"] = true;
     json["meshPerAttributes"] = meshPerAttribute;

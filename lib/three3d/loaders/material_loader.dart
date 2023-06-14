@@ -284,7 +284,7 @@ class MaterialLoader extends Loader {
         normalScale = [normalScale, normalScale];
       }
 
-      material.normalScale = Vector2(0, 0).fromArray(normalScale);
+      material.normalScale = Vector2().fromArray(List<double>.from(normalScale));
     }
 
     if (json["displacementMap"] != null) {

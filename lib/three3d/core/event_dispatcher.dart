@@ -38,7 +38,7 @@ mixin EventDispatcher {
   bool hasEventListener(String type, Function listener) {
     if (_listeners == null) return false;
 
-    var listeners = _listeners!;
+    Map<String, List<Function>> listeners = _listeners!;
 
     return listeners[type] != null && listeners[type]!.contains(listener);
   }
@@ -46,11 +46,11 @@ mixin EventDispatcher {
   void removeEventListener(String type, Function listener) {
     if (_listeners == null) return;
 
-    var listeners = _listeners!;
-    var listenerArray = listeners[type];
+    Map<String, List<Function>> listeners = _listeners!;
+    List<Function>? listenerArray = listeners[type];
 
     if (listenerArray != null) {
-      var index = listenerArray.indexOf(listener);
+      int index = listenerArray.indexOf(listener);
 
       if (index != -1) {
         listenerArray.removeRange(index, index + 1);
@@ -61,8 +61,8 @@ mixin EventDispatcher {
   void dispatchEvent(Event event) {
     if (_listeners == null || _listeners!.isEmpty) return;
 
-    var listeners = _listeners!;
-    var listenerArray = listeners[event.type];
+    Map<String, List<Function>> listeners = _listeners!;
+    List<Function>? listenerArray = listeners[event.type];
 
     // print("dispatchEvent event: ${event.type} ");
 
@@ -70,11 +70,10 @@ mixin EventDispatcher {
       event.target = this;
 
       // Make a copy, in case listeners are removed while iterating.
-      var array = listenerArray.sublist(0);
+      List<Function> array = listenerArray.sublist(0);
 
-      for (var i = 0, l = array.length; i < l; i++) {
+      for (int i = 0, l = array.length; i < l; i++) {
         Function fn = array[i];
-
         fn(event);
       }
 

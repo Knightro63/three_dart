@@ -1,26 +1,15 @@
-import 'package:three_dart/three3d/extras/core/shape.dart';
-import 'package:three_dart/three3d/extras/core/shape_path.dart';
-
-class Font {
-  String type = 'Font';
-  late Map<String, dynamic> data;
-  bool isFont = true;
-
-  List<Shape> generateShapes(text, {double size = 100}) {
-    throw ("Font generateShapes need implement .... ");
-  }
-}
+import 'package:three_dart/three_dart.dart';
 
 class TTFFont extends Font {
-  TTFFont(data) {
-    this.data = data;
+  TTFFont(json) {
+    data = FontData(json);
   }
 
   @override
-  List<Shape> generateShapes(text, {double size = 100}) {
+  List<Shape> generateShapes(String text, {double size = 100}) {
     List<Shape> shapes = [];
-    var paths = createPaths(text, size, data);
-    for (var p = 0, pl = paths.length; p < pl; p++) {
+    List<ShapePath> paths = createPaths(text, size, data);
+    for (int p = 0, pl = paths.length; p < pl; p++) {
       // Array.prototype.push.apply( shapes, paths[ p ].toShapes() );
       shapes.addAll(paths[p].toShapes(false, false));
     }
@@ -28,45 +17,18 @@ class TTFFont extends Font {
     return shapes;
   }
 
-  List<ShapePath> createPaths(String text, double size, Map<String, dynamic> data) {
-    // var chars = Array.from ? Array.from( text ) : String( text ).split( '' ); // workaround for IE11, see #13988
-    List<String> chars = text.split("");
-
-    double scale = size / data["resolution"];
-    double lineHeight =
-        (data["boundingBox"]["yMax"] - data["boundingBox"]["yMin"] + data["underlineThickness"]) * scale;
-
-    List<ShapePath> paths = [];
-
-    double offsetX = 0.0;
-    double offsetY = 0.0;
-
-    for (var i = 0; i < chars.length; i++) {
-      var char = chars[i];
-
-      if (char == '\n') {
-        offsetX = 0;
-        offsetY -= lineHeight;
-      } else {
-        var ret = createPath(char, scale, offsetX, offsetY, data);
-        offsetX += ret["offsetX"];
-        paths.add(ret["path"]);
-      }
-    }
-
-    return paths;
-  }
-
-  Map<String, dynamic> createPath(char, double scale, double offsetX, double offsetY, data) {
-    var glyph = data["glyphs"][char] ?? data["glyphs"]['?'];
+  @override
+  CreatePathUtil createPath(
+      String char, double scale, double offsetX, double offsetY, FontData data) {
+    dynamic glyph = data.glyphs[char] ?? data.glyphs['?'];
 
     if (glyph == null) {
       print("three.Font: character $char does not exists in font family ${data.familyName}");
       // return null;
-      glyph = data["glyphs"]["a"];
+      glyph = data.glyphs["a"];
     }
 
-    var path = ShapePath();
+    ShapePath path = ShapePath();
 
     double x = 0.1;
     double y = 0.1;
@@ -84,7 +46,7 @@ class TTFFont extends Font {
       print(outline);
 
       for (int i = 0, l = outline.length; i < l;) {
-        var action = outline[i];
+        String action = outline[i];
         i = i + 1;
 
         switch (action) {
@@ -131,7 +93,10 @@ class TTFFont extends Font {
       }
     }
 
-    return {"offsetX": glyph["ha"] * scale, "path": path};
+    return CreatePathUtil(
+      offsetX: glyph["ha"] * scale,
+      path: path
+    );//{"offsetX": glyph["ha"] * scale, "path": path};
   }
 
   dispose() {}
