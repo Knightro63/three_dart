@@ -1,6 +1,6 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/materials/material.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import './material.dart';
+import '../math/index.dart';
+import '../constants.dart';
 
 class MeshToonMaterial extends Material {
   MeshToonMaterial([Map<String, dynamic>? parameters]) : super() {
@@ -44,6 +44,11 @@ class MeshToonMaterial extends Material {
     fog = true;
 
     setValues(parameters);
+  }
+
+  @override
+  MeshToonMaterial clone() {
+    return MeshToonMaterial(<String, dynamic>{}).copy(this);
   }
 
   @override

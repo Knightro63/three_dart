@@ -1,13 +1,11 @@
 import 'package:flutter_gl/flutter_gl.dart';
 import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/core/base_buffer_attribute.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import 'base_buffer_attribute.dart';
+import '../math/index.dart';
 
-
-abstract class BufferAttribute<TData extends NativeArray>
-    extends BaseBufferAttribute<TData> {
+abstract class BufferAttribute<TData extends NativeArray> extends BaseBufferAttribute<TData> {
   final _vector = Vector3();
-  final _vector2 = Vector2();
+  final _vector2 = Vector2(null, null);
 
   bool isBufferAttribute = true;
 
@@ -64,11 +62,11 @@ abstract class BufferAttribute<TData extends NativeArray>
   }
 
   BufferAttribute copyColorsArray(List<Color> colors) {
-    TData array = this.array;
+    final array = this.array;
     int offset = 0;
 
     for (int i = 0, l = colors.length; i < l; i++) {
-      Color color = colors[i];
+      final color = colors[i];
       array[offset++] = color.r;
       array[offset++] = color.g;
       array[offset++] = color.b;
@@ -77,12 +75,12 @@ abstract class BufferAttribute<TData extends NativeArray>
     return this;
   }
 
-  BufferAttribute copyVector2sArray(List<Vector2> vectors){
-    TData array = this.array;
+  BufferAttribute copyVector2sArray(List<Vector2> vectors) {
+    final array = this.array;
     int offset = 0;
 
     for (int i = 0, l = vectors.length; i < l; i++) {
-      Vector2 vector = vectors[i];
+      final vector = vectors[i];
       array[offset++] = vector.x;
       array[offset++] = vector.y;
     }
@@ -91,11 +89,11 @@ abstract class BufferAttribute<TData extends NativeArray>
   }
 
   BufferAttribute copyVector3sArray(List<Vector3> vectors) {
-    TData array = this.array;
+    final array = this.array;
     int offset = 0;
 
     for (int i = 0, l = vectors.length; i < l; i++) {
-      Vector3 vector = vectors[i];
+      final vector = vectors[i];
       array[offset++] = vector.x;
       array[offset++] = vector.y;
       array[offset++] = vector.z;
@@ -105,11 +103,11 @@ abstract class BufferAttribute<TData extends NativeArray>
   }
 
   BufferAttribute copyVector4sArray(List<Vector4> vectors) {
-    TData array = this.array;
+    final array = this.array;
     int offset = 0;
 
     for (int i = 0, l = vectors.length; i < l; i++) {
-      Vector4 vector = vectors[i];
+      final vector = vectors[i];
       array[offset++] = vector.x;
       array[offset++] = vector.y;
       array[offset++] = vector.z;
@@ -141,7 +139,7 @@ abstract class BufferAttribute<TData extends NativeArray>
 
   void applyMatrix4(Matrix4 m) {
     for (int i = 0, l = count; i < l; i++) {
-      _vector.fromBufferAttribute(this, i);
+      _vector.fromBufferAttribute( this, i );
 
       _vector.applyMatrix4(m);
 
@@ -149,10 +147,9 @@ abstract class BufferAttribute<TData extends NativeArray>
     }
   }
 
-  BufferAttribute applyNormalMatrix(m) {
+  BufferAttribute applyNormalMatrix(Matrix3 m) {
     for (int i = 0, l = count; i < l; i++) {
-
-      _vector.fromBufferAttribute(this, i);
+      _vector.fromBufferAttribute( this, i );
 
       _vector.applyNormalMatrix(m);
 
@@ -186,7 +183,7 @@ abstract class BufferAttribute<TData extends NativeArray>
     return getAt(index * itemSize);
   }
 
-  BufferAttribute setX(int index, x) {
+  BufferAttribute setX(int index, num x) {
     array[index * itemSize] = x;
 
     return this;
@@ -196,7 +193,7 @@ abstract class BufferAttribute<TData extends NativeArray>
     return getAt(index * itemSize + 1);
   }
 
-  BufferAttribute setY(int index, y) {
+  BufferAttribute setY(int index, num y) {
     array[index * itemSize + 1] = y;
 
     return this;
@@ -206,7 +203,7 @@ abstract class BufferAttribute<TData extends NativeArray>
     return getAt(index * itemSize + 2);
   }
 
-  BufferAttribute setZ(int index, z) {
+  BufferAttribute setZ(int index, num z) {
     array[index * itemSize + 2] = z;
 
     return this;
@@ -224,13 +221,13 @@ abstract class BufferAttribute<TData extends NativeArray>
     }
   }
 
-  BufferAttribute setW(int index, w) {
+  BufferAttribute setW(int index, num w) {
     array[index * itemSize + 3] = w;
 
     return this;
   }
 
-  BufferAttribute setXY(int index, x, y) {
+  BufferAttribute setXY(int index, num x, num y) {
     index *= itemSize;
 
     array[index + 0] = x;
@@ -247,7 +244,7 @@ abstract class BufferAttribute<TData extends NativeArray>
     array[idx + 2] = z.toDouble();
   }
 
-  BufferAttribute setXYZW(int index, x, y, z, w) {
+  BufferAttribute setXYZW(int index, num x, num y, num z, num w) {
     index *= itemSize;
 
     array[index + 0] = x;
@@ -270,25 +267,22 @@ abstract class BufferAttribute<TData extends NativeArray>
     // } else
     if (type == "Float32BufferAttribute") {
       final typed = array as Float32Array;
-      return Float32BufferAttribute(Float32Array(typed.length), itemSize, false)
-          .copy(this);
+      return Float32BufferAttribute(Float32Array(typed.length), itemSize, false).copy(this);
     } else if (type == "Uint8BufferAttribute") {
       final typed = array as Uint8Array;
-      return Uint8BufferAttribute(Uint8Array(typed.length), itemSize, false)
-          .copy(this);
+      return Uint8BufferAttribute(Uint8Array(typed.length), itemSize, false).copy(this);
     } else if (type == "Uint16BufferAttribute") {
       final typed = array as Uint16Array;
-      return Uint16BufferAttribute(Uint16Array(typed.length), itemSize, false)
-          .copy(this);
+      return Uint16BufferAttribute(Uint16Array(typed.length), itemSize, false).copy(this);
     } else {
       throw ("BufferAttribute type: $type clone need support ....  ");
     }
   }
 
-  Map<String, dynamic> toJSON([data]) {
+  Map<String, dynamic> toJSON() {
     Map<String, dynamic> result = {
       "itemSize": itemSize,
-      "type": array.runtimeType.toString(), // TODO remove runtimeType for on web release mode type minification
+      "type": array.runtimeType.toString(), //.replaceAll('List', 'Array'),
       "array": array.sublist(0),
       "normalized": normalized
     };
@@ -304,26 +298,32 @@ abstract class BufferAttribute<TData extends NativeArray>
 }
 
 class Int8BufferAttribute extends BufferAttribute<Int8Array> {
-  Int8BufferAttribute(Int8Array array, int itemSize, [bool normalized = false]) : super(array, itemSize, normalized) {
+  Int8BufferAttribute(Int8Array array, int itemSize, [bool normalized = false])
+      : super(array, itemSize, normalized) {
     type = "Int8BufferAttribute";
   }
 }
 
 class Uint8BufferAttribute extends BufferAttribute<Uint8Array> {
-  Uint8BufferAttribute(Uint8Array array, int itemSize, [bool normalized = false]) : super(array, itemSize, normalized) {
+  Uint8BufferAttribute(Uint8Array array, int itemSize,
+      [bool normalized = false])
+      : super(array, itemSize, normalized) {
     type = "Uint8BufferAttribute";
   }
 }
 
 class Uint8ClampedBufferAttribute extends BufferAttribute<Uint8Array> {
-  Uint8ClampedBufferAttribute(Uint8Array array, int itemSize, [bool normalized = false])
+  Uint8ClampedBufferAttribute(Uint8Array array, int itemSize,
+      [bool normalized = false])
       : super(array, itemSize, normalized) {
     type = "Uint8ClampedBufferAttribute";
   }
 }
 
 class Int16BufferAttribute extends BufferAttribute<Int16Array> {
-  Int16BufferAttribute(Int16Array array, int itemSize, [bool normalized = false]) : super(array, itemSize, normalized) {
+  Int16BufferAttribute(Int16Array array, int itemSize,
+      [bool normalized = false])
+      : super(array, itemSize, normalized) {
     type = "Int16BufferAttribute";
   }
 }
@@ -332,40 +332,47 @@ class Int16BufferAttribute extends BufferAttribute<Int16Array> {
 // Int16BufferAttribute.prototype.constructor = Int16BufferAttribute;
 
 class Uint16BufferAttribute extends BufferAttribute<Uint16Array> {
-  Uint16BufferAttribute(Uint16Array array, int itemSize, [bool normalized = false])
+  Uint16BufferAttribute(Uint16Array array, int itemSize,
+      [bool normalized = false])
       : super(array, itemSize, normalized) {
     type = "Uint16BufferAttribute";
   }
 }
 
 class Int32BufferAttribute extends BufferAttribute<Int32Array> {
-  Int32BufferAttribute(Int32Array array, int itemSize, [bool normalized = false]) : super(array, itemSize, normalized) {
+  Int32BufferAttribute(Int32Array array, int itemSize,
+      [bool normalized = false])
+      : super(array, itemSize, normalized) {
     type = "Int32BufferAttribute";
   }
 }
 
 class Uint32BufferAttribute extends BufferAttribute<Uint32Array> {
-  Uint32BufferAttribute(Uint32Array array, int itemSize, [bool normalized = false])
+  Uint32BufferAttribute(Uint32Array array, int itemSize,
+      [bool normalized = false])
       : super(array, itemSize, normalized) {
     type = "Uint32BufferAttribute";
   }
 }
 
 class Float16BufferAttribute extends BufferAttribute {
-  Float16BufferAttribute(array, int itemSize, [bool normalized = false]) : super(array, itemSize, normalized) {
+  Float16BufferAttribute(array, int itemSize, [bool normalized = false])
+      : super(array, itemSize, normalized) {
     type = "Float16BufferAttribute";
   }
 }
 
 class Float32BufferAttribute extends BufferAttribute<Float32Array> {
-  Float32BufferAttribute(Float32Array array, int itemSize, [bool normalized = false])
+  Float32BufferAttribute(Float32Array array, int itemSize,
+      [bool normalized = false])
       : super(array, itemSize, normalized) {
     type = "Float32BufferAttribute";
   }
 }
 
 class Float64BufferAttribute extends BufferAttribute<Float64Array> {
-  Float64BufferAttribute(Float64Array array, int itemSize, [bool normalized = false])
+  Float64BufferAttribute(Float64Array array, int itemSize,
+      [bool normalized = false])
       : super(array, itemSize, normalized) {
     type = "Float64BufferAttribute";
   }

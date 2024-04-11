@@ -1,8 +1,8 @@
-import 'package:three_dart/three3d/core/object_3d.dart';
-import 'package:three_dart/three3d/lights/light.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'light.dart';
 
 class RectAreaLight extends Light {
-  RectAreaLight(color, intensity, width, height) : super(color, intensity) {
+  RectAreaLight([int? color, double? intensity, num? width, num? height]) : super(color, intensity) {
     type = 'RectAreaLight';
 
     this.width = width ?? 10;
@@ -11,7 +11,7 @@ class RectAreaLight extends Light {
   }
 
   @override
-  copy(Object3D source, [bool? recursive]) {
+  RectAreaLight copy(Object3D source, [bool? recursive]) {
     super.copy(source);
 
     RectAreaLight source1 = source as RectAreaLight;
@@ -23,8 +23,8 @@ class RectAreaLight extends Light {
   }
 
   @override
-  toJSON({Object3dMeta? meta}) {
-    var data = super.toJSON(meta: meta);
+  Map<String,dynamic> toJSON({Object3dMeta? meta}) {
+    Map<String,dynamic> data = super.toJSON(meta: meta);
 
     data["object"]["width"] = width;
     data["object"]["height"] = height;

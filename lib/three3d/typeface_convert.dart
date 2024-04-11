@@ -7,7 +7,7 @@ class TypefaceConvert {
   static bool restrictCharactersCheck = true;
   static bool reverseTypeface = true;
 
-  static exportToFile(font, String filePath) {
+  static Future<File> exportToFile(font, String filePath) {
     String content = convertFont(font);
 
     final file = File(filePath);
@@ -16,8 +16,8 @@ class TypefaceConvert {
     return file.writeAsString(content);
   }
 
-  static convertFont(font, [String? restrictContent]) {
-    var scale = (1000 * 100) / ((font.unitsPerEm ?? 2048) * 72);
+  static String convertFont(font, [String? restrictContent]) {
+    final scale = (1000 * 100) / ((font.unitsPerEm ?? 2048) * 72);
     Map<String, dynamic> result = {};
     result["glyphs"] = {};
 
@@ -29,8 +29,8 @@ class TypefaceConvert {
 
     font.glyphs.forEach((glyph) {
       if (glyph.unicode != null) {
-        var glyphCharacter = String.fromCharCode(glyph.unicode);
-        var needToExport = true;
+        final glyphCharacter = String.fromCharCode(glyph.unicode);
+        bool needToExport = true;
         if (restriction["set"] != null) {
           needToExport = (restrictContent!.contains(glyphCharacter));
         }
@@ -77,8 +77,10 @@ class TypefaceConvert {
     result["familyName"] = font.familyName;
     result["ascender"] = Math.round(font.ascender * scale);
     result["descender"] = Math.round(font.descender * scale);
-    result["underlinePosition"] = Math.round(font.tables.post.underlinePosition * scale);
-    result["underlineThickness"] = Math.round(font.tables.post.underlineThickness * scale);
+    result["underlinePosition"] =
+        Math.round(font.tables.post.underlinePosition * scale);
+    result["underlineThickness"] =
+        Math.round(font.tables.post.underlineThickness * scale);
     result["boundingBox"] = {
       "yMin": Math.round(font.tables.head.yMin * scale),
       "xMin": Math.round(font.tables.head.xMin * scale),
@@ -102,8 +104,8 @@ class TypefaceConvert {
     return convert.jsonEncode(result);
   }
 
-  static reverseCommands(commands) {
-    var paths = [];
+  static List reverseCommands(commands) {
+    final paths = [];
     List path = [];
 
     commands.forEach((c) {
@@ -115,13 +117,17 @@ class TypefaceConvert {
       }
     });
 
-    var reversed = [];
-    for (var p in paths) {
-      var result = {"type": "m", "x": p[p.length - 1].x, "y": p[p.length - 1].y};
+    final reversed = [];
+    for (final p in paths) {
+      Map<String,dynamic> result = {
+        "type": "m",
+        "x": p[p.length - 1].x,
+        "y": p[p.length - 1].y
+      };
       reversed.add(result);
 
-      for (var i = p.length - 1; i > 0; i--) {
-        var command = p[i];
+      for (int i = p.length - 1; i > 0; i--) {
+        final command = p[i];
         result = {"type": command.type};
         if (command.x2 != null && command.y2 != null) {
           result["x1"] = command.x2;

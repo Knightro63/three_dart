@@ -1,8 +1,9 @@
-import 'package:three_dart/three3d/cameras/perspective_camera.dart';
 import 'package:three_dart/three3d/constants.dart';
 import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
 import 'package:three_dart/three3d/renderers/index.dart';
+
+import 'perspective_camera.dart';
 
 class CubeCamera extends Object3D {
   late WebGLCubeRenderTarget renderTarget;
@@ -14,13 +15,15 @@ class CubeCamera extends Object3D {
   late PerspectiveCamera cameraPZ;
   late PerspectiveCamera cameraNZ;
 
-  var fov = 90, aspect = 1;
+  num fov = 90;
+  num aspect = 1;
 
   CubeCamera(num near, num far, this.renderTarget) {
     type = 'CubeCamera';
 
     if (renderTarget.isWebGLCubeRenderTarget != true) {
-      print('three.CubeCamera: The constructor now expects an instance of WebGLCubeRenderTarget as third parameter.');
+      print(
+          'THREE.CubeCamera: The constructor now expects an instance of WebGLCubeRenderTarget as third parameter.');
       return;
     }
 
@@ -61,17 +64,17 @@ class CubeCamera extends Object3D {
     add(cameraNZ);
   }
 
-  update(renderer, scene) {
+  void update(WebGLRenderer renderer, Object3D scene) {
     if (parent == null) updateMatrixWorld(false);
 
-    var currentRenderTarget = renderer.getRenderTarget();
-    var currentToneMapping = renderer.toneMapping;
-    var currentXrEnabled = renderer.xr.enabled;
+    final currentRenderTarget = renderer.getRenderTarget();
+		final currentToneMapping = renderer.toneMapping;
+		final currentXrEnabled = renderer.xr.enabled;
 
-    renderer.toneMapping = NoToneMapping;
+		renderer.toneMapping = NoToneMapping;
     renderer.xr.enabled = false;
 
-    var generateMipmaps = renderTarget.texture.generateMipmaps;
+    final generateMipmaps = renderTarget.texture.generateMipmaps;
 
     renderTarget.texture.generateMipmaps = false;
 
@@ -96,8 +99,8 @@ class CubeCamera extends Object3D {
     renderer.render(scene, cameraNZ);
 
     renderer.setRenderTarget(currentRenderTarget);
-
-    renderer.toneMapping = currentToneMapping;
+    
+		renderer.toneMapping = currentToneMapping;
     renderer.xr.enabled = currentXrEnabled;
 
     renderTarget.texture.needsPMREMUpdate = true;

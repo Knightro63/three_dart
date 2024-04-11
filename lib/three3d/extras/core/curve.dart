@@ -1,6 +1,6 @@
-import 'package:three_dart/three3d/extras/core/shape.dart';
-import 'package:three_dart/three3d/extras/curves/line_curve.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import '../../math/index.dart';
+import '../curves/line_curve.dart';
+import 'shape.dart';
 
 /// Extensible curve object.
 ///
@@ -11,49 +11,27 @@ import 'package:three_dart/three3d/math/index.dart';
 /// .getLength()
 /// .updateArcLengths()
 ///
-/// This following curves inherit from three.Curve:
+/// This following curves inherit from THREE.Curve:
 ///
 /// -- 2D curves --
-/// three.ArcCurve
-/// three.CubicBezierCurve
-/// three.EllipseCurve
-/// three.LineCurve
-/// three.QuadraticBezierCurve
-/// three.SplineCurve
+/// THREE.ArcCurve
+/// THREE.CubicBezierCurve
+/// THREE.EllipseCurve
+/// THREE.LineCurve
+/// THREE.QuadraticBezierCurve
+/// THREE.SplineCurve
 ///
 /// -- 3D curves --
-/// three.CatmullRomCurve3
-/// three.CubicBezierCurve3
-/// three.LineCurve3
-/// three.QuadraticBezierCurve3
+/// THREE.CatmullRomCurve3
+/// THREE.CubicBezierCurve3
+/// THREE.LineCurve3
+/// THREE.QuadraticBezierCurve3
 ///
-/// A series of curves can be represented as a three.CurvePath.
+/// A series of curves can be represented as a THREE.CurvePath.
 ///
 ///*/
 
-class FrenetFrames{
-  FrenetFrames({
-    this.biNormals = const [],
-    this.normals = const [],
-    this.tangents = const []
-  });
-
-  List<Vector3> biNormals;
-  List<Vector3> normals;
-  List<Vector3> tangents;
-}
-
 class Curve {
-  Curve() {
-    arcLengthDivisions = 200;
-  }
-
-  Curve.fromJSON(Map<String, dynamic> json) {
-    arcLengthDivisions = json["arcLengthDivisions"];
-    v1 = Vector2.fromJSON(json["v1"]);
-    v2 = Vector2.fromJSON(json["v2"]);
-  }
-
   late num arcLengthDivisions;
   bool needsUpdate = false;
 
@@ -70,28 +48,36 @@ class Curve {
   bool isSplineCurve = false;
   bool isCubicBezierCurve = false;
   bool isQuadraticBezierCurve = false;
-  bool isCatmullRomCurve3 = false;
 
   Vector2 currentPoint = Vector2();
 
-  late Vector2 v0;
+  late Vector v0;
   late Vector2 v1;
   late Vector2 v2;
 
-  String type = "Curve";
-
   Map<String, dynamic> userData = {};
 
+  Curve() {
+    arcLengthDivisions = 200;
+  }
+
+  Curve.fromJSON(Map<String, dynamic> json) {
+    arcLengthDivisions = json["arcLengthDivisions"];
+    v1 = Vector2.fromJSON(json["v1"]);
+    v2 = Vector2.fromJSON(json["v2"]);
+  }
+
   static Curve castJSON(Map<String, dynamic> json) {
-    String _type = json["type"];
-    if (_type == "Shape") {
+    String type = json["type"];
+
+    if (type == "Shape") {
       return Shape.fromJSON(json);
-    } else if (_type == "Curve") {
+    } else if (type == "Curve") {
       return Curve.fromJSON(json);
-    } else if (_type == "LineCurve") {
+    } else if (type == "LineCurve") {
       return LineCurve.fromJSON(json);
     } else {
-      throw " type: $_type Curve.castJSON is not support yet... ";
+      throw " type: $type Curve.castJSON is not support yet... ";
     }
   }
 
@@ -106,18 +92,18 @@ class Curve {
   // Get point at relative position in curve according to arc length
   // - u [0 .. 1]
 
-  Vector? getPointAt(int u, [Vector? optionalTarget]) {
-    num t = getUtoTmapping(u);
+  Vector? getPointAt(num u, [Vector? optionalTarget]) {
+    final t = getUtoTmapping(u);
     return getPoint(t, optionalTarget);
   }
 
   // Get sequence of points using getPoint( t )
 
-  List<Vector> getPoints([int divisions = 5]) {
-    List<Vector> points = [];
+  List<Vector?> getPoints([num divisions = 5]) {
+    final List<Vector?> points = [];
 
     for (int d = 0; d <= divisions; d++) {
-      points.add(getPoint(d / divisions)!);
+      points.add(getPoint(d / divisions));
     }
 
     return points;
@@ -125,11 +111,11 @@ class Curve {
 
   // Get sequence of points using getPointAt( u )
 
-  List<Vector> getSpacedPoints([int divisions = 5, int offset = 0]) {
-    List<Vector> points = [];
+  List<Vector?> getSpacedPoints([num divisions = 5, num offset = 0]) {
+    final List<Vector?> points = [];
 
     for (int d = 0; d <= divisions; d++) {
-      points.add(getPointAt(d ~/ divisions)!);
+      points.add(getPointAt(d / divisions));
     }
 
     return points;
@@ -138,32 +124,37 @@ class Curve {
   // Get total curve arc length
 
   num getLength() {
-    List<num> lengths = getLengths()!;
+    final lengths = getLengths(null);
     return lengths[lengths.length - 1];
   }
 
   // Get list of cumulative segment lengths
 
-  List<num>? getLengths([int? divisions]) {
-    divisions ??= arcLengthDivisions.toInt();
+  List getLengths(num? divisions) {
+    divisions ??= arcLengthDivisions;
 
-    if (cacheArcLengths != null && (cacheArcLengths!.length == divisions + 1) && !needsUpdate) {
-      return cacheArcLengths;
+    if (cacheArcLengths != null &&
+        (cacheArcLengths!.length == divisions + 1) &&
+        !needsUpdate) {
+      return cacheArcLengths!;
     }
 
     needsUpdate = false;
 
     List<num> cache = [];
-    var current, last = getPoint(0);
+    Vector? current;
+    Vector last = getPoint(0)!;
     num sum = 0.0;
 
     cache.add(0);
 
     for (int p = 1; p <= divisions; p++) {
       current = getPoint(p / divisions);
-      sum += current.distanceTo(last);
-      cache.add(sum);
-      last = current;
+      if(current != null){
+        sum += current.distanceTo(last);
+        cache.add(sum);
+        last = current;
+      }
     }
 
     cacheArcLengths = cache;
@@ -173,29 +164,29 @@ class Curve {
 
   void updateArcLengths() {
     needsUpdate = true;
-    getLengths();
+    getLengths(null);
   }
 
   // Given u ( 0 .. 1 ), get a t to find p. This gives you points which are equidistant
 
-  num getUtoTmapping(int u, [double? distance]) {
-    List<num> arcLengths = getLengths()!;
+  double getUtoTmapping(num u, [num? distance]) {
+    final arcLengths = getLengths(null);
 
     int i = 0;
     int il = arcLengths.length;
 
-    double targetArcLength; // The targeted u distance value to get
+    num targetArcLength; // The targeted u distance value to get
 
     if (distance != null) {
       targetArcLength = distance;
     } else {
-      targetArcLength = u * arcLengths[il - 1].toDouble();
+      targetArcLength = u * arcLengths[il - 1];
     }
 
     // binary search for the index with largest value smaller than target u distance
 
     int low = 0, high = il - 1;
-    double comparison;
+    num comparison;
 
     while (low <= high) {
       i = Math.floor(low + (high - low) / 2)
@@ -212,6 +203,7 @@ class Curve {
         break;
 
         // DONE
+
       }
     }
 
@@ -223,18 +215,18 @@ class Curve {
 
     // we could get finer grain at lengths, or use simple interpolation between two points
 
-    num lengthBefore = arcLengths[i];
-    num lengthAfter = arcLengths[i + 1];
+    final lengthBefore = arcLengths[i];
+    final lengthAfter = arcLengths[i + 1];
 
-    double segmentLength = lengthAfter - lengthBefore.toDouble();
+    final segmentLength = lengthAfter - lengthBefore;
 
     // determine where we are between the 'before' and 'after' points
 
-    double segmentFraction = (targetArcLength - lengthBefore) / segmentLength;
+    final segmentFraction = (targetArcLength - lengthBefore) / segmentLength;
 
     // add that fractional amount to t
 
-    num t = (i + segmentFraction) / (il - 1);
+    final t = (i + segmentFraction) / (il - 1);
 
     return t;
   }
@@ -244,8 +236,8 @@ class Curve {
   // 2 points a small delta apart will be used to find its gradient
   // which seems to give a reasonable approximation
 
-  Vector? getTangent(int t, [Vector? optionalTarget]) {
-    double delta = 0.0001;
+  Vector getTangent(num t, [Vector? optionalTarget]) {
+    final delta = 0.0001;
     num t1 = t - delta;
     num t2 = t + delta;
 
@@ -254,42 +246,44 @@ class Curve {
     if (t1 < 0) t1 = 0;
     if (t2 > 1) t2 = 1;
 
-    Vector pt1 = getPoint(t1)!;
-    Vector pt2 = getPoint(t2)!;
+    final pt1 = getPoint(t1);
+    final pt2 = getPoint(t2);
 
-    Vector tangent = optionalTarget ??
-        ((pt1.runtimeType == Vector2)
-            ? Vector2()
-            : Vector3());
+    final tangent = optionalTarget ??
+      ((pt1.runtimeType == Vector2)?Vector2(): Vector3());
 
-    tangent.copy(pt2).sub(pt1).normalize();
+    if(pt2 != null && pt1 != null){
+      tangent.copy(pt2).sub(pt1).normalize();
+    }
 
     return tangent;
   }
 
-  Vector? getTangentAt(int u, [Vector? optionalTarget]) {
-    int t = getUtoTmapping(u).toInt();
+  Vector getTangentAt(num u, [Vector? optionalTarget]) {
+    final t = getUtoTmapping(u);
     return getTangent(t, optionalTarget);
   }
 
-  FrenetFrames computeFrenetFrames(segments, closed) {
+  FrenetFrames computeFrenetFrames(int segments, bool closed) {
     // see http://www.cs.indiana.edu/pub/techreports/TR425.pdf
 
-    Vector3 normal = Vector3();
+    final normal = Vector3();
 
-    List<Vector3> tangents = [];
-    List<Vector3> normals = [];
-    List<Vector3> binormals = [];
+    final List<Vector3> tangents = [];
+    final List<Vector3> normals = [];
+    final List<Vector3> binormals = [];
 
-    Vector3 vec = Vector3();
-    Matrix4 mat = Matrix4();
+    final vec = Vector3();
+    final mat = Matrix4();
 
     // compute the tangent vectors for each segment on the curve
 
     for (int i = 0; i <= segments; i++) {
-      int u = i ~/ segments;
+      final u = i / segments;
 
-      tangents.add(getTangentAt(u, Vector3()) as Vector3);
+      tangents.add(
+        getTangentAt(u, Vector3()) as Vector3
+      );
       tangents[i].normalize();
     }
 
@@ -334,7 +328,7 @@ class Curve {
       if (vec.length() > Math.epsilon) {
         vec.normalize();
 
-        double theta = Math.acos(MathUtils.clamp(tangents[i - 1].dot(tangents[i]),
+        final theta = Math.acos(MathUtils.clamp(tangents[i - 1].dot(tangents[i]),
             -1, 1)); // clamp for floating pt errors
 
         normals[i].applyMatrix4(mat.makeRotationAxis(vec, theta));
@@ -345,12 +339,13 @@ class Curve {
 
     // if the curve is closed, postprocess the vectors so the first and last normal vectors are the same
 
-    if (closed == true) {
+    if (closed) {
       double theta =
           Math.acos(MathUtils.clamp(normals[0].dot(normals[segments]), -1, 1));
       theta /= segments;
 
-      if (tangents[0].dot(vec.crossVectors(normals[0], normals[segments])) > 0) {
+      if (tangents[0].dot(vec.crossVectors(normals[0], normals[segments])) >
+          0) {
         theta = -theta;
       }
 
@@ -361,11 +356,7 @@ class Curve {
       }
     }
 
-    return FrenetFrames(
-      tangents: tangents,
-      normals: normals,
-      biNormals: binormals
-    );//{"tangents": tangents, "normals": normals, "binormals": binormals};
+    return FrenetFrames(tangents: tangents, normals: normals, binormals: binormals);
   }
 
   Curve clone() {
@@ -374,24 +365,35 @@ class Curve {
 
   Curve copy(Curve source) {
     arcLengthDivisions = source.arcLengthDivisions;
-    type = source.type;
-
     return this;
   }
 
-  Map<String, dynamic> toJSON() {
+   Map<String,dynamic> toJSON() {
     Map<String, dynamic> data = {
       "metadata": {"version": 4.5, "type": 'Curve', "generator": 'Curve.toJSON'}
     };
 
     data["arcLengthDivisions"] = arcLengthDivisions;
-    data["type"] = type;
+    data["type"] = runtimeType.toString();
 
     return data;
   }
 
-  Curve fromJSON(json) {
-    arcLengthDivisions = json.arcLengthDivisions;
+  Curve fromJSON(Map<String,dynamic> json) {
+    arcLengthDivisions = json['arcLengthDivisions'];
+
     return this;
   }
+}
+
+class FrenetFrames{
+  FrenetFrames({
+    this.tangents, 
+    this.normals, 
+    this.binormals
+  });
+
+  final List<Vector3>? tangents;
+  final List<Vector3>? normals;
+  final List<Vector3>? binormals;
 }

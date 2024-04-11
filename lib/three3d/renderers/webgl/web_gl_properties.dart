@@ -1,7 +1,7 @@
-import 'package:three_dart/three3d/weak_map.dart';
+part of three_webgl;
 
 class WebGLProperties {
-  var properties = WeakMap<dynamic, Map<String, dynamic>?>();
+  final properties = WeakMap<dynamic, Map<String, dynamic>?>();
 
   Map<String, dynamic> get(object) {
     Map<String, dynamic> map;
@@ -16,15 +16,15 @@ class WebGLProperties {
     return map;
   }
 
-  remove(object) {
+  void remove(object) {
     properties.remove(object);
   }
 
-  update(object, key, value) {
-    var m = properties[object]!;
+  void update(object, key, value) {
+    final m = properties[object]!;
 
     m[key] = value;
   }
 
-  dispose() {}
+  void dispose() {}
 }

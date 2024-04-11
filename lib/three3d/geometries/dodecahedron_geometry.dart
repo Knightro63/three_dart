@@ -1,31 +1,16 @@
-import 'package:three_dart/three3d/geometries/polyhedron_geometry.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import '../math/index.dart';
+import 'polyhedron_geometry.dart';
 
 class DodecahedronGeometry extends PolyhedronGeometry {
-  DodecahedronGeometry.create(
-    vertices,
-    indices,
-    radius,
-    detail,
-  ) : super(
-          vertices,
-          indices,
-          radius,
-          detail,
-        ) {
+  DodecahedronGeometry.create(vertices, indices, radius, detail)
+      : super(vertices, indices, radius, detail) {
     type = "DodecahedronGeometry";
-    parameters = {
-      "radius": radius,
-      "detail": detail,
-    };
+    parameters = {"radius": radius, "detail": detail};
   }
 
-  factory DodecahedronGeometry([
-    num radius = 1,
-    int detail = 0,
-  ]) {
-    var t = (1 + Math.sqrt(5)) / 2;
-    var r = 1 / t;
+  factory DodecahedronGeometry([num radius = 1, int detail = 0]) {
+    final t = (1 + Math.sqrt(5)) / 2;
+    final r = 1 / t;
 
     List<num> vertices = [
       // (±1, ±1, ±1)
@@ -158,6 +143,9 @@ class DodecahedronGeometry extends PolyhedronGeometry {
       9
     ];
 
-    return DodecahedronGeometry.create(vertices, indices, radius, detail);
+    DodecahedronGeometry dbg =
+        DodecahedronGeometry.create(vertices, indices, radius, detail);
+
+    return dbg;
   }
 }

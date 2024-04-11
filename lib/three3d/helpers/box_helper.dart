@@ -1,10 +1,10 @@
 import 'package:flutter_gl/flutter_gl.dart';
 import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/materials/line_basic_material.dart';
+import 'package:three_dart/three3d/materials/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
 import 'package:three_dart/three3d/objects/index.dart';
 
-var _box = /*@__PURE__*/ Box3(null, null);
+final _box = Box3();
 
 class BoxHelper extends LineSegments {
   Object3D? object;
@@ -12,34 +12,61 @@ class BoxHelper extends LineSegments {
   BoxHelper.create(geometry, material) : super(geometry, material);
 
   factory BoxHelper(object, {color = 0xffff00}) {
-    var indices = Uint16Array.from([0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7]);
-    var positions = Float32Array(8 * 3);
+    final indices = Uint16Array.from([
+      0,
+      1,
+      1,
+      2,
+      2,
+      3,
+      3,
+      0,
+      4,
+      5,
+      5,
+      6,
+      6,
+      7,
+      7,
+      4,
+      0,
+      4,
+      1,
+      5,
+      2,
+      6,
+      3,
+      7
+    ]);
+    final positions = Float32Array(8 * 3);
 
-    var geometry = BufferGeometry();
+    final geometry = BufferGeometry();
     geometry.setIndex(Uint16BufferAttribute(indices, 1, false));
-    geometry.setAttribute(AttributeTypes.position, Float32BufferAttribute(positions, 3, false));
+    geometry.setAttribute(
+        'position', Float32BufferAttribute(positions, 3, false));
 
-    var helper = BoxHelper.create(geometry, LineBasicMaterial({"color": color, "toneMapped": false}));
+    final boxHelper = BoxHelper.create(
+        geometry, LineBasicMaterial({"color": color, "toneMapped": false}));
 
-    helper.object = object;
-    helper.type = 'BoxHelper';
+    boxHelper.object = object;
+    boxHelper.type = 'BoxHelper';
 
-    helper.matrixAutoUpdate = false;
+    boxHelper.matrixAutoUpdate = false;
 
-    helper.update();
+    boxHelper.update();
 
-    return helper;
+    return boxHelper;
   }
 
-  update() {
+  void update() {
     if (object != null) {
       _box.setFromObject(object!);
     }
 
     if (_box.isEmpty()) return;
 
-    var min = _box.min;
-    var max = _box.max;
+    final min = _box.min;
+    final max = _box.max;
 
     /*
 			5____4
@@ -57,8 +84,8 @@ class BoxHelper extends LineSegments {
 		7: max.x, min.y, min.z
 		*/
 
-    var position = geometry!.attributes.positionBuffer!;
-    var array = position.array;
+    final position = geometry!.attributes["position"];
+    final array = position.array;
 
     array[0] = max.x;
     array[1] = max.y;
@@ -90,7 +117,7 @@ class BoxHelper extends LineSegments {
     geometry!.computeBoundingSphere();
   }
 
-  setFromObject(object) {
+  BoxHelper setFromObject(object) {
     this.object = object;
     update();
 

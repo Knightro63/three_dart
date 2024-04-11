@@ -1,14 +1,17 @@
-import 'package:three_dart/three_dart.dart';
+import 'font.dart';
+import 'shape.dart';
+import 'shape_path.dart';
+import '../../math/index.dart';
 
 class TYPRFont extends Font {
-  TYPRFont(json) {
-    data = FontData(json);
+  TYPRFont(data) {
+    this.data = data;
   }
 
   @override
   List<Shape> generateShapes(text, {double size = 100}) {
     List<Shape> shapes = [];
-    List<ShapePath> paths = createPaths(text, size, data);
+    final paths = createPaths(text, size, data);
 
     for (int p = 0, pl = paths.length; p < pl; p++) {
       // Array.prototype.push.apply( shapes, paths[ p ].toShapes() );
@@ -18,56 +21,54 @@ class TYPRFont extends Font {
     return shapes;
   }
 
-  CreatePathUtil2 generateShapes2(text, {int size = 100}) {
+  Map<String, dynamic> generateShapes2(text, {double size = 100}) {
     return createPaths2(text, size, data);
   }
 
-  // 同样文字路径不重复生成
-  // 生成唯一文字路径
-  // 记录 offset
-  CreatePathUtil2 createPaths2(
-      String text, num size, FontData data) {
+  Map<String, dynamic> createPaths2(
+      String text, double size, Map<String, dynamic> data) {
     List<String> chars = text.split("");
 
-    double scale = size / data.resolution;
-    double lineHeight = (data.boundingBox.yMax! -
-            data.boundingBox.yMin! +
-            data.underlineThickness) *
+    double scale = size / data["resolution"];
+    double lineHeight = (data["boundingBox"]["yMax"] -
+            data["boundingBox"]["yMin"] +
+            data["underlineThickness"]) *
         scale;
 
     // List<ShapePath> paths = [];
 
-    Map<String, CreatePathUtil> paths = {};
-    List<CreatePathUtil> result = [];
+    Map<String, Map<String, dynamic>> paths = {};
+    List<Map<String, dynamic>> result = [];
 
-    num offsetX = 0.0;
-    num offsetY = 0.0;
+    double offsetX = 0.0;
+    double offsetY = 0.0;
 
-    num maxWidth = 0.0;
+    double maxWidth = 0.0;
 
     for (int i = 0; i < chars.length; i++) {
-      String char = chars[i];
+      final char = chars[i];
 
       if (char == '\n') {
         offsetX = 0;
         offsetY -= lineHeight;
-      } else {
-        var charPath = paths[char];
+      } 
+      else {
+        Map<String, dynamic>? charPath = paths[char];
         if (charPath == null) {
-          CreatePathUtil ret = createPath(char, scale, 0.0, 0.0, data);
+          final ret = createPath(char, scale, 0.0, 0.0, data);
           paths[char] = ret;
           charPath = ret;
         }
 
-        CreatePathUtil charData = CreatePathUtil(
-          char: char,
-          offsetX: offsetX.toDouble(),
-          offsetY: offsetY.toDouble()
-        );
+        Map<String, dynamic> charData = {
+          "char": char,
+          "offsetX": offsetX,
+          "offsetY": offsetY
+        };
 
         result.add(charData);
 
-        offsetX += charPath.offsetX;
+        offsetX += charPath["offsetX"];
         // paths.add(ret["path"]);
 
         if (offsetX > maxWidth) {
@@ -76,49 +77,75 @@ class TYPRFont extends Font {
       }
     }
 
-    CreatePathUtil2 _data = CreatePathUtil2(
-      paths: paths,
-      chars: result,
-      height: offsetY + lineHeight,
-      width: maxWidth.toDouble()
-    );
+    Map<String, dynamic> data2 = {
+      "paths": paths,
+      "chars": result,
+      "height": offsetY + lineHeight,
+      "width": maxWidth
+    };
 
-    return _data;
+    return data2;
   }
   @override
-  CreatePathUtil createPath(
-      String char, double scale, double offsetX, double offsetY, FontData data) {
-    List<int> _glyphs = List<int>.from(data.font.stringToGlyphs(char));
+  List<ShapePath> createPaths(
+      String text, double size, Map<String, dynamic> data) {
+    // final chars = Array.from ? Array.from( text ) : String( text ).split( '' ); // workaround for IE11, see #13988
+    List<String> chars = text.split("");
 
-    var gid = _glyphs[0];
-    var charPath = data.font.glyphToPath(gid);
+    double scale = size / data["resolution"];
+    double lineHeight = (data["boundingBox"]["yMax"] -
+            data["boundingBox"]["yMin"] +
+            data["underlineThickness"]) *
+        scale;
 
-    double preScale = (100000) / ((data.font.head["unitsPerEm"] ?? 2048) * 72);
-    // var _preScale = 1;
-    int ha = Math.round(data.font.hmtx["aWidth"][gid] * preScale);
+    List<ShapePath> paths = [];
 
-    ShapePath path = ShapePath();
+    double offsetX = 0.0;
+    double offsetY = 0.0;
+
+    for (int i = 0; i < chars.length; i++) {
+      final char = chars[i];
+
+      if (char == '\n') {
+        offsetX = 0;
+        offsetY -= lineHeight;
+      } 
+      else {
+        final ret = createPath(char, scale, offsetX, offsetY, data);
+        offsetX += ret["offsetX"];
+        paths.add(ret["path"]);
+      }
+    }
+
+    return paths;
+  }
+  @override
+  Map<String, dynamic> createPath(
+      String char, double scale, double offsetX, double offsetY, data) {
+    final font = data["font"];
+    List<int> glyphs = List<int>.from(font.stringToGlyphs(char));
+
+    final gid = glyphs[0];
+    final charPath = font.glyphToPath(gid);
+
+    final preScale = (100000) / ((font.head["unitsPerEm"] ?? 2048) * 72);
+    // final _preScale = 1;
+    final ha = Math.round(font.hmtx["aWidth"][gid] * preScale);
+
+    final path = ShapePath();
 
     double x = 0.1;
     double y = 0.1;
     double cpx, cpy, cpx1, cpy1, cpx2, cpy2;
 
-    var cmds = charPath["cmds"];
+    final cmds = charPath["cmds"];
     List<double> crds = List<double>.from(charPath["crds"].map((e) => e.toDouble()));
-
-    // print(" charPath  before scale ....");
-    // print(charPath);
-
     crds = crds.map((n) => Math.round(n * preScale).toDouble()).toList();
-
-    // print(" charPath ha: ${ha} _preScale: ${_preScale} ");
-    // print(cmds);
-    // print(crds);
 
     int i = 0;
     int l = cmds.length;
     for (int j = 0; j < l; j++) {
-      var action = cmds[j];
+      final action = cmds[j];
 
       switch (action) {
         case 'M': // moveTo
@@ -164,11 +191,8 @@ class TYPRFont extends Font {
       }
     }
 
-    return CreatePathUtil(
-      offsetX: ha * scale.toDouble(),
-      path: path
-    );//{"offsetX": ha * scale, "path": path};
+    return {"offsetX": ha * scale, "path": path};
   }
-
-  dispose() {}
+  @override
+  void dispose() {}
 }

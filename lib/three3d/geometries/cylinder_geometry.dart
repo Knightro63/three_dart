@@ -1,22 +1,18 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import '../core/index.dart';
+import '../math/index.dart';
 
 class CylinderGeometry extends BufferGeometry {
-  NativeArray? verticesArray;
-  NativeArray? normalsArray;
-  NativeArray? uvsArray;
-
   CylinderGeometry([
-    radiusTop = 1,
-    radiusBottom = 1,
-    height = 1,
-    radialSegments = 8,
-    heightSegments = 1,
+    double radiusTop = 1,
+    double radiusBottom = 1,
+    double height = 1,
+    int radialSegments = 8,
+    int heightSegments = 1,
     bool openEnded = false,
-    thetaStart = 0,
-    thetaLength = Math.pi * 2,
-  ]) : super() {
+    num thetaStart = 0,
+    double thetaLength = Math.pi * 2
+  ]): super() {
     type = "CylinderGeometry";
     parameters = {
       "radiusTop": radiusTop,
@@ -29,10 +25,10 @@ class CylinderGeometry extends BufferGeometry {
       "thetaLength": thetaLength
     };
 
-    var scope = this;
+    final scope = this;
 
-    radialSegments = Math.floor(radialSegments);
-    heightSegments = Math.floor(heightSegments);
+    // radialSegments = Math.floor(radialSegments);
+    // heightSegments = Math.floor(heightSegments);
 
     // buffers
 
@@ -43,52 +39,54 @@ class CylinderGeometry extends BufferGeometry {
 
     // helper variables
 
-    var index = 0;
-    var indexArray = [];
-    var halfHeight = height / 2;
-    var groupStart = 0;
+    int index = 0;
+    final indexArray = [];
+    final halfHeight = height / 2;
+    int groupStart = 0;
 
     // generate geometry
 
-    generateTorso() {
-      var normal = Vector3();
-      var vertex = Vector3();
+    void generateTorso() {
+      final normal = Vector3();
+      final vertex = Vector3();
 
-      var groupCount = 0;
+      int groupCount = 0;
 
       // this will be used to calculate the normal
-      var slope = (radiusBottom - radiusTop) / height;
+      final slope = (radiusBottom - radiusTop) / height;
 
       // generate vertices, normals and uvs
 
-      for (var y = 0; y <= heightSegments; y++) {
-        var indexRow = [];
+      for (int y = 0; y <= heightSegments; y++) {
+        final indexRow = [];
 
-        var v = y / heightSegments;
+        final v = y / heightSegments;
 
         // calculate the radius of the current row
 
-        var radius = v * (radiusBottom - radiusTop) + radiusTop;
+        final radius = v * (radiusBottom - radiusTop) + radiusTop;
 
-        for (var x = 0; x <= radialSegments; x++) {
-          var u = x / radialSegments;
+        for (int x = 0; x <= radialSegments; x++) {
+          final u = x / radialSegments;
 
-          var theta = u * thetaLength + thetaStart;
+          final theta = u * thetaLength + thetaStart;
 
-          var sinTheta = Math.sin(theta);
-          var cosTheta = Math.cos(theta);
+          final sinTheta = Math.sin(theta);
+          final cosTheta = Math.cos(theta);
 
           // vertex
 
           vertex.x = radius * sinTheta;
           vertex.y = -v * height + halfHeight;
           vertex.z = radius * cosTheta;
-          vertices.addAll([vertex.x.toDouble(), vertex.y.toDouble(), vertex.z.toDouble()]);
+          vertices.addAll(
+              [vertex.x.toDouble(), vertex.y.toDouble(), vertex.z.toDouble()]);
 
           // normal
 
           normal.set(sinTheta, slope, cosTheta).normalize();
-          normals.addAll([normal.x.toDouble(), normal.y.toDouble(), normal.z.toDouble()]);
+          normals.addAll(
+              [normal.x.toDouble(), normal.y.toDouble(), normal.z.toDouble()]);
 
           // uv
 
@@ -106,14 +104,14 @@ class CylinderGeometry extends BufferGeometry {
 
       // generate indices
 
-      for (var x = 0; x < radialSegments; x++) {
-        for (var y = 0; y < heightSegments; y++) {
+      for (int x = 0; x < radialSegments; x++) {
+        for (int y = 0; y < heightSegments; y++) {
           // we use the index array to access the correct indices
 
-          var a = indexArray[y][x];
-          var b = indexArray[y + 1][x];
-          var c = indexArray[y + 1][x + 1];
-          var d = indexArray[y][x + 1];
+          final a = indexArray[y][x];
+          final b = indexArray[y + 1][x];
+          final c = indexArray[y + 1][x + 1];
+          final d = indexArray[y][x + 1];
 
           // faces
 
@@ -135,23 +133,23 @@ class CylinderGeometry extends BufferGeometry {
       groupStart += groupCount;
     }
 
-    generateCap(top) {
+    void generateCap(bool top) {
       // save the index of the first center vertex
-      var centerIndexStart = index;
+      final centerIndexStart = index;
 
-      var uv = Vector2();
-      var vertex = Vector3();
+      final uv = Vector2(null, null);
+      final vertex = Vector3();
 
-      var groupCount = 0;
+      int groupCount = 0;
 
-      var radius = (top == true) ? radiusTop : radiusBottom;
-      var sign = (top == true) ? 1 : -1;
+      final radius = (top == true) ? radiusTop : radiusBottom;
+      final sign = (top == true) ? 1 : -1;
 
       // first we generate the center vertex data of the cap.
       // because the geometry needs one set of uvs per face,
       // we must generate a center vertex per face/segment
 
-      for (var x = 1; x <= radialSegments; x++) {
+      for (int x = 1; x <= radialSegments; x++) {
         // vertex
 
         vertices.addAll([0, halfHeight * sign, 0]);
@@ -170,23 +168,24 @@ class CylinderGeometry extends BufferGeometry {
       }
 
       // save the index of the last center vertex
-      var centerIndexEnd = index;
+      final centerIndexEnd = index;
 
       // now we generate the surrounding vertices, normals and uvs
 
-      for (var x = 0; x <= radialSegments; x++) {
-        var u = x / radialSegments;
-        var theta = u * thetaLength + thetaStart;
+      for (int x = 0; x <= radialSegments; x++) {
+        final u = x / radialSegments;
+        final theta = u * thetaLength + thetaStart;
 
-        var cosTheta = Math.cos(theta);
-        var sinTheta = Math.sin(theta);
+        final cosTheta = Math.cos(theta);
+        final sinTheta = Math.sin(theta);
 
         // vertex
 
         vertex.x = radius * sinTheta;
         vertex.y = halfHeight * sign;
         vertex.z = radius * cosTheta;
-        vertices.addAll([vertex.x.toDouble(), vertex.y.toDouble(), vertex.z.toDouble()]);
+        vertices.addAll(
+            [vertex.x.toDouble(), vertex.y.toDouble(), vertex.z.toDouble()]);
 
         // normal
 
@@ -205,9 +204,9 @@ class CylinderGeometry extends BufferGeometry {
 
       // generate indices
 
-      for (var x = 0; x < radialSegments; x++) {
-        var c = centerIndexStart + x;
-        var i = centerIndexEnd + x;
+      for (int x = 0; x < radialSegments; x++) {
+        final c = centerIndexStart + x;
+        final i = centerIndexEnd + x;
 
         if (top == true) {
           // face top
@@ -224,7 +223,8 @@ class CylinderGeometry extends BufferGeometry {
 
       // add a group to the geometry. this will ensure multi material support
 
-      scope.addGroup(groupStart, groupCount, top == true ? 1 : 2);
+      scope.addGroup(groupStart, groupCount,
+          top == true ? 1 : 2);
 
       // calculate new start value for groups
 
@@ -241,9 +241,12 @@ class CylinderGeometry extends BufferGeometry {
     // build geometry
 
     setIndex(indices);
-    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
-    setAttribute(AttributeTypes.normal, Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
-    setAttribute(AttributeTypes.position, Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
+    setAttribute('position',
+        Float32BufferAttribute(Float32Array.from(vertices), 3, false));
+    setAttribute('normal',
+        Float32BufferAttribute(Float32Array.from(normals), 3, false));
+    setAttribute(
+        'uv', Float32BufferAttribute(Float32Array.from(uvs), 2, false));
   }
 
   static CylinderGeometry fromJSON(data) {
@@ -255,15 +258,7 @@ class CylinderGeometry extends BufferGeometry {
       data["heightSegments"],
       data["openEnded"],
       data["thetaStart"],
-      data["thetaLength"],
+      data["thetaLength"]
     );
-  }
-
-  @override
-  void dispose() {
-    verticesArray?.dispose();
-    normalsArray?.dispose();
-    uvsArray?.dispose();
-    super.dispose();
   }
 }

@@ -1,12 +1,17 @@
-import 'package:three_dart/three3d/extras/core/shape_path.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import 'shape_path.dart';
+import '../../math/index.dart';
 
 double degsToRads = Math.pi / 180;
-num digit0 = 48, digit9 = 57, comma = 44, space = 32, period = 46, minus = 45;
+num digit0 = 48; 
+num digit9 = 57;
+num comma = 44;
+num space = 32;
+num period = 46;
+num minus = 45;
 
 class SvgPath {
-  static ShapePath transformSVGPath(String svgPathStr) {
-    ShapePath path = ShapePath();
+  static transformSVGPath(svgPathStr) {
+    final path = ShapePath();
 
     int idx = 1;
     String activeCmd;
@@ -16,13 +21,24 @@ class SvgPath {
     double nx = 0;
     double ny = 0;
     double firstX = 0, firstY = 0;
-    double x1 = 0, x2 = 0, y1 = 0, y2 = 0, rx = 0, ry = 0, xar = 0, laf = 0, sf = 0;
+    double x1 = 0,
+        x2 = 0,
+        y1 = 0,
+        y2 = 0,
+        rx = 0,
+        ry = 0,
+        xar = 0,
+        laf = 0,
+        sf = 0;
+        //cx = 0,
+        //cy = 0;
 
-    int len = svgPathStr.length;
+    final len = svgPathStr.length;
 
     double eatNum() {
       int sidx;
-      int c = 0;
+      double c = 0.0;
+      //bool isFloat = false;
       String s;
 
       // eat delims
@@ -51,6 +67,7 @@ class SvgPath {
           continue;
         } else if (c == period) {
           idx++;
+          //isFloat = true;
           continue;
         }
 
@@ -68,7 +85,7 @@ class SvgPath {
     }
 
     bool nextIsNum() {
-      int c;
+      num c;
 
       // do permanently eat any delims...
 
@@ -246,8 +263,8 @@ class SvgPath {
           //cx = Math.cos(xar) * x2 - Math.sin(xar) * y2 + (x + nx) / 2;
           //cy = Math.sin(xar) * x2 + Math.cos(xar) * y2 + (y + ny) / 2;
 
-          Vector2 u = Vector2(1, 0);
-          Vector2 v = Vector2((x1 - x2) / rx, (y1 - y2) / ry);
+          final u = Vector2(1, 0);
+          final v = Vector2((x1 - x2) / rx, (y1 - y2) / ry);
 
           double startAng = Math.acos(u.dot(v) / u.length() / v.length());
 
@@ -263,13 +280,17 @@ class SvgPath {
 
           if (((v.x * u.y) - (v.y * u.x)) < 0) deltaAng = -deltaAng;
 
-          // if ( ! sf && deltaAng > 0 ) deltaAng -= Math.PI * 2;
-          // if ( sf && deltaAng < 0 ) deltaAng += Math.PI * 2;
+          // if ( ! sf && deltaAng > 0 ) deltaAng -= Math.pi * 2;
+          // if ( sf && deltaAng < 0 ) deltaAng += Math.pi * 2;
           if (sf == 0 && deltaAng > 0) deltaAng -= Math.pi * 2;
           if (sf != 0 && deltaAng < 0) deltaAng += Math.pi * 2;
 
           // path.absarc( cx, cy, rx, startAng, startAng + deltaAng, sf );
           throw ("SvgPath path.absarc");
+
+          // x = nx;
+          // y = ny;
+          // break;
 
         default:
           throw ("Wrong path command: $activeCmd");
@@ -278,7 +299,8 @@ class SvgPath {
       // just reissue the command
 
       if (canRepeat && nextIsNum()) continue;
-      int index = idx++;
+
+      final index = idx++;
 
       if (index < len) {
         activeCmd = svgPathStr[index];

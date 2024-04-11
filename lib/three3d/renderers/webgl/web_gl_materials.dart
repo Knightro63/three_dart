@@ -1,9 +1,4 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/materials/index.dart';
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/renderers/web_gl_renderer.dart';
-import 'package:three_dart/three3d/renderers/webgl/web_gl_properties.dart';
-import 'package:three_dart/three3d/textures/index.dart';
+part of three_webgl;
 
 class WebGLMaterials {
   WebGLRenderer renderer;
@@ -11,18 +6,19 @@ class WebGLMaterials {
 
   WebGLMaterials(this.renderer, this.properties);
 
-  refreshFogUniforms(uniforms, fog) {
+  void refreshFogUniforms(Map uniforms, FogBase fog) {
     uniforms["fogColor"]["value"].copy(fog.color);
 
     if (fog.isFog) {
       uniforms["fogNear"]["value"] = fog.near;
       uniforms["fogFar"]["value"] = fog.far;
-    } else if (fog.isFogExp2) {
+    } 
+    else if (fog.isFogExp2) {
       uniforms["fogDensity"]["value"] = fog.density;
     }
   }
 
-  refreshMaterialUniforms(uniforms, Material material, pixelRatio, height, transmissionRenderTarget) {
+  void refreshMaterialUniforms(Map<String, dynamic> uniforms, Material material, double pixelRatio, double height, RenderTarget? transmissionRenderTarget) {
     if (material is MeshBasicMaterial) {
       refreshUniformsCommon(uniforms, material);
     } else if (material is MeshLambertMaterial) {
@@ -68,7 +64,7 @@ class WebGLMaterials {
     }
   }
 
-  refreshUniformsCommon(Map<String, dynamic> uniforms, Material material) {
+  void refreshUniformsCommon(Map<String, dynamic> uniforms, Material material) {
     uniforms["opacity"]["value"] = material.opacity;
 
     uniforms["diffuse"]["value"].copy(material.color);
@@ -115,7 +111,7 @@ class WebGLMaterials {
       uniforms["alphaTest"]["value"] = material.alphaTest;
     }
 
-    var envMap = properties.get(material)["envMap"];
+    final envMap = properties.get(material)["envMap"];
 
     if (envMap != null) {
       uniforms["envMap"]["value"] = envMap;
@@ -132,7 +128,7 @@ class WebGLMaterials {
       uniforms["lightMap"]["value"] = material.lightMap;
 
       // artist-friendly light intensity scaling factor
-      var scaleFactor = (renderer.physicallyCorrectLights != true) ? Math.pi : 1;
+      final scaleFactor = (renderer.physicallyCorrectLights != true) ? Math.pi : 1;
 
       uniforms["lightMapIntensity"]["value"] = material.lightMapIntensity! * scaleFactor;
     }
@@ -156,7 +152,7 @@ class WebGLMaterials {
     // 11. clearcoat normal map
     // 12. clearcoat roughnessMap map
 
-    var uvScaleMap;
+    Texture? uvScaleMap;
 
     if (material.map != null) {
       uvScaleMap = material.map;
@@ -199,11 +195,11 @@ class WebGLMaterials {
     if (uvScaleMap != null) {
       // backwards compatibility
       if (uvScaleMap.isWebGLRenderTarget) {
-        uvScaleMap = uvScaleMap.texture;
+        //uvScaleMap = uvScaleMap.texture;
       }
 
-      if (uvScaleMap?.matrixAutoUpdate == true) {
-        uvScaleMap?.updateMatrix();
+      if (uvScaleMap.matrixAutoUpdate == true) {
+        uvScaleMap.updateMatrix();
       }
 
       uniforms["uvTransform"]["value"].copy(uvScaleMap.matrix);
@@ -213,18 +209,19 @@ class WebGLMaterials {
     // 1. ao map
     // 2. light map
 
-    var uv2ScaleMap;
+    Texture? uv2ScaleMap;
 
     if (material.aoMap != null) {
       uv2ScaleMap = material.aoMap;
-    } else if (material.lightMap != null) {
+    } 
+    else if (material.lightMap != null) {
       uv2ScaleMap = material.lightMap;
     }
 
     if (uv2ScaleMap != null) {
       // backwards compatibility
       if (uv2ScaleMap.isWebGLRenderTarget) {
-        uv2ScaleMap = uv2ScaleMap.texture;
+        //uv2ScaleMap = uv2ScaleMap.texture;
       }
 
       if (uv2ScaleMap.matrixAutoUpdate == true) {
@@ -235,18 +232,18 @@ class WebGLMaterials {
     }
   }
 
-  refreshUniformsLine(uniforms, material) {
+  void refreshUniformsLine(Map<String, dynamic> uniforms, Material material) {
     uniforms["diffuse"]["value"].copy(material.color);
     uniforms["opacity"]["value"] = material.opacity;
   }
 
-  refreshUniformsDash(uniforms, material) {
+  void refreshUniformsDash(Map<String, dynamic> uniforms, Material material) {
     uniforms["dashSize"]["value"] = material.dashSize;
-    uniforms["totalSize"]["value"] = material.dashSize + material.gapSize;
+    uniforms["totalSize"]["value"] = (material.dashSize ?? 0) + (material.gapSize ?? 0);
     uniforms["scale"]["value"] = material.scale;
   }
 
-  refreshUniformsPoints(uniforms, Material material, pixelRatio, height) {
+  void refreshUniformsPoints(Map<String, dynamic> uniforms, Material material, double pixelRatio, double height) {
     uniforms["diffuse"]["value"].copy(material.color);
     uniforms["opacity"]["value"] = material.opacity;
     uniforms["size"]["value"] = material.size! * pixelRatio;
@@ -285,7 +282,7 @@ class WebGLMaterials {
     }
   }
 
-  refreshUniformsSprites(uniforms, material) {
+  void refreshUniformsSprites(Map<String, dynamic> uniforms, Material material) {
     uniforms["diffuse"]["value"].copy(material.color);
     uniforms["opacity"]["value"] = material.opacity;
     uniforms["rotation"]["value"] = material.rotation;
@@ -306,7 +303,7 @@ class WebGLMaterials {
     // 1. color map
     // 2. alpha map
 
-    var uvScaleMap;
+    late final Texture? uvScaleMap;
 
     if (material.map != null) {
       uvScaleMap = material.map;
@@ -323,18 +320,18 @@ class WebGLMaterials {
     }
   }
 
-  refreshUniformsPhong(uniforms, material) {
+  void refreshUniformsPhong(Map<String, dynamic> uniforms, Material material) {
     uniforms["specular"]["value"].copy(material.specular);
-    uniforms["shininess"]["value"] = Math.max<num>(material.shininess, 1e-4); // to prevent pow( 0.0, 0.0 )
+    uniforms["shininess"]["value"] = Math.max<num>(material.shininess!, 1e-4); // to prevent pow( 0.0, 0.0 )
   }
 
-  refreshUniformsToon(uniforms, material) {
+  void refreshUniformsToon(Map<String, dynamic> uniforms, Material material) {
     if (material.gradientMap != null) {
       uniforms["gradientMap"]["value"] = material.gradientMap;
     }
   }
 
-  refreshUniformsStandard(uniforms, material) {
+  void refreshUniformsStandard(Map<String, dynamic> uniforms, Material material) {
     uniforms["roughness"]["value"] = material.roughness;
     uniforms["metalness"]["value"] = material.metalness;
 
@@ -346,7 +343,7 @@ class WebGLMaterials {
       uniforms["metalnessMap"]["value"] = material.metalnessMap;
     }
 
-    var envMap = properties.get(material)["envMap"];
+    final envMap = properties.get(material)["envMap"];
 
     if (envMap != null) {
       //uniforms.envMap.value = material.envMap; // part of uniforms common
@@ -354,7 +351,7 @@ class WebGLMaterials {
     }
   }
 
-  refreshUniformsPhysical(uniforms, material, transmissionRenderTarget) {
+  void refreshUniformsPhysical(Map<String, dynamic> uniforms,Material material, RenderTarget? transmissionRenderTarget) {
     uniforms["ior"]["value"] = material.ior; // also part of uniforms common
 
     if (material.sheen > 0) {
@@ -395,8 +392,8 @@ class WebGLMaterials {
 
     if (material.transmission > 0) {
       uniforms["transmission"]["value"] = material.transmission;
-      uniforms["transmissionSamplerMap"]["value"] = transmissionRenderTarget.texture;
-      uniforms["transmissionSamplerSize"]["value"].set(transmissionRenderTarget.width, transmissionRenderTarget.height);
+      uniforms["transmissionSamplerMap"]["value"] = transmissionRenderTarget?.texture;
+      uniforms["transmissionSamplerSize"]["value"].set(transmissionRenderTarget?.width, transmissionRenderTarget?.height);
 
       if (material.transmissionMap != null) {
         uniforms["transmissionMap"]["value"] = material.transmissionMap;
@@ -424,13 +421,13 @@ class WebGLMaterials {
     }
   }
 
-  refreshUniformsMatcap(uniforms, material) {
+  void refreshUniformsMatcap(Map<String, dynamic> uniforms, Material material) {
     if (material.matcap != null) {
       uniforms["matcap"]["value"] = material.matcap;
     }
   }
 
-  refreshUniformsDistance(uniforms, material) {
+  void refreshUniformsDistance(Map<String, dynamic> uniforms, MeshDistanceMaterial material) {
     uniforms["referencePosition"]["value"].copy(material.referencePosition);
     uniforms["nearDistance"]["value"] = material.nearDistance;
     uniforms["farDistance"]["value"] = material.farDistance;

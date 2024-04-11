@@ -5,10 +5,7 @@
 */
 // import "package:universal_html/html.dart";
 
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/core/event_dispatcher.dart';
-import 'package:three_dart/three3d/math/vector4.dart';
-import 'package:three_dart/three3d/textures/index.dart';
+part of three_renderers;
 
 abstract class RenderTarget with EventDispatcher {
   late int width;
@@ -77,7 +74,7 @@ class WebGLRenderTarget extends RenderTarget {
 
     this.options = options ?? WebGLRenderTargetOptions({});
 
-    var image = ImageElement(width: width, height: height, depth: 1);
+    final image = ImageElement(width: width, height: height, depth: 1);
 
     texture = Texture(image, this.options.mapping, this.options.wrapS, this.options.wrapT, this.options.magFilter,
         this.options.minFilter, this.options.format, this.options.type, this.options.anisotropy, this.options.encoding);
@@ -152,7 +149,7 @@ class WebGLRenderTarget extends RenderTarget {
 
   @override
   void dispose() {
-    dispatchEvent(Event({"type": "dispose"}));
+    dispatchEvent(Event(type: "dispose"));
   }
 }
 

@@ -1,9 +1,9 @@
-import 'package:three_dart/three3d/math/math_utils.dart';
-import 'package:three_dart/three3d/math/matrix4.dart';
-import 'package:three_dart/three3d/math/vector3.dart';
+import 'math_utils.dart';
+import 'matrix4.dart';
+import 'vector3.dart';
 
-final _startP = /*@__PURE__*/ Vector3();
-final _startEnd = /*@__PURE__*/ Vector3();
+final _startP = Vector3();
+final _startEnd = Vector3();
 
 class Line3 {
   late Vector3 start;
@@ -22,7 +22,7 @@ class Line3 {
   }
 
   Line3 clone() {
-    return Line3(null, null).copy(this);
+    return Line3().copy(this);
   }
 
   Line3 copy(Line3 line) {
@@ -44,7 +44,7 @@ class Line3 {
     return start.distanceToSquared(end);
   }
 
-  double distance() {
+  num distance() {
     return start.distanceTo(end);
   }
 
@@ -59,7 +59,7 @@ class Line3 {
     final startEnd2 = _startEnd.dot(_startEnd);
     final startEndStartP = _startEnd.dot(_startP);
 
-    var t = startEndStartP / startEnd2;
+    double t = startEndStartP / startEnd2;
 
     if (clampToLine) {
       t = MathUtils.clamp(t, 0, 1);

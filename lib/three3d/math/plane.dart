@@ -1,13 +1,13 @@
-import 'package:three_dart/three3d/math/box3.dart';
-import 'package:three_dart/three3d/math/line3.dart';
-import 'package:three_dart/three3d/math/matrix3.dart';
-import 'package:three_dart/three3d/math/matrix4.dart';
-import 'package:three_dart/three3d/math/sphere.dart';
-import 'package:three_dart/three3d/math/vector3.dart';
+import 'box3.dart';
+import 'line3.dart';
+import 'matrix3.dart';
+import 'matrix4.dart';
+import 'sphere.dart';
+import 'vector3.dart';
 
-Vector3 _vector1 = /*@__PURE__*/ Vector3();
-Vector3 _vector2 = /*@__PURE__*/ Vector3();
-Matrix3 _normalMatrix = /*@__PURE__*/ Matrix3();
+final _vector1 = Vector3();
+final _vector2 = Vector3();
+final _normalMatrix = Matrix3();
 
 class Plane {
   String type = "Plane";
@@ -22,8 +22,8 @@ class Plane {
     this.constant = (constant != null) ? constant : 0;
   }
 
-  List<num> toJSON() {
-    List<num> data = normal.toJSON();
+  List<num> toList() {
+    List<num> data = normal.toList();
     data.add(constant);
 
     return data;
@@ -51,7 +51,8 @@ class Plane {
   }
 
   Plane setFromCoplanarPoints(Vector3 a, Vector3 b, Vector3 c) {
-    var normal = _vector1.subVectors(c, b).cross(_vector2.subVectors(a, b)).normalize();
+    final normal =
+        _vector1.subVectors(c, b).cross(_vector2.subVectors(a, b)).normalize();
 
     // Q: should an error be thrown if normal is zero (e.g. degenerate plane)?
 
@@ -74,7 +75,7 @@ class Plane {
   Plane normalize() {
     // Note: will lead to a divide by zero if the plane is invalid.
 
-    var inverseNormalLength = 1.0 / normal.length();
+    final inverseNormalLength = 1.0 / normal.length();
     normal.multiplyScalar(inverseNormalLength);
     constant *= inverseNormalLength;
 
@@ -97,13 +98,16 @@ class Plane {
   }
 
   Vector3 projectPoint(Vector3 point, Vector3 target) {
-    return target.copy(normal).multiplyScalar(-distanceToPoint(point)).add(point);
+    return target
+        .copy(normal)
+        .multiplyScalar(-distanceToPoint(point))
+        .add(point);
   }
 
   Vector3? intersectLine(Line3 line, Vector3 target) {
-    var direction = line.delta(_vector1);
+    final direction = line.delta(_vector1);
 
-    var denominator = normal.dot(direction);
+    final denominator = normal.dot(direction);
 
     if (denominator == 0) {
       // line is coplanar, return origin
@@ -115,7 +119,7 @@ class Plane {
       return null;
     }
 
-    var t = -(line.start.dot(normal) + constant) / denominator;
+    final t = -(line.start.dot(normal) + constant) / denominator;
 
     if (t < 0 || t > 1) {
       return null;
@@ -127,8 +131,8 @@ class Plane {
   bool intersectsLine(Line3 line) {
     // Note: this tests if a line intersects the plane, not whether it (or its end-points) are coplanar with it.
 
-    var startSign = distanceToPoint(line.start);
-    var endSign = distanceToPoint(line.end);
+    final startSign = distanceToPoint(line.start);
+    final endSign = distanceToPoint(line.end);
 
     return (startSign < 0 && endSign > 0) || (endSign < 0 && startSign > 0);
   }
@@ -146,11 +150,12 @@ class Plane {
   }
 
   Plane applyMatrix4(Matrix4 matrix, [Matrix3? optionalNormalMatrix]) {
-    var normalMatrix = optionalNormalMatrix ?? _normalMatrix.getNormalMatrix(matrix);
+    final normalMatrix =
+        optionalNormalMatrix ?? _normalMatrix.getNormalMatrix(matrix);
 
-    var referencePoint = coplanarPoint(_vector1).applyMatrix4(matrix);
+    final referencePoint = coplanarPoint(_vector1).applyMatrix4(matrix);
 
-    var normal = this.normal.applyMatrix3(normalMatrix).normalize();
+    final normal = this.normal.applyMatrix3(normalMatrix).normalize();
 
     constant = -referencePoint.dot(normal).toDouble();
 

@@ -1,7 +1,7 @@
-import 'package:three_dart/three3d/animation/property_binding.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'package:three_dart/three3d/math/index.dart';
 import 'package:three_dart/three3d/dart_helpers.dart';
-import 'package:three_dart/three3d/math/math_utils.dart';
-import 'package:three_dart/three3d/objects/mesh.dart';
+import 'property_binding.dart';
 
 ///
 /// A group of objects that receives a shared animation state.
@@ -39,23 +39,22 @@ class AnimationObjectGroup {
   int nCachedObjects_ = 0;
   // note: read by PropertyBinding.Composite
 
-  late Map _indicesByUUID;
-  late dynamic _paths;
-  late dynamic _parsedPaths;
-  late dynamic _bindings;
-  late dynamic _bindingsIndicesByPath;
-  List<Mesh> _objects = [];
+  late Map<String,int> _indicesByUUID;
+  late List<String> _paths;
+  late List<Map<String,String?>> _parsedPaths;
+  late List<List<PropertyBinding?>> _bindings;
+  late Map<String,int> _bindingsIndicesByPath;
+  List<Object3D> _objects = [];
 
-  AnimationObjectGroup(List<Mesh>? items) {
+  AnimationObjectGroup(List<Object3D>? items) {
     // cached objects followed by the active ones
     _objects = items != null ? items.sublist(0) : [];
 
-    var indices = {};
-    _indicesByUUID = indices; // for bookkeeping
+    _indicesByUUID = {}; // for bookkeeping
 
     if (items != null && items.isNotEmpty) {
-      for (var i = 0, n = items.length; i != n; ++i) {
-        indices[items[i].uuid] = i;
+      for (int i = 0, n = items.length; i != n; ++i) {
+        _indicesByUUID[items[i].uuid] = i;
       }
     }
 
@@ -63,47 +62,23 @@ class AnimationObjectGroup {
     _parsedPaths = []; // inside: { we don't care, here }
     _bindings = []; // inside: Array< PropertyBinding >
     _bindingsIndicesByPath = {}; // inside: indices in these arrays
-
-    // var scope = this;
-
-    // this.stats = {
-
-    //   objects: {
-    //     get total() {
-
-    //       return scope._objects.length;
-
-    //     },
-    //     get inUse() {
-
-    //       return this.total - scope.nCachedObjects_;
-
-    //     }
-    //   },
-    //   get bindingsPerObject() {
-
-    //     return scope._bindings.length;
-
-    //   }
-
-    // };
   }
 
-  add(List<Mesh> items) {
-    var objects = _objects,
+  void add(List<Object3D> items) {
+    final objects = _objects,
         indicesByUUID = _indicesByUUID,
         paths = _paths,
         parsedPaths = _parsedPaths,
         bindings = _bindings,
         nBindings = bindings.length;
 
-    Mesh? knownObject;
-    var nObjects = objects.length;
-    var nCachedObjects = nCachedObjects_;
+    late Object3D knownObject;
+    int nObjects = objects.length;
+    int nCachedObjects = nCachedObjects_;
 
-    for (var i = 0, n = items.length; i != n; ++i) {
-      var object = items[i], uuid = object.uuid;
-      var index = indicesByUUID[uuid];
+    for (int i = 0, n = items.length; i != n; ++i) {
+      final object = items[i], uuid = object.uuid;
+      int? index = indicesByUUID[uuid];
 
       if (index == null) {
         // unknown object -> add it to the ACTIVE region
@@ -114,15 +89,17 @@ class AnimationObjectGroup {
 
         // accounting is done, now do the same for all bindings
 
-        for (var j = 0, m = nBindings; j != m; ++j) {
+        for (int j = 0, m = nBindings; j != m; ++j) {
           bindings[j].add(PropertyBinding(object, paths[j], parsedPaths[j]));
         }
-      } else if (index < nCachedObjects) {
+      } 
+      else if (index < nCachedObjects) {
         knownObject = objects[index];
 
         // move existing object to the ACTIVE region
 
-        var firstActiveIndex = --nCachedObjects, lastCachedObject = objects[firstActiveIndex];
+        final firstActiveIndex = --nCachedObjects,
+            lastCachedObject = objects[firstActiveIndex];
 
         indicesByUUID[lastCachedObject.uuid] = index;
         objects[index] = lastCachedObject;
@@ -132,10 +109,11 @@ class AnimationObjectGroup {
 
         // accounting is done, now do the same for all bindings
 
-        for (var j = 0, m = nBindings; j != m; ++j) {
-          var bindingsForPath = bindings[j], lastCached = bindingsForPath[firstActiveIndex];
+        for (int j = 0, m = nBindings; j != m; ++j) {
+          final bindingsForPath = bindings[j],
+              lastCached = bindingsForPath[firstActiveIndex];
 
-          var binding = bindingsForPath[index];
+          PropertyBinding? binding = bindingsForPath[index];
 
           bindingsForPath[index] = lastCached;
 
@@ -143,9 +121,9 @@ class AnimationObjectGroup {
 
           bindingsForPath[firstActiveIndex] = binding;
         }
-      } else if (objects[index] != knownObject) {
-        print('three.AnimationObjectGroup: Different objects with the same UUID '
-            'detected. Clean the caches or recreate your infrastructure when reloading scenes.');
+      } 
+      else if (objects[index] != knownObject) {
+        print('THREE.AnimationObjectGroup: Different objects with the same UUID ' 'detected. Clean the caches or recreate your infrastructure when reloading scenes.');
       } // else the object is already where we want it to be
 
     } // for arguments
@@ -153,18 +131,22 @@ class AnimationObjectGroup {
     nCachedObjects_ = nCachedObjects;
   }
 
-  remove(List<Mesh> items) {
-    var objects = _objects, indicesByUUID = _indicesByUUID, bindings = _bindings, nBindings = bindings.length;
+  void remove(List<Object3D> items) {
+    final objects = _objects,
+        indicesByUUID = _indicesByUUID,
+        bindings = _bindings,
+        nBindings = bindings.length;
 
-    var nCachedObjects = nCachedObjects_;
+    int nCachedObjects = nCachedObjects_;
 
-    for (var i = 0, n = items.length; i != n; ++i) {
-      var object = items[i], uuid = object.uuid, index = indicesByUUID[uuid];
+    for (int i = 0, n = items.length; i != n; ++i) {
+      final object = items[i], uuid = object.uuid, index = indicesByUUID[uuid];
 
       if (index != null && index >= nCachedObjects) {
         // move existing object into the CACHED region
 
-        var lastCachedIndex = nCachedObjects++, firstActiveObject = objects[lastCachedIndex];
+        final lastCachedIndex = nCachedObjects++,
+            firstActiveObject = objects[lastCachedIndex];
 
         indicesByUUID[firstActiveObject.uuid] = index;
         objects[index] = firstActiveObject;
@@ -174,8 +156,8 @@ class AnimationObjectGroup {
 
         // accounting is done, now do the same for all bindings
 
-        for (var j = 0, m = nBindings; j != m; ++j) {
-          var bindingsForPath = bindings[j],
+        for (int j = 0, m = nBindings; j != m; ++j) {
+          final bindingsForPath = bindings[j],
               firstActive = bindingsForPath[lastCachedIndex],
               binding = bindingsForPath[index];
 
@@ -189,13 +171,16 @@ class AnimationObjectGroup {
   }
 
   // remove & forget
-  uncache(List<Mesh> items) {
-    var objects = _objects, indicesByUUID = _indicesByUUID, bindings = _bindings, nBindings = bindings.length;
+  void uncache(List<Object3D> items) {
+    final objects = _objects,
+        indicesByUUID = _indicesByUUID,
+        bindings = _bindings,
+        nBindings = bindings.length;
 
-    var nCachedObjects = nCachedObjects_, nObjects = objects.length;
+    int nCachedObjects = nCachedObjects_, nObjects = objects.length;
 
-    for (var i = 0, n = items.length; i != n; ++i) {
-      var object = items[i], uuid = object.uuid, index = indicesByUUID[uuid];
+    for (int i = 0, n = items.length; i != n; ++i) {
+      final object = items[i], uuid = object.uuid, index = indicesByUUID[uuid];
 
       if (index != null) {
         // delete indicesByUUID[ uuid ];
@@ -204,7 +189,7 @@ class AnimationObjectGroup {
         if (index < nCachedObjects) {
           // object is cached, shrink the CACHED region
 
-          var firstActiveIndex = --nCachedObjects,
+          final firstActiveIndex = --nCachedObjects,
               lastCachedObject = objects[firstActiveIndex],
               lastIndex = --nObjects,
               lastObject = objects[lastIndex];
@@ -220,19 +205,20 @@ class AnimationObjectGroup {
 
           // accounting is done, now do the same for all bindings
 
-          for (var j = 0, m = nBindings; j != m; ++j) {
-            var bindingsForPath = bindings[j],
+          for (int j = 0, m = nBindings; j != m; ++j) {
+            final bindingsForPath = bindings[j],
                 lastCached = bindingsForPath[firstActiveIndex],
                 last = bindingsForPath[lastIndex];
 
             bindingsForPath[index] = lastCached;
             bindingsForPath[firstActiveIndex] = last;
-            bindingsForPath.pop();
+            bindingsForPath.removeLast();
           }
-        } else {
+        } 
+        else {
           // object is active, just swap with the last and pop
 
-          var lastIndex = --nObjects, lastObject = objects[lastIndex];
+          final lastIndex = --nObjects, lastObject = objects[lastIndex];
 
           if (lastIndex > 0) {
             indicesByUUID[lastObject.uuid] = index;
@@ -243,8 +229,8 @@ class AnimationObjectGroup {
 
           // accounting is done, now do the same for all bindings
 
-          for (var j = 0, m = nBindings; j != m; ++j) {
-            var bindingsForPath = bindings[j];
+          for (int j = 0, m = nBindings; j != m; ++j) {
+            final bindingsForPath = bindings[j];
 
             bindingsForPath[index] = bindingsForPath[lastIndex];
             pop(bindingsForPath);
@@ -260,23 +246,23 @@ class AnimationObjectGroup {
 
   // Internal interface used by befriended PropertyBinding.Composite:
 
-  subscribe_(path, parsedPath) {
+  List<PropertyBinding?> subscribe_(String path, parsedPath) {
     // returns an array of bindings for the given path that is changed
     // according to the contained objects in the group
 
-    var indicesByPath = _bindingsIndicesByPath;
-    var index = indicesByPath[path];
-    var bindings = _bindings;
+    final indicesByPath = _bindingsIndicesByPath;
+    int? index = indicesByPath[path];
+    final bindings = _bindings;
 
     if (index != null) return bindings[index];
 
-    var paths = _paths,
+    final paths = _paths,
         parsedPaths = _parsedPaths,
         objects = _objects,
         nObjects = objects.length,
         nCachedObjects = nCachedObjects_;
 
-    var bindingsForPath = List<PropertyBinding?>.filled(nObjects, null);
+    final bindingsForPath = List<PropertyBinding?>.filled(nObjects, null);
 
     index = bindings.length;
 
@@ -286,22 +272,23 @@ class AnimationObjectGroup {
     parsedPaths.add(parsedPath);
     bindings.add(bindingsForPath);
 
-    for (var i = nCachedObjects, n = objects.length; i != n; ++i) {
-      var object = objects[i];
+    for (int i = nCachedObjects, n = objects.length; i != n; ++i) {
+      final object = objects[i];
       bindingsForPath[i] = PropertyBinding(object, path, parsedPath);
     }
 
     return bindingsForPath;
   }
 
-  unsubscribe_(path) {
+  void unsubscribe_(path) {
     // tells the group to forget about a property path and no longer
     // update the array previously obtained with 'subscribe_'
 
-    var indicesByPath = _bindingsIndicesByPath, index = indicesByPath[path];
+    final indicesByPath = _bindingsIndicesByPath,
+        index = indicesByPath[path];
 
     if (index != null) {
-      var paths = _paths,
+      final paths = _paths,
           parsedPaths = _parsedPaths,
           bindings = _bindings,
           lastBindingsIndex = bindings.length - 1,
@@ -311,13 +298,13 @@ class AnimationObjectGroup {
       indicesByPath[lastBindingsPath] = index;
 
       bindings[index] = lastBindings;
-      bindings.pop();
+      bindings.removeLast();
 
       parsedPaths[index] = parsedPaths[lastBindingsIndex];
-      parsedPaths.pop();
+      parsedPaths.removeLast();
 
       paths[index] = paths[lastBindingsIndex];
-      paths.pop();
+      paths.removeLast();
     }
   }
 }

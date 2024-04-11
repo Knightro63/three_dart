@@ -1,16 +1,17 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/buffer_attribute.dart';
+import 'buffer_attribute.dart';
 
 class InstancedBufferAttribute extends BufferAttribute {
   late int meshPerAttribute;
 
-  InstancedBufferAttribute(NativeArray array, int itemSize, [bool normalized = false, this.meshPerAttribute = 1])
+  InstancedBufferAttribute(NativeArray array, int itemSize,
+      [bool normalized = false, this.meshPerAttribute = 1])
       : super(array, itemSize, normalized) {
     type = "InstancedBufferAttribute";
     // if ( normalized is num ) {
     //   meshPerAttribute = normalized;
     //   normalized = false;
-    //   print( 'three.InstancedBufferAttribute: The constructor now expects normalized as the third argument.' );
+    //   print( 'THREE.InstancedBufferAttribute: The constructor now expects normalized as the third argument.' );
     // }
   }
 
@@ -24,8 +25,8 @@ class InstancedBufferAttribute extends BufferAttribute {
   }
 
   @override
-  Map<String, dynamic> toJSON([data]) {
-    Map<String, dynamic> result = super.toJSON();
+  Map<String, dynamic> toJSON() {
+    final result = super.toJSON();
     result['meshPerAttribute'] = meshPerAttribute;
     result['isInstancedBufferAttribute'] = true;
     return result;

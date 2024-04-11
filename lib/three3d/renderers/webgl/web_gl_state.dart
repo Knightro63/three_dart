@@ -1,10 +1,4 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/materials/index.dart';
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/renderers/webgl/index.dart';
-import 'package:three_dart/three3d/weak_map.dart';
+part of three_webgl;
 
 class WebGLState {
   bool isWebGL2 = true;
@@ -18,7 +12,7 @@ class WebGLState {
 
   late int maxTextures;
 
-  var emptyTextures = <int, dynamic>{};
+  final emptyTextures = <int, dynamic>{};
   late Map<int, int> equationToGL;
   late Map<int, int> factorToGL;
 
@@ -31,7 +25,7 @@ class WebGLState {
   dynamic xrFramebuffer;
   Map currentBoundFramebuffers = {};
   WeakMap currentDrawbuffers = WeakMap();
-  var defaultDrawbuffers = [];
+  List defaultDrawbuffers = [];
 
   dynamic currentProgram;
 
@@ -57,7 +51,7 @@ class WebGLState {
   bool lineWidthAvailable = true;
 
   int? currentTextureSlot;
-  var currentBoundTextures = <int, BoundTexture>{};
+  Map<int, BoundTexture> currentBoundTextures = <int, BoundTexture>{};
 
   late Vector4 currentScissor;
   late Vector4 currentViewport;
@@ -129,21 +123,21 @@ class WebGLState {
     // currentScissor = new Vector4.init().fromArray( scissorParam );
     // currentViewport = new Vector4.init().fromArray( viewportParam );
 
-    currentScissor = Vector4();
-    currentViewport = Vector4();
+    currentScissor = Vector4.init();
+    currentViewport = Vector4.init();
   }
 
   createTexture(int type, int target, int count) {
-    var data = Uint8Array(4);
+    final data = Uint8Array(4);
     // 4 is required to match default unpack alignment of 4.
     //
-    var texture = gl.createTexture();
+    final texture = gl.createTexture();
 
     gl.bindTexture(type, texture);
     gl.texParameteri(type, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(type, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-    for (var i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
       gl.texImage2D(target + i, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
     }
 
@@ -203,7 +197,7 @@ class WebGLState {
   drawBuffers(renderTarget, framebuffer) {
     dynamic drawBuffers = defaultDrawbuffers;
 
-    var needsUpdate = false;
+    bool needsUpdate = false;
 
     if (renderTarget != null) {
       drawBuffers = currentDrawbuffers.get(framebuffer);
@@ -214,10 +208,10 @@ class WebGLState {
       }
 
       if (renderTarget.isWebGLMultipleRenderTargets) {
-        var textures = renderTarget.texture;
+        final textures = renderTarget.texture;
 
         if (drawBuffers.length != textures.length || drawBuffers[0] != gl.COLOR_ATTACHMENT0) {
-          for (var i = 0, il = textures.length; i < il; i++) {
+          for (int i = 0, il = textures.length; i < il; i++) {
             drawBuffers[i] = gl.COLOR_ATTACHMENT0 + i;
           }
 
@@ -393,7 +387,7 @@ class WebGLState {
   void setMaterial(Material material, bool frontFaceCW) {
     material.side == DoubleSide ? disable(gl.CULL_FACE) : enable(gl.CULL_FACE);
 
-    var flipSided = (material.side == BackSide);
+    bool flipSided = (material.side == BackSide);
     if (frontFaceCW) flipSided = !flipSided;
 
     setFlipSided(flipSided);
@@ -408,7 +402,7 @@ class WebGLState {
     depthBuffer.setMask(material.depthWrite);
     colorBuffer.setMask(material.colorWrite);
 
-    var stencilWrite = material.stencilWrite;
+    final stencilWrite = material.stencilWrite;
     stencilBuffer.setTest(stencilWrite);
     if (stencilWrite) {
       stencilBuffer.setMask(material.stencilWriteMask);
@@ -503,12 +497,12 @@ class WebGLState {
       activeTexture(null);
     }
 
-    var boundTexture = currentBoundTextures[currentTextureSlot];
+    BoundTexture? boundTexture = currentBoundTextures[currentTextureSlot];
 
     // print("WebGLState.boundTexture boundTexture: ${boundTexture} currentTextureSlot: ${currentTextureSlot} ");
 
     if (boundTexture == null) {
-      boundTexture = BoundTexture(null, null);
+      boundTexture = BoundTexture();
       currentBoundTextures[currentTextureSlot!] = boundTexture;
     }
 
@@ -530,7 +524,7 @@ class WebGLState {
   }
 
   unbindTexture() {
-    var boundTexture = currentBoundTextures[currentTextureSlot];
+    final boundTexture = currentBoundTextures[currentTextureSlot];
 
     if (boundTexture != null && boundTexture.type != null) {
       gl.bindTexture(boundTexture.type!, null);
@@ -559,7 +553,8 @@ class WebGLState {
   void texSubImage2DIf(target, level, x, y, glFormat, glType, image) {
     if (kIsWeb) {
       texSubImage2DNoSize(gl.TEXTURE_2D, 0, 0, 0, glFormat, glType, image.data);
-    } else {
+    } 
+    else {
       texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, image.width, image.height, glFormat, glType, image.data);
     }
   }
@@ -761,7 +756,7 @@ class ColorBuffer {
   late Function enable;
   late Function disable;
 
-  Vector4 color = Vector4();
+  Vector4 color = Vector4.init();
   bool? currentColorMask;
   Vector4 currentColorClear = Vector4(0, 0, 0, 0);
 
@@ -985,8 +980,5 @@ class BoundTexture {
   int? type;
   dynamic texture;
 
-  BoundTexture(type, texture) {
-    type = type;
-    texture = texture;
-  }
+  BoundTexture([this.type, this.texture]);
 }

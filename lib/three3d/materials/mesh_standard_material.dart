@@ -1,6 +1,6 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/materials/material.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import './material.dart';
+import '../math/index.dart';
+import '../constants.dart';
 
 class MeshStandardMaterial extends Material {
   MeshStandardMaterial([Map<String, dynamic>? parameters]) : super() {

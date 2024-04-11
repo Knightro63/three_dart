@@ -1,79 +1,81 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three_dart.dart';
+import 'buffer_attribute.dart';
 
 enum AttributeTypes{position,normal,color,uv,uv2,tangent,lineDistances,skinWeights,skinIndex,faceIndex}
 
 class Attributes{
   Attributes({
-    this.positionBuffer,
-    this.normalBuffer,
-    this.colorBuffer,
-    this.uv2Buffer,
-    this.uvBuffer,
-    this.tangentBuffer,
-    this.lineDistancesBuffer
+    this.position,
+    this.normal,
+    this.color,
+    this.uv2,
+    this.uv,
+    this.tangent,
+    this.lineDistances
   });
   BufferAttribute<NativeArray<num>>? faceIndexBuffer;
   BufferAttribute<NativeArray<num>>? skinIndexBuffer;
   BufferAttribute<NativeArray<num>>? skinWeightsBuffer;
-  BufferAttribute<NativeArray<num>>? positionBuffer;
-  BufferAttribute<NativeArray<num>>? normalBuffer;
-  BufferAttribute<NativeArray<num>>? colorBuffer;
-  BufferAttribute<NativeArray<num>>? uvBuffer;
-  BufferAttribute<NativeArray<num>>? uv2Buffer;
-  BufferAttribute<NativeArray<num>>? lineDistancesBuffer;
-  BufferAttribute<NativeArray<num>>? tangentBuffer;
-  //List<Color> color
-  List<Color>? get color => colorBuffer != null?List<Color>.generate(
-    colorBuffer!.length,
-    (i){
-      return Color(0,0,0).fromBufferAttribute(colorBuffer!, i);
-    }
-  ):null;
+  BufferAttribute<NativeArray<num>>? position;
+  BufferAttribute<NativeArray<num>>? normal;
+  BufferAttribute<NativeArray<num>>? color;
+  BufferAttribute<NativeArray<num>>? uv;
+  BufferAttribute<NativeArray<num>>? uv2;
+  BufferAttribute<NativeArray<num>>? lineDistances;
+  BufferAttribute<NativeArray<num>>? tangent;
+  // //List<Color> color
+  // List<Color>? get color => color != null?List<Color>.generate(
+  //   color!.length,
+  //   (i){
+  //     return Color(0,0,0).fromBufferAttribute(color!, i);
+  //   }
+  // ):null;
 
-  List<Vector3>? get normal => normalBuffer != null?List<Vector3>.generate(
-    normalBuffer!.length,
-    (i){
-      return Vector3().fromBufferAttribute(normalBuffer!, i);
-    }
-  ):null;
-  List<Vector4>? get skinWeights => skinWeightsBuffer != null?List<Vector4>.generate(
-    skinWeightsBuffer!.length,
-    (i){
-      return Vector4().fromBufferAttribute(skinWeightsBuffer!, i);
-    }
-  ):null;
-  List<Vector3>? get position => positionBuffer != null?List<Vector3>.generate(
-    positionBuffer!.length,
-    (i){
-      return Vector3().fromBufferAttribute(positionBuffer!, i);
-    }
-  ):null;
+  // List<Vector3>? get normal => normal != null?List<Vector3>.generate(
+  //   normal!.length,
+  //   (i){
+  //     return Vector3().fromBufferAttribute(normal!, i);
+  //   }
+  // ):null;
+  // List<Vector4>? get skinWeights => skinWeightsBuffer != null?List<Vector4>.generate(
+  //   skinWeightsBuffer!.length,
+  //   (i){
+  //     return Vector4().fromBufferAttribute(skinWeightsBuffer!, i);
+  //   }
+  // ):null;
+  // List<Vector3>? get position => position != null?List<Vector3>.generate(
+  //   position!.length,
+  //   (i){
+  //     return Vector3().fromBufferAttribute(position!, i);
+  //   }
+  // ):null;
 
-  List<Vector2>? get uv => uvBuffer != null?List<Vector2>.generate(
-    uvBuffer!.length,
-    (i){
-      return Vector2().fromBufferAttribute(uvBuffer!, i);
-    }
-  ):null;
+  // List<Vector2>? get uv => uv != null?List<Vector2>.generate(
+  //   uv!.length,
+  //   (i){
+  //     return Vector2().fromBufferAttribute(uv!, i);
+  //   }
+  // ):null;
 
-  List<Vector2>? get uv2 => uv2Buffer != null?List<Vector2>.generate(
-    uv2Buffer!.length,
-    (i){
-      return Vector2().fromBufferAttribute(uv2Buffer!, i);
-    }
-  ):null;
+  // List<Vector2>? get uv2 => uv2 != null?List<Vector2>.generate(
+  //   uv2!.length,
+  //   (i){
+  //     return Vector2().fromBufferAttribute(uv2!, i);
+  //   }
+  // ):null;
 
-  Float32Array? get lineDistances => lineDistancesBuffer != null?Float32Array.from(List<double>.from(lineDistancesBuffer!.array.toDartList())):null;
+  // Float32Array? get lineDistances => lineDistances != null?Float32Array.from(List<double>.from(lineDistances!.array.toDartList())):null;
 
-  List<Vector3>? get tangent => tangentBuffer != null?List<Vector3>.generate(
-    tangentBuffer!.length,
-    (i){
-      return Vector3().fromBufferAttribute(tangentBuffer!, i);
-    }
-  ):null;
+  // List<Vector3>? get tangent => tangent != null?List<Vector3>.generate(
+  //   tangent!.length,
+  //   (i){
+  //     return Vector3().fromBufferAttribute(tangent!, i);
+  //   }
+  // ):null;
 
   List<AttributeTypes> get keys => AttributeTypes.values.toList();
+  void operator []=(AttributeTypes key, BufferAttribute<NativeArray<num>>? value) => setAttribute(key, value);
+  BufferAttribute<NativeArray<num>>? operator [](AttributeTypes? key) => getAttribute(key);
 
   BufferAttribute<NativeArray<num>>? getAttributefromString(String name){
     for(int i = 0; i < AttributeTypes.values.length;i++){
@@ -95,31 +97,31 @@ class Attributes{
   }
   Attributes clone(){
     return Attributes(
-      normalBuffer:normalBuffer,
-      tangentBuffer: tangentBuffer,
-      colorBuffer: colorBuffer,
-      positionBuffer: positionBuffer,
-      uv2Buffer: uv2Buffer,
-      uvBuffer: uvBuffer,
-      lineDistancesBuffer: lineDistancesBuffer
+      normal:normal,
+      tangent: tangent,
+      color: color,
+      position: position,
+      uv2: uv2,
+      uv: uv,
+      lineDistances: lineDistances
     );
   }
-  BufferAttribute<NativeArray<num>>? getAttribute(AttributeTypes type){
+  BufferAttribute<NativeArray<num>>? getAttribute(AttributeTypes? type){
     switch (type) {
       case AttributeTypes.color:
-        return colorBuffer;
+        return color;
       case AttributeTypes.position:
-        return positionBuffer;
+        return position;
       case AttributeTypes.normal:
-        return normalBuffer;
+        return normal;
       case AttributeTypes.uv:
-        return uvBuffer;
+        return uv;
       case AttributeTypes.uv2:
-        return uv2Buffer;
+        return uv2;
       case AttributeTypes.tangent:
-        return tangentBuffer;
+        return tangent;
       case AttributeTypes.lineDistances:
-        return lineDistancesBuffer;
+        return lineDistances;
       case AttributeTypes.skinWeights:
         return skinWeightsBuffer;
       case AttributeTypes.skinIndex:
@@ -133,25 +135,25 @@ class Attributes{
   void setAttribute(AttributeTypes type, [BufferAttribute<NativeArray<num>>? value]){
     switch (type) {
       case AttributeTypes.color:
-        colorBuffer = value;
+        color = value;
         break;
       case AttributeTypes.position:
-        positionBuffer = value;
+        position = value;
         break;
       case AttributeTypes.normal:
-        normalBuffer = value;
+        normal = value;
         break;
       case AttributeTypes.uv:
-        uvBuffer = value;
+        uv = value;
         break;
       case AttributeTypes.uv2:
-        uv2Buffer = value;
+        uv2 = value;
         break;
       case AttributeTypes.lineDistances:
-        lineDistancesBuffer = value;
+        lineDistances = value;
         break;
       case AttributeTypes.tangent:
-        tangentBuffer = value;
+        tangent = value;
         break;
       case AttributeTypes.skinWeights:
         skinWeightsBuffer = value;
@@ -167,19 +169,19 @@ class Attributes{
   bool hasAttribute(AttributeTypes type){
     switch (type) {
       case AttributeTypes.color:
-        return colorBuffer != null;
+        return color != null;
       case AttributeTypes.position:
-        return positionBuffer != null;
+        return position != null;
       case AttributeTypes.normal:
-        return normalBuffer != null;
+        return normal != null;
       case AttributeTypes.uv:
-        return uvBuffer != null;
+        return uv != null;
       case AttributeTypes.uv2:
-        return uv2Buffer != null;
+        return uv2 != null;
       case AttributeTypes.tangent:
-        return tangentBuffer != null;
+        return tangent != null;
       case AttributeTypes.lineDistances:
-        return lineDistancesBuffer != null;
+        return lineDistances != null;
       case AttributeTypes.skinWeights:
         return skinWeightsBuffer != null;
       case AttributeTypes.skinIndex:

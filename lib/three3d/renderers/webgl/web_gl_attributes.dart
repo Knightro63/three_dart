@@ -1,8 +1,4 @@
-import 'dart:typed_data';
-
-import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/renderers/webgl/index.dart';
-import 'package:three_dart/three3d/weak_map.dart';
+part of three_webgl;
 
 class WebGLAttributes {
   dynamic gl;
@@ -16,14 +12,14 @@ class WebGLAttributes {
     isWebGL2 = capabilities.isWebGL2;
   }
 
-  Map<String, dynamic> createBuffer(var attribute, int bufferType, {String? name}) {
+  Map<String, dynamic> createBuffer(BufferAttribute<NativeArray<num>> attribute, int bufferType, {String? name}) {
     final array = attribute.array;
-    var usage = attribute.usage;
+    final usage = attribute.usage;
 
-    var type = gl.FLOAT;
+    dynamic type = gl.FLOAT;
     int bytesPerElement = 4;
 
-    var buffer = gl.createBuffer();
+    final buffer = gl.createBuffer();
 
     gl.bindBuffer(bufferType, buffer);
 
@@ -36,9 +32,11 @@ class WebGLAttributes {
     if (attribute is Float32BufferAttribute) {
       type = gl.FLOAT;
       bytesPerElement = Float32List.bytesPerElement;
-    } else if (attribute is Float64BufferAttribute) {
+    } 
+    else if (attribute is Float64BufferAttribute) {
       print('three.WebGLAttributes: Unsupported data buffer format: Float64Array.');
-    } else if (attribute is Float16BufferAttribute) {
+    } 
+    else if (attribute is Float16BufferAttribute) {
       if (isWebGL2) {
         bytesPerElement = 2;
         type = gl.HALF_FLOAT;
@@ -76,9 +74,9 @@ class WebGLAttributes {
     };
   }
 
-  updateBuffer(buffer, attribute, bufferType) {
-    var array = attribute.array;
-    var updateRange = attribute.updateRange;
+  void updateBuffer(buffer, attribute, bufferType) {
+    final array = attribute.array;
+    final updateRange = attribute.updateRange;
 
     gl.bindBuffer(bufferType, buffer);
 
@@ -95,17 +93,18 @@ class WebGLAttributes {
     }
   }
 
-  get(BaseBufferAttribute attribute) {
+  dynamic get(BaseBufferAttribute attribute) {
     if (attribute.type == "InterleavedBufferAttribute") {
       return buffers.get(attribute.data!);
-    } else {
+    } 
+    else {
       return buffers.get(attribute);
     }
   }
 
-  remove(BufferAttribute attribute) {
+  void remove(BufferAttribute attribute) {
     if (attribute.type == "InterleavedBufferAttribute") {
-      var data = buffers.get(attribute.data);
+      final data = buffers.get(attribute.data);
 
       if (data) {
         gl.deleteBuffer(data.buffer);
@@ -113,7 +112,7 @@ class WebGLAttributes {
         buffers.delete(attribute.data);
       }
     } else {
-      var data = buffers.get(attribute);
+      final data = buffers.get(attribute);
 
       if (data != null) {
         gl.deleteBuffer(data["buffer"]);
@@ -123,9 +122,9 @@ class WebGLAttributes {
     }
   }
 
-  update(attribute, bufferType, {String? name}) {
+  void update(attribute, bufferType, {String? name}) {
     if (attribute.type == "GLBufferAttribute") {
-      var cached = buffers.get(attribute);
+      final cached = buffers.get(attribute);
 
       if (cached == null || cached["version"] < attribute.version) {
         buffers.add(key: attribute, value: createBuffer(attribute, bufferType, name: name));

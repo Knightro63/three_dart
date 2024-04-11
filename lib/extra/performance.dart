@@ -1,5 +1,5 @@
 class Performance {
-  static now() {
+  static int now() {
     return DateTime.now().millisecondsSinceEpoch;
   }
 }

@@ -4,20 +4,21 @@ class FogBase {
   String name = "";
   late Color color;
 
-  bool isFog = false;
-  bool isFogExp2 = false;
-
-  toJSON() {
-    throw (" need implement .... ");
-  }
-}
-
-class Fog extends FogBase {
+  late num density;
   late num near;
   late num far;
 
+  bool isFog = false;
+  bool isFogExp2 = false;
+
+  Map<String,dynamic> toJSON() {
+    throw(" need implement .... ");
+  }
+
+}
+
+class Fog extends FogBase {
   Fog(color, num? near, num? far) {
-    isFog = true;
     name = '';
 
     if (color is int) {
@@ -30,14 +31,20 @@ class Fog extends FogBase {
 
     this.near = near ?? 1;
     this.far = far ?? 1000;
+    isFog = true;
   }
 
-  clone() {
+  Fog clone() {
     return Fog(color, near, far);
   }
 
   @override
-  toJSON(/* meta */) {
-    return {"type": 'Fog', "color": color.getHex(), "near": near, "far": far};
+  Map<String,dynamic> toJSON(/* meta */) {
+    return {
+      "type": 'Fog',
+      "color": color.getHex(),
+      "near": near,
+      "far": far
+    };
   }
 }

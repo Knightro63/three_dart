@@ -1,5 +1,5 @@
-import 'package:three_dart/three3d/materials/material.dart';
-import 'package:three_dart/three3d/math/vector3.dart';
+import './material.dart';
+import '../math/index.dart';
 
 class MeshDistanceMaterial extends Material {
   late Vector3 referencePosition;
@@ -22,6 +22,11 @@ class MeshDistanceMaterial extends Material {
     displacementBias = 0;
 
     setValues(parameters);
+  }
+
+  @override
+  MeshDistanceMaterial clone() {
+    return MeshDistanceMaterial(<String, dynamic>{}).copy(this);
   }
 
   @override

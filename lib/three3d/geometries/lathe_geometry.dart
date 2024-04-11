@@ -1,24 +1,15 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import '../core/index.dart';
+import '../math/index.dart';
 
 class LatheGeometry extends BufferGeometry {
-  NativeArray? verticesArray;
-  NativeArray? uvsArray;
-  NativeArray? normalsArray;
-
-  LatheGeometry(
-    points, {
-    segments = 12,
-    phiStart = 0,
-    double phiLength = Math.pi * 2,
-  }) : super() {
+  LatheGeometry(List<Vector> points,{int segments = 12, num phiStart = 0, double phiLength = Math.pi * 2}): super() {
     type = 'LatheGeometry';
     parameters = {
       "points": points,
       "segments": segments,
       "phiStart": phiStart,
-      "phiLength": phiLength,
+      "phiLength": phiLength
     };
 
     segments = Math.floor(segments);
@@ -29,26 +20,26 @@ class LatheGeometry extends BufferGeometry {
 
     // buffers
 
-    var indices = [];
+    final indices = [];
     List<double> vertices = [];
     List<double> uvs = [];
-    var initNormals = [];
+    final initNormals = [];
     List<double> normals = [];
 
     // helper variables
 
-    var inverseSegments = 1.0 / segments;
-    var vertex = Vector3();
-    var uv = Vector2();
-    var normal = Vector3();
-    var curNormal = Vector3();
-    var prevNormal = Vector3();
+    final inverseSegments = 1.0 / segments;
+    final vertex = Vector3();
+    final uv = Vector2(null, null);
+    final normal = Vector3();
+    final curNormal = Vector3();
+    final prevNormal = Vector3();
     double dx = 0;
     double dy = 0;
 
     // pre-compute normals for initial "meridian"
 
-    for (var j = 0; j <= (points.length - 1); j++) {
+    for (int j = 0; j <= (points.length - 1); j++) {
       // special handling for 1st vertex on path
       if (j == 0) {
         dx = points[j + 1].x - points[j].x;
@@ -93,20 +84,21 @@ class LatheGeometry extends BufferGeometry {
 
     // generate vertices and uvs
 
-    for (var i = 0; i <= segments; i++) {
-      var phi = phiStart + i * inverseSegments * phiLength;
+    for (int i = 0; i <= segments; i++) {
+      final phi = phiStart + i * inverseSegments * phiLength;
 
-      var sin = Math.sin(phi);
-      var cos = Math.cos(phi);
+      final sin = Math.sin(phi);
+      final cos = Math.cos(phi);
 
-      for (var j = 0; j <= (points.length - 1); j++) {
+      for (int j = 0; j <= (points.length - 1); j++) {
         // vertex
 
         vertex.x = points[j].x * sin;
         vertex.y = points[j].y;
         vertex.z = points[j].x * cos;
 
-        vertices.addAll([vertex.x.toDouble(), vertex.y.toDouble(), vertex.z.toDouble()]);
+        vertices.addAll(
+            [vertex.x.toDouble(), vertex.y.toDouble(), vertex.z.toDouble()]);
 
         // uv
 
@@ -117,9 +109,9 @@ class LatheGeometry extends BufferGeometry {
 
         // normal
 
-        var x = initNormals[3 * j + 0] * sin;
-        var y = initNormals[3 * j + 1];
-        var z = initNormals[3 * j + 0] * cos;
+        final x = initNormals[3 * j + 0] * sin;
+        final y = initNormals[3 * j + 1];
+        final z = initNormals[3 * j + 0] * cos;
 
         normals.addAll([x, y, z]);
       }
@@ -127,14 +119,14 @@ class LatheGeometry extends BufferGeometry {
 
     // indices
 
-    for (var i = 0; i < segments; i++) {
-      for (var j = 0; j < (points.length - 1); j++) {
-        var base = j + i * points.length;
+    for (int i = 0; i < segments; i++) {
+      for (int j = 0; j < (points.length - 1); j++) {
+        final base = j + i * points.length;
 
-        var a = base;
-        var b = base + points.length;
-        var c = base + points.length + 1;
-        var d = base + 1;
+        final a = base;
+        final b = base + points.length;
+        final c = base + points.length + 1;
+        final d = base + 1;
 
         // faces
 
@@ -146,17 +138,11 @@ class LatheGeometry extends BufferGeometry {
     // build geometry
 
     setIndex(indices);
-    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
-    setAttribute(AttributeTypes.normal, Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
-    setAttribute(AttributeTypes.uv, Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
-  }
-
-  @override
-  void dispose() {
-    verticesArray?.dispose();
-    uvsArray?.dispose();
-    normalsArray?.dispose();
-
-    super.dispose();
+    setAttribute('position',
+        Float32BufferAttribute(Float32Array.from(vertices), 3, false));
+    setAttribute(
+        'uv', Float32BufferAttribute(Float32Array.from(uvs), 2, false));
+    setAttribute('normal',
+        Float32BufferAttribute(Float32Array.from(normals), 3, false));
   }
 }

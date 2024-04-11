@@ -1,30 +1,29 @@
-import 'package:three_dart/three3d/dart_helpers.dart';
-import 'package:three_dart/three3d/math/index.dart';
+part of three_loaders;
 
 class SVGLoaderPointsToStroke {
-  var tempV2_1 = Vector2();
-  var tempV2_2 = Vector2();
-  var tempV2_3 = Vector2();
-  var tempV2_4 = Vector2();
-  var tempV2_5 = Vector2();
-  var tempV2_6 = Vector2();
-  var tempV2_7 = Vector2();
-  var lastPointL = Vector2();
-  var lastPointR = Vector2();
-  var point0L = Vector2();
-  var point0R = Vector2();
-  var currentPointL = Vector2();
-  var currentPointR = Vector2();
-  var nextPointL = Vector2();
-  var nextPointR = Vector2();
-  var innerPoint = Vector2();
-  var outerPoint = Vector2();
+  Vector2 tempV2_1 = Vector2();
+  Vector2 tempV2_2 = Vector2();
+  Vector2 tempV2_3 = Vector2();
+  Vector2 tempV2_4 = Vector2();
+  Vector2 tempV2_5 = Vector2();
+  Vector2 tempV2_6 = Vector2();
+  Vector2 tempV2_7 = Vector2();
+  Vector2 lastPointL = Vector2();
+  Vector2 lastPointR = Vector2();
+  Vector2 point0L = Vector2();
+  Vector2 point0R = Vector2();
+  Vector2 currentPointL = Vector2();
+  Vector2 currentPointR = Vector2();
+  Vector2 nextPointL = Vector2();
+  Vector2 nextPointR = Vector2();
+  Vector2 innerPoint = Vector2();
+  Vector2 outerPoint = Vector2();
 
-  num arcDivisions = 12;
+  int arcDivisions = 12;
   num minDistance = 0.001;
   int vertexOffset = 0;
 
-  late List points;
+  late List<Vector2> points;
   late dynamic style;
 
   List<double> vertices = List<double>.of([], growable: true);
@@ -32,7 +31,7 @@ class SVGLoaderPointsToStroke {
   List<double> uvs = List<double>.of([], growable: true);
 
   int numVertices = 0;
-  var currentPoint;
+  late Vector2 currentPoint;
 
   // This function can be called to update existing arrays or buffers.
   // Accepts same parameters as pointsToStroke, plus the buffers and optional offset.
@@ -46,38 +45,38 @@ class SVGLoaderPointsToStroke {
   num u0 = 0.0;
 
   SVGLoaderPointsToStroke(
-    points,
-    this.style,
-    arcDivisions,
-    minDistance,
+    List<Vector?> points, 
+    this.style, 
+    int? arcDivisions, 
+    double? minDistance, 
     this.vertices,
-    this.normals,
-    this.uvs,
-    vertexOffset,
+    this.normals, 
+    this.uvs, 
+    int? vertexOffset
   ) {
-    arcDivisions = arcDivisions ?? 12;
-    minDistance = minDistance ?? 0.001;
-    vertexOffset = vertexOffset ?? 0;
+    this.arcDivisions = arcDivisions ?? 12;
+    this.minDistance = minDistance ?? 0.001;
+    this.vertexOffset = vertexOffset ?? 0;
 
     // First ensure there are no duplicated points
     this.points = removeDuplicatedPoints(points);
-    currentCoordinate = vertexOffset * 3;
-    currentCoordinateUV = vertexOffset * 2;
+    currentCoordinate = this.vertexOffset * 3;
+    currentCoordinateUV = this.vertexOffset * 2;
   }
 
-  convert() {
-    var numPoints = points.length;
+  int convert() {
+    final numPoints = points.length;
 
     if (numPoints < 2) return 0;
 
-    var isClosed = points[0].equals(points[numPoints - 1]);
+    final isClosed = points[0].equals(points[numPoints - 1]);
 
-    var previousPoint = points[0];
-    var nextPoint;
+    Vector2 previousPoint = points[0];
+    Vector2? nextPoint;
 
-    var strokeWidth2 = style["strokeWidth"] / 2;
+    final strokeWidth2 = style["strokeWidth"] / 2;
 
-    var deltaU = 1 / (numPoints - 1);
+    final deltaU = 1 / (numPoints - 1);
 
     bool innerSideModified = false;
     bool joinIsOnLeftSide = false;
@@ -92,7 +91,7 @@ class SVGLoaderPointsToStroke {
     point0L.copy(lastPointL);
     point0R.copy(lastPointR);
 
-    for (var iPoint = 1; iPoint < numPoints; iPoint++) {
+    for (int iPoint = 1; iPoint < numPoints; iPoint++) {
       currentPoint = points[iPoint];
 
       // Get next point
@@ -108,7 +107,7 @@ class SVGLoaderPointsToStroke {
       }
 
       // Normal of previous segment in tempV2_1
-      var normal1 = tempV2_1;
+      final normal1 = tempV2_1;
       getNormal(previousPoint, currentPoint, normal1);
 
       tempV2_3.copy(normal1).multiplyScalar(strokeWidth2);
@@ -137,24 +136,25 @@ class SVGLoaderPointsToStroke {
 
         tempV2_3.subVectors(nextPoint, currentPoint);
         tempV2_3.normalize();
-        var dot = Math.abs(normal1.dot(tempV2_3));
+        final dot = Math.abs(normal1.dot(tempV2_3));
 
         // If path is straight, don't create join
         if (dot != 0) {
           // Compute inner and outer segment intersections
-          var miterSide = strokeWidth2 / dot;
+          final miterSide = strokeWidth2 / dot;
           tempV2_3.multiplyScalar(-miterSide);
           tempV2_4.subVectors(currentPoint, previousPoint);
           tempV2_5.copy(tempV2_4).setLength(miterSide).add(tempV2_3);
           innerPoint.copy(tempV2_5).negate();
-          var miterLength2 = tempV2_5.length();
-          var segmentLengthPrev = tempV2_4.length();
+          final miterLength2 = tempV2_5.length();
+          final segmentLengthPrev = tempV2_4.length();
           tempV2_4.divideScalar(segmentLengthPrev);
           tempV2_6.subVectors(nextPoint, currentPoint);
-          var segmentLengthNext = tempV2_6.length();
+          final segmentLengthNext = tempV2_6.length();
           tempV2_6.divideScalar(segmentLengthNext);
           // Check that previous and next segments doesn't overlap with the innerPoint of intersection
-          if (tempV2_4.dot(innerPoint) < segmentLengthPrev && tempV2_6.dot(innerPoint) < segmentLengthNext) {
+          if (tempV2_4.dot(innerPoint) < segmentLengthPrev &&
+              tempV2_6.dot(innerPoint) < segmentLengthNext) {
             innerSideModified = true;
           }
 
@@ -179,7 +179,8 @@ class SVGLoaderPointsToStroke {
 
           switch (style["strokeLineJoin"]) {
             case 'bevel':
-              makeSegmentWithBevelJoin(joinIsOnLeftSide, innerSideModified, u1, u1);
+              makeSegmentWithBevelJoin(
+                  joinIsOnLeftSide, innerSideModified, u1, u1);
 
               break;
 
@@ -187,14 +188,17 @@ class SVGLoaderPointsToStroke {
 
               // Segment triangles
 
-              createSegmentTrianglesWithMiddleSection(joinIsOnLeftSide, innerSideModified, u1);
+              createSegmentTrianglesWithMiddleSection(
+                  joinIsOnLeftSide, innerSideModified, u1);
 
               // Join triangles
 
               if (joinIsOnLeftSide) {
-                makeCircularSector(currentPoint, currentPointL, nextPointL, u1, 0);
+                makeCircularSector(
+                    currentPoint, currentPointL, nextPointL, u1, 0);
               } else {
-                makeCircularSector(currentPoint, nextPointR, currentPointR, u1, 1);
+                makeCircularSector(
+                    currentPoint, nextPointR, currentPointR, u1, 1);
               }
 
               break;
@@ -202,24 +206,33 @@ class SVGLoaderPointsToStroke {
             case 'miter':
             case 'miter-clip':
             default:
-              var miterFraction = (strokeWidth2 * style["strokeMiterLimit"]) / miterLength2;
+              final miterFraction =
+                  (strokeWidth2 * style["strokeMiterLimit"]) / miterLength2;
 
               if (miterFraction < 1) {
                 // The join miter length exceeds the miter limit
 
                 if (style["strokeLineJoin"] != 'miter-clip') {
-                  makeSegmentWithBevelJoin(joinIsOnLeftSide, innerSideModified, u1, u1);
+                  makeSegmentWithBevelJoin(
+                      joinIsOnLeftSide, innerSideModified, u1, u1);
                   break;
                 } else {
                   // Segment triangles
 
-                  createSegmentTrianglesWithMiddleSection(joinIsOnLeftSide, innerSideModified, u1);
+                  createSegmentTrianglesWithMiddleSection(
+                      joinIsOnLeftSide, innerSideModified, u1);
 
                   // Miter-clip join triangles
 
                   if (joinIsOnLeftSide) {
-                    tempV2_6.subVectors(outerPoint, currentPointL).multiplyScalar(miterFraction).add(currentPointL);
-                    tempV2_7.subVectors(outerPoint, nextPointL).multiplyScalar(miterFraction).add(nextPointL);
+                    tempV2_6
+                        .subVectors(outerPoint, currentPointL)
+                        .multiplyScalar(miterFraction)
+                        .add(currentPointL);
+                    tempV2_7
+                        .subVectors(outerPoint, nextPointL)
+                        .multiplyScalar(miterFraction)
+                        .add(nextPointL);
 
                     addVertex(currentPointL, u1, 0);
                     addVertex(tempV2_6, u1, 0);
@@ -233,8 +246,14 @@ class SVGLoaderPointsToStroke {
                     addVertex(tempV2_7, u1, 0);
                     addVertex(nextPointL, u1, 0);
                   } else {
-                    tempV2_6.subVectors(outerPoint, currentPointR).multiplyScalar(miterFraction).add(currentPointR);
-                    tempV2_7.subVectors(outerPoint, nextPointR).multiplyScalar(miterFraction).add(nextPointR);
+                    tempV2_6
+                        .subVectors(outerPoint, currentPointR)
+                        .multiplyScalar(miterFraction)
+                        .add(currentPointR);
+                    tempV2_7
+                        .subVectors(outerPoint, nextPointR)
+                        .multiplyScalar(miterFraction)
+                        .add(nextPointR);
 
                     addVertex(currentPointR, u1, 1);
                     addVertex(tempV2_6, u1, 1);
@@ -333,12 +352,13 @@ class SVGLoaderPointsToStroke {
 
     if (!isClosed) {
       // Ending line endcap
-      addCapGeometry(currentPoint, currentPointL, currentPointR, joinIsOnLeftSide, false, u1);
+      addCapGeometry(currentPoint, currentPointL, currentPointR,
+          joinIsOnLeftSide, false, u1);
     } else if (innerSideModified) {
       // Modify path first segment vertices to adjust to the segments inner and outer intersections
 
-      var lastOuter = outerPoint;
-      var lastInner = innerPoint;
+      Vector2 lastOuter = outerPoint;
+      Vector2 lastInner = innerPoint;
 
       if (initialJoinIsOnLeftSide != joinIsOnLeftSide) {
         lastOuter = innerPoint;
@@ -371,40 +391,44 @@ class SVGLoaderPointsToStroke {
     // -- End of algorithm
   }
 
-  removeDuplicatedPoints(points) {
+  List<Vector2> removeDuplicatedPoints(List<Vector?> points) {
     // Creates a new array if necessary with duplicated points removed.
     // This does not remove duplicated initial and ending points of a closed path.
 
-    var dupPoints = false;
-    for (var i = 1, n = points.length - 1; i < n; i++) {
-      if (points[i].distanceTo(points[i + 1]) < minDistance) {
+    bool dupPoints = false;
+    final List<Vector2> convPoints = [];
+    for (int i = 0; i < points.length-1; i++) {
+      if (points[i]!.distanceTo(points[i + 1]!) < minDistance) {
         dupPoints = true;
         break;
       }
+
+      convPoints.add(Vector2(points[i]!.x,points[i]!.y));
     }
+    convPoints.add(Vector2(points[points.length - 1]!.x,points[points.length - 1]!.y));
 
-    if (!dupPoints) return points;
+    if (!dupPoints) return convPoints;
 
-    var newPoints = [];
-    newPoints.add(points[0]);
+    final List<Vector2> newPoints = [];
+    newPoints.add(Vector2(points[0]!.x,points[0]!.y));
 
-    for (var i = 1, n = points.length - 1; i < n; i++) {
-      if (points[i].distanceTo(points[i + 1]) >= minDistance) {
-        newPoints.add(points[i]);
+    for (int i = 1, n = points.length - 1; i < n; i++) {
+      if (points[i]!.distanceTo(points[i + 1]!) >= minDistance) {
+        newPoints.add(Vector2(points[i]!.x,points[i]!.y));
       }
     }
 
-    newPoints.add(points[points.length - 1]);
+    newPoints.add(Vector2(points[points.length - 1]!.x,points[points.length - 1]!.y));
 
     return newPoints;
   }
 
-  getNormal(p1, p2, result) {
+  Vector2 getNormal(Vector2 p1, Vector2 p2, Vector2 result) {
     result.subVectors(p2, p1);
     return result.set(-result.y, result.x).normalize();
   }
 
-  addVertex(position, u, v) {
+  void addVertex(Vector2 position, num u, num v) {
     listSetter(vertices, currentCoordinate, position.x);
 
     // vertices[ currentCoordinate + 1 ] = position.y;
@@ -433,22 +457,22 @@ class SVGLoaderPointsToStroke {
     numVertices += 3;
   }
 
-  makeCircularSector(center, p1, p2, u, v) {
+  void makeCircularSector(Vector2 center, Vector2 p1, Vector2 p2, num u, num v) {
     // param p1, p2: Points in the circle arc.
     // p1 and p2 are in clockwise direction.
 
     tempV2_1.copy(p1).sub(center).normalize();
     tempV2_2.copy(p2).sub(center).normalize();
 
-    var angle = Math.pi;
-    var dot = tempV2_1.dot(tempV2_2);
+    double angle = Math.pi;
+    final dot = tempV2_1.dot(tempV2_2);
     if (Math.abs(dot) < 1) angle = Math.abs(Math.acos(dot)).toDouble();
 
     angle /= arcDivisions;
 
     tempV2_3.copy(p1);
 
-    for (var i = 0, il = arcDivisions - 1; i < il; i++) {
+    for (int i = 0, il = arcDivisions - 1; i < il; i++) {
       tempV2_4.copy(tempV2_3).rotateAround(center, angle);
 
       addVertex(tempV2_3, u, v);
@@ -463,7 +487,7 @@ class SVGLoaderPointsToStroke {
     addVertex(center, u, 0.5);
   }
 
-  makeSegmentTriangles(u1) {
+  void makeSegmentTriangles(num u1) {
     addVertex(lastPointR, u0, 1);
     addVertex(lastPointL, u0, 0);
     addVertex(currentPointL, u1, 0);
@@ -473,7 +497,7 @@ class SVGLoaderPointsToStroke {
     addVertex(currentPointR, u1, 0);
   }
 
-  makeSegmentWithBevelJoin(joinIsOnLeftSide, innerSideModified, u, u1) {
+  void makeSegmentWithBevelJoin(bool joinIsOnLeftSide, bool innerSideModified, num u, num u1) {
     if (innerSideModified) {
       // Optimized segment + bevel triangles
 
@@ -525,7 +549,7 @@ class SVGLoaderPointsToStroke {
     }
   }
 
-  createSegmentTrianglesWithMiddleSection(joinIsOnLeftSide, innerSideModified, u1) {
+  void createSegmentTrianglesWithMiddleSection(bool joinIsOnLeftSide, bool innerSideModified, num u1) {
     if (innerSideModified) {
       if (joinIsOnLeftSide) {
         addVertex(lastPointR, u0, 1);
@@ -563,7 +587,7 @@ class SVGLoaderPointsToStroke {
     }
   }
 
-  addCapGeometry(center, p1, p2, joinIsOnLeftSide, start, u) {
+  void addCapGeometry(Vector2 center, Vector2 p1, Vector2 p2, bool joinIsOnLeftSide, bool start, num u) {
     // param center: End point of the path
     // param p1, p2: Left and right cap points
 
@@ -602,7 +626,7 @@ class SVGLoaderPointsToStroke {
           tempV2_3.addVectors(tempV2_1, tempV2_2).add(center);
           tempV2_4.subVectors(tempV2_2, tempV2_1).add(center);
 
-          var vl = vertices.length;
+          final vl = vertices.length;
 
           // Modify already existing vertices
           if (joinIsOnLeftSide) {

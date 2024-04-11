@@ -1,10 +1,7 @@
-import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/objects/index.dart';
-import 'package:three_dart/three3d/renderers/webgl/index.dart';
-import 'package:three_dart/three3d/weak_map.dart';
+part of three_webgl;
 
 class WebGLObjects {
-  var updateMap = WeakMap();
+  final updateMap = WeakMap();
   WebGLInfo info;
   dynamic gl;
   WebGLGeometries geometries;
@@ -15,9 +12,9 @@ class WebGLObjects {
   BufferGeometry update(Object3D object) {
     num frame = info.render["frame"]!;
 
-    var geometry = object.geometry;
+    final geometry = object.geometry;
 
-    var buffergeometry = geometries.get(object, geometry!);
+    final buffergeometry = geometries.get(geometry!);
 
     // Update once per frame
 
@@ -49,7 +46,7 @@ class WebGLObjects {
   }
 
   void onInstancedMeshDispose(event) {
-    var instancedMesh = event.target;
+    final instancedMesh = event.target;
 
     instancedMesh.removeEventListener('dispose', onInstancedMeshDispose);
 

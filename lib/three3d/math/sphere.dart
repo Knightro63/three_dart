@@ -1,23 +1,26 @@
-import 'package:three_dart/three3d/math/index.dart';
+import 'math.dart';
+import 'box3.dart';
+import 'matrix4.dart';
+import 'plane.dart';
+import 'vector3.dart';
 
 class Sphere {
   late Vector3 center;
   late double radius;
 
-  final _box = Box3(null, null);
-  final _v1 = /*@__PURE__*/ Vector3();
-  final _toFarthestPoint = /*@__PURE__*/ Vector3();
-  final _toPoint = /*@__PURE__*/ Vector3();
+  final _box = Box3();
+  final _v1 = Vector3();
+  final _toFarthestPoint = Vector3();
+  final _toPoint = Vector3();
 
   Sphere([Vector3? center, double? radius]) {
     this.center = center ?? Vector3();
     this.radius = radius ?? -1;
   }
 
-  List<num> toJSON() {
-    var data = center.toJSON();
+  List<num> toList() {
+    final data = center.toList();
     data.add(radius);
-
     return data;
   }
 
@@ -29,7 +32,7 @@ class Sphere {
   }
 
   Sphere setFromPoints(List<Vector3> points, [Vector3? optionalCenter]) {
-    var center = this.center;
+    final center = this.center;
 
     if (optionalCenter != null) {
       center.copy(optionalCenter);
@@ -39,7 +42,7 @@ class Sphere {
 
     num maxRadiusSq = 0.0;
 
-    for (var i = 0, il = points.length; i < il; i++) {
+    for (int i = 0, il = points.length; i < il; i++) {
       maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(points[i]));
     }
 
@@ -79,7 +82,7 @@ class Sphere {
   }
 
   bool intersectsSphere(Sphere sphere) {
-    var radiusSum = radius + sphere.radius;
+    final radiusSum = radius + sphere.radius;
 
     return sphere.center.distanceToSquared(center) <= (radiusSum * radiusSum);
   }
@@ -93,7 +96,7 @@ class Sphere {
   }
 
   Vector3 clampPoint(Vector3 point, Vector3 target) {
-    var deltaLengthSq = center.distanceToSquared(point);
+    final deltaLengthSq = center.distanceToSquared(point);
 
     target.copy(point);
 
@@ -137,11 +140,11 @@ class Sphere {
 
     _toPoint.subVectors(point, center);
 
-    var lengthSq = _toPoint.lengthSq();
+    final lengthSq = _toPoint.lengthSq();
 
     if (lengthSq > (radius * radius)) {
-      var length = Math.sqrt(lengthSq);
-      var missingRadiusHalf = (length - radius) * 0.5;
+      final length = Math.sqrt(lengthSq);
+      final missingRadiusHalf = (length - radius) * 0.5;
 
       // Nudge this sphere towards the target point. Add half the missing distance to radius,
       // and the other half to position. This gives a tighter enclosure, instead of if
@@ -164,7 +167,10 @@ class Sphere {
     if (center.equals(sphere.center) == true) {
       _toFarthestPoint.set(0, 0, 1).multiplyScalar(sphere.radius);
     } else {
-      _toFarthestPoint.subVectors(sphere.center, center).normalize().multiplyScalar(sphere.radius);
+      _toFarthestPoint
+          .subVectors(sphere.center, center)
+          .normalize()
+          .multiplyScalar(sphere.radius);
     }
 
     expandByPoint(_v1.copy(sphere.center).add(_toFarthestPoint));

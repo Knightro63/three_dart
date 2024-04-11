@@ -1,34 +1,29 @@
-import 'package:three_dart/three3d/animation/animation_utils.dart';
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/math/interpolants/cubic_interpolant.dart';
-import 'package:three_dart/three3d/math/interpolants/discrete_interpolant.dart';
-import 'package:three_dart/three3d/math/interpolants/linear_interpolant.dart';
-import 'package:three_dart/three3d/math/math.dart';
-
-import '../math/interpolant.dart';
+import 'package:three_dart/three3d/math/index.dart';
+import '../constants.dart';
+import 'animation_utils.dart';
 
 class KeyframeTrack {
   late String name;
   late List<num> times;
   late List<num> values;
 
-  var timeBufferType = "List<num>";
-  var valueBufferType = "List<num>";
-  var defaultInterpolation = InterpolateLinear;
+  String timeBufferType = "List<num>";
+  String valueBufferType = "List<num>";
+  int defaultInterpolation = InterpolateLinear;
   late String valueTypeName;
 
   Function? createInterpolant;
-
   late int? _interpolation;
 
-  KeyframeTrack(this.name, times, values, [interpolation]) {
-    if (times == null || times.length == 0) {
-      throw ('three.KeyframeTrack: no keyframes in track named $name');
-    }
-
+  KeyframeTrack(this.name,this.times,this.values, [int? interpolation]) {
+    // if (name == null) throw ('THREE.KeyframeTrack: track name is null');
+    // this.name = name;
+    // if (times == null || times.isEmpty) throw ('THREE.KeyframeTrack: no keyframes in track named $name');
+    // this.times = AnimationUtils.convertArray(times, timeBufferType, false);
+    
     _interpolation = interpolation;
-    this.times = AnimationUtils.convertArray(times, timeBufferType, false);
-    this.values = AnimationUtils.convertArray(values, valueBufferType, false);
+    
+    //this.values = AnimationUtils.convertArray(values, valueBufferType, false);
 
     setInterpolation(interpolation ?? defaultInterpolation);
   }
@@ -36,15 +31,16 @@ class KeyframeTrack {
   // Serialization (in static context, because of constructor invocation
   // and automatic invocation of .toJSON):
 
-  static toJSON(track) {
-    var trackType = track.constructor;
+  static Map<String,dynamic> toJSON(KeyframeTrack track) {
+    //final trackType = track;
 
-    dynamic json;
+    Map<String,dynamic> json = {};
 
     // derived classes can define a static toJSON method
-    if (trackType.toJSON != null) {
-      json = trackType.toJSON(track);
-    } else {
+    // if (trackType.toJSON != null) {
+    //   json = trackType.toJSON(track);
+    // } 
+    // else {
       // by default, we assume the data can be serialized as-is
       json = {
         'name': track.name,
@@ -52,52 +48,58 @@ class KeyframeTrack {
         'values': AnimationUtils.convertArray(track.values, "List<num>")
       };
 
-      var interpolation = track.getInterpolation();
+      final int? interpolation = track.getInterpolation();
 
       if (interpolation != track.defaultInterpolation) {
-        json.interpolation = interpolation;
+        json['interpolation'] = interpolation;
       }
-    }
+    //}
 
-    json.type = track.valueTypeName; // mandatory
+    json['type'] = track.valueTypeName; // mandatory
 
     return json;
   }
 
+
   Interpolant? interpolantFactoryMethodDiscrete(result) {
-    return DiscreteInterpolant(times, values, getValueSize(), result);
+    return DiscreteInterpolant(
+      times, 
+      values, 
+      getValueSize(), 
+      result
+    );
   }
 
   Interpolant? interpolantFactoryMethodLinear(result) {
-    return LinearInterpolant(times, values, getValueSize(), result);
+    return LinearInterpolant(
+      times, 
+      values, 
+      getValueSize(), 
+      result
+    );
   }
 
   Interpolant? interpolantFactoryMethodSmooth(result) {
     return CubicInterpolant(times, values, getValueSize(), result);
   }
 
-  setInterpolation(interpolation) {
+  KeyframeTrack setInterpolation(int interpolation) {
     Function(dynamic result)? factoryMethod;
 
     switch (interpolation) {
       case InterpolateDiscrete:
         factoryMethod = interpolantFactoryMethodDiscrete;
-
         break;
-
       case InterpolateLinear:
         factoryMethod = interpolantFactoryMethodLinear;
-
         break;
-
       case InterpolateSmooth:
         factoryMethod = interpolantFactoryMethodSmooth;
-
         break;
     }
 
     if (factoryMethod == null) {
-      var message = 'unsupported interpolation for $valueTypeName keyframe track named $name';
+      final message = 'unsupported interpolation for $valueTypeName keyframe track named $name';
 
       if (createInterpolant == null) {
         // fall back to default, unless the default itself is messed up
@@ -105,10 +107,11 @@ class KeyframeTrack {
           setInterpolation(defaultInterpolation);
         } else {
           throw (message); // fatal, in this case
+
         }
       }
 
-      print('three.KeyframeTrack: $message');
+      print('THREE.KeyframeTrack: $message');
       return this;
     }
 
@@ -117,38 +120,21 @@ class KeyframeTrack {
     return this;
   }
 
-  getInterpolation() {
+  int? getInterpolation() {
     print("KeyframeTrack.getInterpolation todo debug need confirm?? ");
-
     return _interpolation;
-
-    // switch ( this.createInterpolant ) {
-
-    // 	case this.InterpolantFactoryMethodDiscrete:
-
-    // 		return InterpolateDiscrete;
-
-    // 	case this.InterpolantFactoryMethodLinear:
-
-    // 		return InterpolateLinear;
-
-    // 	case this.InterpolantFactoryMethodSmooth:
-
-    // 		return InterpolateSmooth;
-
-    // }
   }
 
-  getValueSize() {
+  int getValueSize() {
     return values.length ~/ times.length;
   }
 
   // move all keyframes either forwards or backwards in time
-  shift(timeOffset) {
+  KeyframeTrack shift(timeOffset) {
     if (timeOffset != 0.0) {
-      var times = this.times;
+      final times = this.times;
 
-      for (var i = 0, n = times.length; i != n; ++i) {
+      for (int i = 0, n = times.length; i != n; ++i) {
         times[i] += timeOffset;
       }
     }
@@ -157,11 +143,11 @@ class KeyframeTrack {
   }
 
   // scale all keyframe times by a factor (useful for frame <-> seconds conversions)
-  scale(timeScale) {
+  KeyframeTrack scale(timeScale) {
     if (timeScale != 1.0) {
-      var times = this.times;
+      final times = this.times;
 
-      for (var i = 0, n = times.length; i != n; ++i) {
+      for (int i = 0, n = times.length; i != n; ++i) {
         times[i] *= timeScale;
       }
     }
@@ -171,10 +157,10 @@ class KeyframeTrack {
 
   // removes keyframes before and after animation without changing any values within the range [startTime, endTime].
   // IMPORTANT: We do not shift around keys to the start of the track time, because for interpolated keys this will change their values
-  trim(startTime, endTime) {
-    var times = this.times, nKeys = times.length;
+  KeyframeTrack trim(startTime, endTime) {
+    final times = this.times, nKeys = times.length;
 
-    var from = 0, to = nKeys - 1;
+    int from = 0, to = nKeys - 1;
 
     while (from != nKeys && times[from] < startTime) {
       ++from;
@@ -193,42 +179,63 @@ class KeyframeTrack {
         from = to - 1;
       }
 
-      var stride = getValueSize();
+      final stride = getValueSize();
       this.times = AnimationUtils.arraySlice(times, from, to);
-      values = AnimationUtils.arraySlice(values, (from * stride).toInt(), (to * stride).toInt());
+      values = AnimationUtils.arraySlice(
+          values, (from * stride).toInt(), (to * stride).toInt());
     }
 
     return this;
   }
 
   // ensure we do not get a GarbageInGarbageOut situation, make sure tracks are at least minimally viable
-  validate() {
-    var valid = true;
+  bool validate() {
+    bool valid = true;
 
-    var valueSize = getValueSize();
+    final valueSize = getValueSize();
     if (valueSize - Math.floor(valueSize) != 0) {
-      print('three.KeyframeTrack: Invalid value size in track. $this');
+      print('THREE.KeyframeTrack: Invalid value size in track. $this');
       valid = false;
     }
 
-    var times = this.times, nKeys = times.length;
+    final times = this.times, values = this.values, nKeys = times.length;
 
     if (nKeys == 0) {
-      print('three.KeyframeTrack: Track is empty. $this');
+      print('THREE.KeyframeTrack: Track is empty. $this');
       valid = false;
     }
 
     num? prevTime;
 
-    for (var i = 0; i != nKeys; i++) {
-      var currTime = times[i];
+    for (int i = 0; i != nKeys; i++) {
+      final currTime = times[i];
 
+      if (currTime.isNaN) {
+        print('THREE.KeyframeTrack: Time is not a valid number. $this i: $i $currTime');
+        valid = false;
+        break;
+      }
+      
       if (prevTime != null && prevTime > currTime) {
-        print('three.KeyframeTrack: Out of order keys. $this i: $i currTime: $currTime prevTime: $prevTime');
+        print(
+            'THREE.KeyframeTrack: Out of order keys.$this i: $i currTime: $currTime prevTime: $prevTime');
         valid = false;
         break;
       }
       prevTime = currTime;
+    }
+
+    if (AnimationUtils.isTypedArray(values)) {
+      for (int i = 0, n = values.length; i != n; ++i) {
+        final value = values[i];
+
+        if (value.isNaN) {
+          print(
+              'THREE.KeyframeTrack: Value is not a valid number. $this i: $i value: $value');
+          valid = false;
+          break;
+        }
+      }
     }
 
     return valid;
@@ -236,21 +243,21 @@ class KeyframeTrack {
 
   // removes equivalent sequential keys as common in morph target sequences
   // (0,0,0,0,1,1,1,0,0,0,0,0,0,0) --> (0,0,1,1,0,0)
-  optimize() {
+  KeyframeTrack optimize() {
     // times or values may be shared with other tracks, so overwriting is unsafe
-    var times = AnimationUtils.arraySlice(this.times),
+    final times = AnimationUtils.arraySlice(this.times),
         values = AnimationUtils.arraySlice(this.values),
         stride = getValueSize(),
         smoothInterpolation = getInterpolation() == InterpolateSmooth,
         lastIndex = times.length - 1;
 
-    var writeIndex = 1;
+    int writeIndex = 1;
 
-    for (var i = 1; i < lastIndex; ++i) {
-      var keep = false;
+    for (int i = 1; i < lastIndex; ++i) {
+      bool keep = false;
 
-      var time = times[i];
-      var timeNext = times[i + 1];
+      final time = times[i];
+      final timeNext = times[i + 1];
 
       // remove adjacent keyframes scheduled at the same time
 
@@ -258,10 +265,12 @@ class KeyframeTrack {
         if (!smoothInterpolation) {
           // remove unnecessary keyframes same as their neighbors
 
-          var offset = i * stride, offsetP = offset - stride, offsetN = offset + stride;
+          final offset = i * stride,
+              offsetP = offset - stride,
+              offsetN = offset + stride;
 
-          for (var j = 0; j != stride; ++j) {
-            var value = values[offset + j];
+          for (int j = 0; j != stride; ++j) {
+            final value = values[offset + j];
 
             if (value != values[offsetP + j] || value != values[offsetN + j]) {
               keep = true;
@@ -279,9 +288,9 @@ class KeyframeTrack {
         if (i != writeIndex) {
           times[writeIndex] = times[i];
 
-          var readOffset = i * stride, writeOffset = writeIndex * stride;
+          final readOffset = i * stride, writeOffset = writeIndex * stride;
 
-          for (var j = 0; j != stride; ++j) {
+          for (int j = 0; j != stride; ++j) {
             values[writeOffset + j] = values[readOffset + j];
           }
         }
@@ -295,7 +304,11 @@ class KeyframeTrack {
     if (lastIndex > 0) {
       times[writeIndex] = times[lastIndex];
 
-      for (var readOffset = lastIndex * stride, writeOffset = writeIndex * stride, j = 0; j != stride; ++j) {
+      for (int readOffset = lastIndex * stride,
+              writeOffset = writeIndex * stride,
+              j = 0;
+          j != stride;
+          ++j) {
         values[writeOffset + j] = values[readOffset + j];
       }
 
@@ -304,7 +317,8 @@ class KeyframeTrack {
 
     if (writeIndex != times.length) {
       this.times = AnimationUtils.arraySlice(times, 0, writeIndex);
-      this.values = AnimationUtils.arraySlice(values, 0, (writeIndex * stride).toInt());
+      this.values =
+          AnimationUtils.arraySlice(values, 0, (writeIndex * stride).toInt());
     } else {
       this.times = times;
       this.values = values;
@@ -313,17 +327,8 @@ class KeyframeTrack {
     return this;
   }
 
-  clone() {
+  KeyframeTrack clone() {
     print("KeyframeTrack clone todo ");
-    // var times = AnimationUtils.arraySlice( this.times, 0, null );
-    // var values = AnimationUtils.arraySlice( this.values, 0, null );
-
-    // var TypedKeyframeTrack = this.constructor;
-    // var track = new TypedKeyframeTrack( this.name, times, values );
-
-    // // Interpolant argument to constructor is not saved, so copy the factory method directly.
-    // track.createInterpolant = this.createInterpolant;
-
-    // return track;
+    return KeyframeTrack(name, times, values)..createInterpolant = createInterpolant;
   }
 }

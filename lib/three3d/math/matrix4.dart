@@ -1,45 +1,61 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/math/euler.dart';
-import 'package:three_dart/three3d/math/math.dart';
-import 'package:three_dart/three3d/math/matrix3.dart';
-import 'package:three_dart/three3d/math/quaternion.dart';
-import 'package:three_dart/three3d/math/vector3.dart';
+import 'math.dart';
+import 'euler.dart';
+import 'matrix3.dart';
+import 'quaternion.dart';
+import 'vector3.dart';
 
-var _matrix4v1 = Vector3();
-var _matrix4m1 = Matrix4();
-var _matrix4zero = Vector3(0, 0, 0);
-var _matrix4one = Vector3(1, 1, 1);
-var _matrix4x = Vector3();
-var _matrix4y = Vector3();
-var _matrix4z = Vector3();
+final _matrix4v1 = Vector3();
+final _matrix4m1 = Matrix4();
+final _matrix4zero = Vector3(0, 0, 0);
+final _matrix4one = Vector3(1, 1, 1);
+final _matrix4x = Vector3();
+final _matrix4y = Vector3();
+final _matrix4z = Vector3();
 
 class Matrix4 {
   String type = "Matrix4";
   late Float32Array elements;
 
   Matrix4() {
-    elements = Float32Array.from([1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
+    elements = Float32Array.from([
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]);
   }
 
   Matrix4 set(
-    num n11,
-    num n12,
-    num n13,
-    num n14,
-    num n21,
-    num n22,
-    num n23,
-    num n24,
-    num n31,
-    num n32,
-    num n33,
-    num n34,
-    num n41,
-    num n42,
-    num n43,
-    num n44,
-  ) {
-    var te = elements;
+      num n11,
+      num n12,
+      num n13,
+      num n14,
+      num n21,
+      num n22,
+      num n23,
+      num n24,
+      num n31,
+      num n32,
+      num n33,
+      num n34,
+      num n41,
+      num n42,
+      num n43,
+      num n44) {
+    final te = elements;
 
     te[0] = n11.toDouble();
     te[4] = n12.toDouble();
@@ -62,7 +78,8 @@ class Matrix4 {
   }
 
   Matrix4 identity() {
-    set(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+    set(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0);
 
     return this;
   }
@@ -72,8 +89,8 @@ class Matrix4 {
   }
 
   Matrix4 copy(Matrix4 m) {
-    var te = elements;
-    var me = m.elements;
+    final te = elements;
+    final me = m.elements;
 
     te[0] = me[0];
     te[1] = me[1];
@@ -96,7 +113,7 @@ class Matrix4 {
   }
 
   Matrix4 copyPosition(Matrix4 m) {
-    var te = elements, me = m.elements;
+    final te = elements, me = m.elements;
 
     te[12] = me[12];
     te[13] = me[13];
@@ -106,9 +123,10 @@ class Matrix4 {
   }
 
   Matrix4 setFromMatrix3(Matrix3 m) {
-    var me = m.elements;
+    final me = m.elements;
 
-    set(me[0], me[3], me[6], 0, me[1], me[4], me[7], 0, me[2], me[5], me[8], 0, 0, 0, 0, 1);
+    set(me[0], me[3], me[6], 0, me[1], me[4], me[7], 0, me[2], me[5], me[8], 0,
+        0, 0, 0, 1);
 
     return this;
   }
@@ -122,7 +140,8 @@ class Matrix4 {
   }
 
   Matrix4 makeBasis(Vector3 xAxis, Vector3 yAxis, Vector3 zAxis) {
-    set(xAxis.x, yAxis.x, zAxis.x, 0, xAxis.y, yAxis.y, zAxis.y, 0, xAxis.z, yAxis.z, zAxis.z, 0, 0, 0, 0, 1);
+    set(xAxis.x, yAxis.x, zAxis.x, 0, xAxis.y, yAxis.y, zAxis.y, 0, xAxis.z,
+        yAxis.z, zAxis.z, 0, 0, 0, 0, 1);
 
     return this;
   }
@@ -130,12 +149,12 @@ class Matrix4 {
   Matrix4 extractRotation(Matrix4 m) {
     // this method does not support reflection matrices
 
-    var te = elements;
-    var me = m.elements;
+    final te = elements;
+    final me = m.elements;
 
-    var scaleX = 1 / _matrix4v1.setFromMatrixColumn(m, 0).length();
-    var scaleY = 1 / _matrix4v1.setFromMatrixColumn(m, 1).length();
-    var scaleZ = 1 / _matrix4v1.setFromMatrixColumn(m, 2).length();
+    final scaleX = 1 / _matrix4v1.setFromMatrixColumn(m, 0).length();
+    final scaleY = 1 / _matrix4v1.setFromMatrixColumn(m, 1).length();
+    final scaleZ = 1 / _matrix4v1.setFromMatrixColumn(m, 2).length();
 
     te[0] = me[0] * scaleX;
     te[1] = me[1] * scaleX;
@@ -161,15 +180,15 @@ class Matrix4 {
   }
 
   Matrix4 makeRotationFromEuler(Euler euler) {
-    var te = elements;
+    final te = elements;
 
-    var x = euler.x, y = euler.y, z = euler.z;
-    var a = Math.cos(x).toDouble(), b = Math.sin(x).toDouble();
-    var c = Math.cos(y).toDouble(), d = Math.sin(y).toDouble();
-    var e = Math.cos(z).toDouble(), f = Math.sin(z).toDouble();
+    final x = euler.x, y = euler.y, z = euler.z;
+    final a = Math.cos(x).toDouble(), b = Math.sin(x).toDouble();
+    final c = Math.cos(y).toDouble(), d = Math.sin(y).toDouble();
+    final e = Math.cos(z).toDouble(), f = Math.sin(z).toDouble();
 
     if (euler.order == 'XYZ') {
-      var ae = a * e, af = a * f, be = b * e, bf = b * f;
+      final ae = a * e, af = a * f, be = b * e, bf = b * f;
 
       te[0] = c * e;
       te[4] = -c * f;
@@ -183,7 +202,7 @@ class Matrix4 {
       te[6] = be + af * d;
       te[10] = a * c;
     } else if (euler.order == 'YXZ') {
-      var ce = c * e, cf = c * f, de = d * e, df = d * f;
+      final ce = c * e, cf = c * f, de = d * e, df = d * f;
 
       te[0] = ce + df * b;
       te[4] = de * b - cf;
@@ -197,7 +216,7 @@ class Matrix4 {
       te[6] = df + ce * b;
       te[10] = a * c;
     } else if (euler.order == 'ZXY') {
-      var ce = c * e, cf = c * f, de = d * e, df = d * f;
+      final ce = c * e, cf = c * f, de = d * e, df = d * f;
 
       te[0] = ce - df * b;
       te[4] = -a * f;
@@ -211,7 +230,7 @@ class Matrix4 {
       te[6] = b;
       te[10] = a * c;
     } else if (euler.order == 'ZYX') {
-      var ae = a * e, af = a * f, be = b * e, bf = b * f;
+      final ae = a * e, af = a * f, be = b * e, bf = b * f;
 
       te[0] = c * e;
       te[4] = be * d - af;
@@ -225,7 +244,7 @@ class Matrix4 {
       te[6] = b * c;
       te[10] = a * c;
     } else if (euler.order == 'YZX') {
-      var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
+      final ac = a * c, ad = a * d, bc = b * c, bd = b * d;
 
       te[0] = c * e;
       te[4] = bd - ac * f;
@@ -239,7 +258,7 @@ class Matrix4 {
       te[6] = ad * f + bc;
       te[10] = ac - bd * f;
     } else if (euler.order == 'XZY') {
-      var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
+      final ac = a * c, ad = a * d, bc = b * c, bd = b * d;
 
       te[0] = c * e;
       te[4] = -f;
@@ -273,7 +292,7 @@ class Matrix4 {
   }
 
   Matrix4 lookAt(Vector3 eye, Vector3 target, Vector3 up) {
-    var te = elements;
+    final te = elements;
 
     _matrix4z.subVectors(eye, target);
 
@@ -317,7 +336,8 @@ class Matrix4 {
 
   Matrix4 multiply(Matrix4 m, {Matrix4? n}) {
     if (n != null) {
-      print('three.Matrix4: .multiply() now only accepts one argument. Use .multiplyMatrices( a, b ) instead.');
+      print(
+          'THREE.Matrix4: .multiply() now only accepts one argument. Use .multiplyMatrices( a, b ) instead.');
       return multiplyMatrices(m, n);
     }
 
@@ -329,19 +349,19 @@ class Matrix4 {
   }
 
   Matrix4 multiplyMatrices(Matrix4 a, Matrix4 b) {
-    var ae = a.elements;
-    var be = b.elements;
-    var te = elements;
+    final ae = a.elements;
+    final be = b.elements;
+    final te = elements;
 
-    var a11 = ae[0], a12 = ae[4], a13 = ae[8], a14 = ae[12];
-    var a21 = ae[1], a22 = ae[5], a23 = ae[9], a24 = ae[13];
-    var a31 = ae[2], a32 = ae[6], a33 = ae[10], a34 = ae[14];
-    var a41 = ae[3], a42 = ae[7], a43 = ae[11], a44 = ae[15];
+    final a11 = ae[0], a12 = ae[4], a13 = ae[8], a14 = ae[12];
+    final a21 = ae[1], a22 = ae[5], a23 = ae[9], a24 = ae[13];
+    final a31 = ae[2], a32 = ae[6], a33 = ae[10], a34 = ae[14];
+    final a41 = ae[3], a42 = ae[7], a43 = ae[11], a44 = ae[15];
 
-    var b11 = be[0], b12 = be[4], b13 = be[8], b14 = be[12];
-    var b21 = be[1], b22 = be[5], b23 = be[9], b24 = be[13];
-    var b31 = be[2], b32 = be[6], b33 = be[10], b34 = be[14];
-    var b41 = be[3], b42 = be[7], b43 = be[11], b44 = be[15];
+    final b11 = be[0], b12 = be[4], b13 = be[8], b14 = be[12];
+    final b21 = be[1], b22 = be[5], b23 = be[9], b24 = be[13];
+    final b31 = be[2], b32 = be[6], b33 = be[10], b34 = be[14];
+    final b41 = be[3], b42 = be[7], b43 = be[11], b44 = be[15];
 
     te[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
     te[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
@@ -367,7 +387,7 @@ class Matrix4 {
   }
 
   Matrix4 multiplyScalar(num s) {
-    var te = elements;
+    final te = elements;
 
     te[0] *= s;
     te[4] *= s;
@@ -390,27 +410,44 @@ class Matrix4 {
   }
 
   double determinant() {
-    var te = elements;
+    final te = elements;
 
     double n11 = te[0], n12 = te[4], n13 = te[8], n14 = te[12];
     double n21 = te[1], n22 = te[5], n23 = te[9], n24 = te[13];
     double n31 = te[2], n32 = te[6], n33 = te[10], n34 = te[14];
     double n41 = te[3], n42 = te[7], n43 = te[11], n44 = te[15];
 
-    //TODO: make this more efficient
-    //( based on http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.htm )
-
     double v1 = n41 *
-        (n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34);
+        (n14 * n23 * n32 -
+            n13 * n24 * n32 -
+            n14 * n22 * n33 +
+            n12 * n24 * n33 +
+            n13 * n22 * n34 -
+            n12 * n23 * n34);
 
     double v2 = n42 *
-        (n11 * n23 * n34 - n11 * n24 * n33 + n14 * n21 * n33 - n13 * n21 * n34 + n13 * n24 * n31 - n14 * n23 * n31);
+        (n11 * n23 * n34 -
+            n11 * n24 * n33 +
+            n14 * n21 * n33 -
+            n13 * n21 * n34 +
+            n13 * n24 * n31 -
+            n14 * n23 * n31);
 
     double v3 = n43 *
-        (n11 * n24 * n32 - n11 * n22 * n34 - n14 * n21 * n32 + n12 * n21 * n34 + n14 * n22 * n31 - n12 * n24 * n31);
+        (n11 * n24 * n32 -
+            n11 * n22 * n34 -
+            n14 * n21 * n32 +
+            n12 * n21 * n34 +
+            n14 * n22 * n31 -
+            n12 * n24 * n31);
 
     double v4 = n44 *
-        (-n13 * n22 * n31 - n11 * n23 * n32 + n11 * n22 * n33 + n13 * n21 * n32 - n12 * n21 * n33 + n12 * n23 * n31);
+        (-n13 * n22 * n31 -
+            n11 * n23 * n32 +
+            n11 * n22 * n33 +
+            n13 * n21 * n32 -
+            n12 * n21 * n33 +
+            n12 * n23 * n31);
 
     final result = (v1 + v2 + v3 + v4);
 
@@ -420,8 +457,8 @@ class Matrix4 {
   }
 
   Matrix4 transpose() {
-    var te = elements;
-    var tmp = te[1];
+    final te = elements;
+    double tmp = te[1];
     te[1] = te[4];
     te[4] = tmp;
     tmp = te[2];
@@ -445,23 +482,23 @@ class Matrix4 {
   }
 
   // x is Vector3 | num
-  Matrix4 setPosition(x, [y, z]) {
-    var te = elements;
+  Matrix4 setPosition(double x, double y, double z) {
+    final te = elements;
 
-    if (x is Vector3) {
-      print("warn use setPositionFromVector3 ........... ");
-      return setPositionFromVector3(x);
-    } else {
+    // if (x is Vector3) {
+    //   print("warn use setPositionFromVector3 ........... ");
+    //   return setPositionFromVector3(x);
+    // } else {
       te[12] = x.toDouble();
       te[13] = y.toDouble();
       te[14] = z.toDouble();
-    }
+    //}
 
     return this;
   }
 
   Matrix4 setPositionFromVector3(Vector3 x) {
-    var te = elements;
+    final te = elements;
 
     te[12] = x.x.toDouble();
     te[13] = x.y.toDouble();
@@ -472,7 +509,7 @@ class Matrix4 {
 
   Matrix4 invert() {
     // based on http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.htm
-    var te = elements;
+    final te = elements;
     final double n11 = te[0],
         n21 = te[1],
         n31 = te[2],
@@ -489,67 +526,135 @@ class Matrix4 {
         n24 = te[13],
         n34 = te[14],
         n44 = te[15],
-        t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44,
-        t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44,
-        t13 = n13 * n24 * n42 - n14 * n23 * n42 + n14 * n22 * n43 - n12 * n24 * n43 - n13 * n22 * n44 + n12 * n23 * n44,
-        t14 = n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34;
+        t11 = n23 * n34 * n42 -
+            n24 * n33 * n42 +
+            n24 * n32 * n43 -
+            n22 * n34 * n43 -
+            n23 * n32 * n44 +
+            n22 * n33 * n44,
+        t12 = n14 * n33 * n42 -
+            n13 * n34 * n42 -
+            n14 * n32 * n43 +
+            n12 * n34 * n43 +
+            n13 * n32 * n44 -
+            n12 * n33 * n44,
+        t13 = n13 * n24 * n42 -
+            n14 * n23 * n42 +
+            n14 * n22 * n43 -
+            n12 * n24 * n43 -
+            n13 * n22 * n44 +
+            n12 * n23 * n44,
+        t14 = n14 * n23 * n32 -
+            n13 * n24 * n32 -
+            n14 * n22 * n33 +
+            n12 * n24 * n33 +
+            n13 * n22 * n34 -
+            n12 * n23 * n34;
 
     final det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
 
     if (det == 0) return set(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
-    var detInv = 1 / det;
+    final detInv = 1 / det;
 
     te[0] = t11 * detInv;
-    te[1] =
-        (n24 * n33 * n41 - n23 * n34 * n41 - n24 * n31 * n43 + n21 * n34 * n43 + n23 * n31 * n44 - n21 * n33 * n44) *
-            detInv;
-    te[2] =
-        (n22 * n34 * n41 - n24 * n32 * n41 + n24 * n31 * n42 - n21 * n34 * n42 - n22 * n31 * n44 + n21 * n32 * n44) *
-            detInv;
-    te[3] =
-        (n23 * n32 * n41 - n22 * n33 * n41 - n23 * n31 * n42 + n21 * n33 * n42 + n22 * n31 * n43 - n21 * n32 * n43) *
-            detInv;
+    te[1] = (n24 * n33 * n41 -
+            n23 * n34 * n41 -
+            n24 * n31 * n43 +
+            n21 * n34 * n43 +
+            n23 * n31 * n44 -
+            n21 * n33 * n44) *
+        detInv;
+    te[2] = (n22 * n34 * n41 -
+            n24 * n32 * n41 +
+            n24 * n31 * n42 -
+            n21 * n34 * n42 -
+            n22 * n31 * n44 +
+            n21 * n32 * n44) *
+        detInv;
+    te[3] = (n23 * n32 * n41 -
+            n22 * n33 * n41 -
+            n23 * n31 * n42 +
+            n21 * n33 * n42 +
+            n22 * n31 * n43 -
+            n21 * n32 * n43) *
+        detInv;
 
     te[4] = t12 * detInv;
-    te[5] =
-        (n13 * n34 * n41 - n14 * n33 * n41 + n14 * n31 * n43 - n11 * n34 * n43 - n13 * n31 * n44 + n11 * n33 * n44) *
-            detInv;
-    te[6] =
-        (n14 * n32 * n41 - n12 * n34 * n41 - n14 * n31 * n42 + n11 * n34 * n42 + n12 * n31 * n44 - n11 * n32 * n44) *
-            detInv;
-    te[7] =
-        (n12 * n33 * n41 - n13 * n32 * n41 + n13 * n31 * n42 - n11 * n33 * n42 - n12 * n31 * n43 + n11 * n32 * n43) *
-            detInv;
+    te[5] = (n13 * n34 * n41 -
+            n14 * n33 * n41 +
+            n14 * n31 * n43 -
+            n11 * n34 * n43 -
+            n13 * n31 * n44 +
+            n11 * n33 * n44) *
+        detInv;
+    te[6] = (n14 * n32 * n41 -
+            n12 * n34 * n41 -
+            n14 * n31 * n42 +
+            n11 * n34 * n42 +
+            n12 * n31 * n44 -
+            n11 * n32 * n44) *
+        detInv;
+    te[7] = (n12 * n33 * n41 -
+            n13 * n32 * n41 +
+            n13 * n31 * n42 -
+            n11 * n33 * n42 -
+            n12 * n31 * n43 +
+            n11 * n32 * n43) *
+        detInv;
 
     te[8] = t13 * detInv;
-    te[9] =
-        (n14 * n23 * n41 - n13 * n24 * n41 - n14 * n21 * n43 + n11 * n24 * n43 + n13 * n21 * n44 - n11 * n23 * n44) *
-            detInv;
-    te[10] =
-        (n12 * n24 * n41 - n14 * n22 * n41 + n14 * n21 * n42 - n11 * n24 * n42 - n12 * n21 * n44 + n11 * n22 * n44) *
-            detInv;
-    te[11] =
-        (n13 * n22 * n41 - n12 * n23 * n41 - n13 * n21 * n42 + n11 * n23 * n42 + n12 * n21 * n43 - n11 * n22 * n43) *
-            detInv;
+    te[9] = (n14 * n23 * n41 -
+            n13 * n24 * n41 -
+            n14 * n21 * n43 +
+            n11 * n24 * n43 +
+            n13 * n21 * n44 -
+            n11 * n23 * n44) *
+        detInv;
+    te[10] = (n12 * n24 * n41 -
+            n14 * n22 * n41 +
+            n14 * n21 * n42 -
+            n11 * n24 * n42 -
+            n12 * n21 * n44 +
+            n11 * n22 * n44) *
+        detInv;
+    te[11] = (n13 * n22 * n41 -
+            n12 * n23 * n41 -
+            n13 * n21 * n42 +
+            n11 * n23 * n42 +
+            n12 * n21 * n43 -
+            n11 * n22 * n43) *
+        detInv;
 
     te[12] = t14 * detInv;
-    te[13] =
-        (n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34) *
-            detInv;
-    te[14] =
-        (n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34) *
-            detInv;
-    te[15] =
-        (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33) *
-            detInv;
+    te[13] = (n13 * n24 * n31 -
+            n14 * n23 * n31 +
+            n14 * n21 * n33 -
+            n11 * n24 * n33 -
+            n13 * n21 * n34 +
+            n11 * n23 * n34) *
+        detInv;
+    te[14] = (n14 * n22 * n31 -
+            n12 * n24 * n31 -
+            n14 * n21 * n32 +
+            n11 * n24 * n32 +
+            n12 * n21 * n34 -
+            n11 * n22 * n34) *
+        detInv;
+    te[15] = (n12 * n23 * n31 -
+            n13 * n22 * n31 +
+            n13 * n21 * n32 -
+            n11 * n23 * n32 -
+            n12 * n21 * n33 +
+            n11 * n22 * n33) *
+        detInv;
 
     return this;
   }
 
   Matrix4 scale(Vector3 v) {
-    var te = elements;
-    var x = v.x, y = v.y, z = v.z;
+    final te = elements;
+    final x = v.x, y = v.y, z = v.z;
 
     te[0] *= x;
     te[4] *= y;
@@ -568,7 +673,7 @@ class Matrix4 {
   }
 
   double getMaxScaleOnAxis() {
-    var te = elements;
+    final te = elements;
 
     double scaleXSq = te[0] * te[0] + te[1] * te[1] + te[2] * te[2];
     double scaleYSq = te[4] * te[4] + te[5] * te[5] + te[6] * te[6];
@@ -584,7 +689,7 @@ class Matrix4 {
   }
 
   Matrix4 makeRotationX(num theta) {
-    var c = Math.cos(theta).toDouble(), s = Math.sin(theta).toDouble();
+    final c = Math.cos(theta).toDouble(), s = Math.sin(theta).toDouble();
 
     set(1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1);
 
@@ -592,7 +697,7 @@ class Matrix4 {
   }
 
   Matrix4 makeRotationY(num theta) {
-    var c = Math.cos(theta).toDouble(), s = Math.sin(theta).toDouble();
+    final c = Math.cos(theta).toDouble(), s = Math.sin(theta).toDouble();
 
     set(c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1);
 
@@ -600,7 +705,7 @@ class Matrix4 {
   }
 
   Matrix4 makeRotationZ(num theta) {
-    var c = Math.cos(theta).toDouble(), s = Math.sin(theta).toDouble();
+    final c = Math.cos(theta).toDouble(), s = Math.sin(theta).toDouble();
 
     set(c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 
@@ -610,14 +715,29 @@ class Matrix4 {
   Matrix4 makeRotationAxis(Vector3 axis, num angle) {
     // Based on http://www.gamedev.net/reference/articles/article1199.asp
 
-    var c = Math.cos(angle).toDouble();
-    var s = Math.sin(angle).toDouble();
-    var t = 1 - c;
-    var x = axis.x, y = axis.y, z = axis.z;
-    var tx = t * x, ty = t * y;
+    final c = Math.cos(angle).toDouble();
+    final s = Math.sin(angle).toDouble();
+    final t = 1 - c;
+    final x = axis.x, y = axis.y, z = axis.z;
+    final tx = t * x, ty = t * y;
 
-    set(tx * x + c, tx * y - s * z, tx * z + s * y, 0, tx * y + s * z, ty * y + c, ty * z - s * x, 0, tx * z - s * y,
-        ty * z + s * x, t * z * z + c, 0, 0, 0, 0, 1);
+    set(
+        tx * x + c,
+        tx * y - s * z,
+        tx * z + s * y,
+        0,
+        tx * y + s * z,
+        ty * y + c,
+        ty * z - s * x,
+        0,
+        tx * z - s * y,
+        ty * z + s * x,
+        t * z * z + c,
+        0,
+        0,
+        0,
+        0,
+        1);
 
     return this;
   }
@@ -635,18 +755,18 @@ class Matrix4 {
   }
 
   Matrix4 compose(Vector3 position, Quaternion quaternion, Vector3 scale) {
-    var te = elements;
+    final te = elements;
 
-    var x = quaternion.x.toDouble();
-    var y = quaternion.y.toDouble();
-    var z = quaternion.z.toDouble();
-    var w = quaternion.w.toDouble();
-    var x2 = x + x, y2 = y + y, z2 = z + z;
-    var xx = x * x2, xy = x * y2, xz = x * z2;
-    var yy = y * y2, yz = y * z2, zz = z * z2;
-    var wx = w * x2, wy = w * y2, wz = w * z2;
+    final x = quaternion.x.toDouble();
+    final y = quaternion.y.toDouble();
+    final z = quaternion.z.toDouble();
+    final w = quaternion.w.toDouble();
+    final x2 = x + x, y2 = y + y, z2 = z + z;
+    final xx = x * x2, xy = x * y2, xz = x * z2;
+    final yy = y * y2, yz = y * z2, zz = z * z2;
+    final wx = w * x2, wy = w * y2, wz = w * z2;
 
-    var sx = scale.x, sy = scale.y, sz = scale.z;
+    final sx = scale.x, sy = scale.y, sz = scale.z;
 
     te[0] = (1 - (yy + zz)) * sx.toDouble();
     te[1] = (xy + wz) * sx;
@@ -672,14 +792,14 @@ class Matrix4 {
   }
 
   Matrix4 decompose(Vector3 position, Quaternion quaternion, Vector3 scale) {
-    var te = elements;
+    final te = elements;
 
-    var sx = _matrix4v1.set(te[0], te[1], te[2]).length();
-    var sy = _matrix4v1.set(te[4], te[5], te[6]).length();
-    var sz = _matrix4v1.set(te[8], te[9], te[10]).length();
+    double sx = _matrix4v1.set(te[0], te[1], te[2]).length();
+    final sy = _matrix4v1.set(te[4], te[5], te[6]).length();
+    final sz = _matrix4v1.set(te[8], te[9], te[10]).length();
 
     // if determine is negative, we need to invert one scale
-    var det = determinant();
+    final det = determinant();
     if (det < 0) sx = -sx;
 
     position.x = te[12];
@@ -689,9 +809,9 @@ class Matrix4 {
     // scale the rotation part
     _matrix4m1.copy(this);
 
-    var invSX = 1 / sx;
-    var invSY = 1 / sy;
-    var invSZ = 1 / sz;
+    final invSX = 1 / sx;
+    final invSY = 1 / sy;
+    final invSZ = 1 / sz;
 
     _matrix4m1.elements[0] *= invSX;
     _matrix4m1.elements[1] *= invSX;
@@ -714,15 +834,17 @@ class Matrix4 {
     return this;
   }
 
-  Matrix4 makePerspective(num left, num right, num top, num bottom, num near, num far) {
-    var te = elements;
-    var x = 2 * near / (right - left);
-    var y = 2 * near / (top - bottom);
+  Matrix4 makePerspective(
+      num left, num right, num top, num bottom, num near, num far) {
+    
+    final te = elements;
+    final x = 2 * near / (right - left);
+    final y = 2 * near / (top - bottom);
 
-    var a = (right + left) / (right - left);
-    var b = (top + bottom) / (top - bottom);
-    var c = -(far + near) / (far - near);
-    var d = -2 * far * near / (far - near);
+    final a = (right + left) / (right - left);
+    final b = (top + bottom) / (top - bottom);
+    final c = -(far + near) / (far - near);
+    final d = -2 * far * near / (far - near);
 
     te[0] = x;
     te[4] = 0;
@@ -744,15 +866,16 @@ class Matrix4 {
     return this;
   }
 
-  Matrix4 makeOrthographic(num left, num right, num top, num bottom, num near, num far) {
-    var te = elements;
-    var w = 1.0 / (right - left);
-    var h = 1.0 / (top - bottom);
-    var p = 1.0 / (far - near);
+  Matrix4 makeOrthographic(
+      num left, num right, num top, num bottom, num near, num far) {
+    final te = elements;
+    final w = 1.0 / (right - left);
+    final h = 1.0 / (top - bottom);
+    final p = 1.0 / (far - near);
 
-    var x = (right + left) * w;
-    var y = (top + bottom) * h;
-    var z = (far + near) * p;
+    final x = (right + left) * w;
+    final y = (top + bottom) * h;
+    final z = (far + near) * p;
 
     te[0] = 2 * w;
     te[4] = 0;
@@ -775,10 +898,10 @@ class Matrix4 {
   }
 
   bool equals(Matrix4 matrix) {
-    var te = elements;
-    var me = matrix.elements;
+    final te = elements;
+    final me = matrix.elements;
 
-    for (var i = 0; i < 16; i++) {
+    for (int i = 0; i < 16; i++) {
       if (te[i] != me[i]) return false;
     }
 
@@ -786,15 +909,15 @@ class Matrix4 {
   }
 
   Matrix4 fromArray(array, [int offset = 0]) {
-    for (var i = 0; i < 16; i++) {
+    for (int i = 0; i < 16; i++) {
       elements[i] = array[i + offset].toDouble();
     }
 
     return this;
   }
 
-  toArray(array, [int offset = 0]) {
-    var te = elements;
+  List<num> toArray(List<num> array, [int offset = 0]) {
+    final te = elements;
 
     array[offset] = te[0];
     array[offset + 1] = te[1];
@@ -819,16 +942,13 @@ class Matrix4 {
     return array;
   }
 
-  toJSON() {
+  List<num> toList() {
     return elements.sublist(0);
   }
 
   Matrix4 getInverse(Matrix4 matrix) {
-    print('three.Matrix4: .getInverse() has been removed. Use matrixInv.copy( matrix ).invert(); instead.');
+    print(
+        'THREE.Matrix4: .getInverse() has been removed. Use matrixInv.copy( matrix ).invert(); instead.');
     return copy(matrix).invert();
-  }
-
-  void dispose() {
-    elements.dispose();
   }
 }

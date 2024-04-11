@@ -1,8 +1,8 @@
-import 'package:three_dart/three3d/dart_helpers.dart';
-import 'package:three_dart/three3d/extras/core/path.dart';
-import 'package:three_dart/three3d/extras/core/shape.dart';
-import 'package:three_dart/three3d/extras/shape_utils.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import 'path.dart';
+import 'shape.dart';
+import '../shape_utils.dart';
+import '../../math/index.dart';
+import '../../dart_helpers.dart';
 
 class ShapePath {
   String type = "ShapePath";
@@ -25,20 +25,18 @@ class ShapePath {
     return this;
   }
 
-  ShapePath quadraticCurveTo(double aCPx, double aCPy, double aX, double aY) {
+  ShapePath quadraticCurveTo(num aCPx, num aCPy, num aX, num aY) {
     currentPath.quadraticCurveTo(aCPx, aCPy, aX, aY);
     return this;
   }
 
   ShapePath bezierCurveTo(num aCP1x, num aCP1y, num aCP2x, num aCP2y, num aX, num aY) {
     currentPath.bezierCurveTo(aCP1x, aCP1y, aCP2x, aCP2y, aX, aY);
-
     return this;
   }
 
   ShapePath splineThru(List<Vector2> pts) {
     currentPath.splineThru(pts);
-
     return this;
   }
 
@@ -47,9 +45,9 @@ class ShapePath {
       List<Shape> shapes = [];
 
       for (int i = 0, l = inSubpaths.length; i < l; i++) {
-        Path tmpPath = inSubpaths[i];
+        final tmpPath = inSubpaths[i];
 
-        Shape tmpShape = Shape();
+        final tmpShape = Shape(null);
         tmpShape.curves = tmpPath.curves;
 
         shapes.add(tmpShape);
@@ -58,8 +56,8 @@ class ShapePath {
       return shapes;
     }
 
-    bool isPointInsidePolygon(Vector inPt, List<Vector> inPolygon) {
-      int polyLen = inPolygon.length;
+    bool isPointInsidePolygon(Vector2 inPt, List<Vector2> inPolygon) {
+      final polyLen = inPolygon.length;
 
       // inPt on polygon contour => immediate success    or
       // toggling of inside/outside at every single! intersection point of an edge
@@ -67,11 +65,11 @@ class ShapePath {
       //  not counting lowerY endpoints of edges and whole edges on that line
       bool inside = false;
       for (int p = polyLen - 1, q = 0; q < polyLen; p = q++) {
-        Vector edgeLowPt = inPolygon[p];
-        Vector edgeHighPt = inPolygon[q];
+        Vector2 edgeLowPt = inPolygon[p];
+        Vector2 edgeHighPt = inPolygon[q];
 
-        double edgeDx = edgeHighPt.x - edgeLowPt.x.toDouble();
-        double edgeDy = edgeHighPt.y - edgeLowPt.y.toDouble();
+        double edgeDx = edgeHighPt.x - edgeLowPt.x;
+        double edgeDy = edgeHighPt.y - edgeLowPt.y;
 
         if (Math.abs(edgeDy) > Math.epsilon) {
           // not parallel
@@ -112,14 +110,16 @@ class ShapePath {
       return inside;
     }
 
-    bool Function(List<Vector>) isClockWise = ShapeUtils.isClockWise;
+    final isClockWise = ShapeUtils.isClockWise;
 
-    List<Path> subPaths = this.subPaths;
+    final subPaths = this.subPaths;
     if (subPaths.isEmpty) return [];
 
     if (noHoles == true) return toShapesNoHoles(subPaths);
 
-    var solid, tmpPath, tmpShape;
+    bool solid;
+    Path tmpPath;
+    Shape tmpShape;
     List<Shape> shapes = [];
 
     if (subPaths.length == 1) {
@@ -133,13 +133,13 @@ class ShapePath {
     bool holesFirst = !isClockWise(subPaths[0].getPoints());
     holesFirst = isCCW ? !holesFirst : holesFirst;
 
-    // console.log("Holes first", holesFirst);
+    // Console.log("Holes first", holesFirst);
 
-    var betterShapeHoles = [];
-    var newShapes = [];
-    var newShapeHoles = [];
+    dynamic betterShapeHoles = [];
+    final newShapes = [];
+    dynamic newShapeHoles = [];
     int mainIdx = 0;
-    var tmpPoints;
+    List<Vector?> tmpPoints;
 
     // newShapes[ mainIdx ] = null;
     listSetter(newShapes, mainIdx, null);
@@ -165,12 +165,12 @@ class ShapePath {
         // newShapeHoles[ mainIdx ] = [];
         listSetter(newShapeHoles, mainIdx, []);
 
-        //console.log('cw', i);
+        //Console.log('cw', i);
 
       } else {
         newShapeHoles[mainIdx].add({"h": tmpPath, "p": tmpPoints[0]});
 
-        //console.log('ccw', i);
+        //Console.log('ccw', i);
 
       }
     }
@@ -190,10 +190,10 @@ class ShapePath {
       }
 
       for (int sIdx = 0, sLen = newShapes.length; sIdx < sLen; sIdx++) {
-        var sho = newShapeHoles[sIdx];
+        final sho = newShapeHoles[sIdx];
 
         for (int hIdx = 0; hIdx < sho.length; hIdx++) {
-          var ho = sho[hIdx];
+          final ho = sho[hIdx];
           bool holeUnassigned = true;
 
           for (int s2Idx = 0; s2Idx < newShapes.length; s2Idx++) {
@@ -218,7 +218,7 @@ class ShapePath {
       }
     }
 
-    var tmpHoles;
+    dynamic tmpHoles;
 
     for (int i = 0, il = newShapes.length; i < il; i++) {
       tmpShape = newShapes[i]["s"];
@@ -230,7 +230,7 @@ class ShapePath {
       }
     }
 
-    //console.log("shape", shapes);
+    //Console.log("shape", shapes);
 
     return shapes;
   }

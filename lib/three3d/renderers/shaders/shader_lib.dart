@@ -1,7 +1,4 @@
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/renderers/shaders/shader_chunk.dart';
-import 'package:three_dart/three3d/renderers/shaders/uniforms_lib.dart';
-import 'package:three_dart/three3d/renderers/shaders/uniforms_utils.dart';
+part of three_shaders;
 
 Map<String, dynamic> shaderLibStandard = {
   "uniforms": mergeUniforms([
@@ -133,7 +130,8 @@ Map<String, dynamic> shaderLib = {
     "fragmentShader": shaderChunk["linedashed_frag"]
   },
   "depth": {
-    "uniforms": mergeUniforms([uniformsLib["common"], uniformsLib["displacementmap"]]),
+    "uniforms":
+        mergeUniforms([uniformsLib["common"], uniformsLib["displacementmap"]]),
     "vertexShader": shaderChunk["depth_vert"],
     "fragmentShader": shaderChunk["depth_frag"]
   },

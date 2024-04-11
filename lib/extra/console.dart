@@ -1,18 +1,18 @@
 // ignore: camel_case_types
-class console {
-  static error(String message, [dynamic variables]) {
+class Console {
+  static void error(String message, [dynamic variables]) {
     _print(message, variables);
   }
 
-  static warn(String message, [dynamic variables]) {
+  static void warn(String message, [dynamic variables]) {
     _print(message, variables);
   }
 
-  static info(String message, [dynamic variables]) {
+  static void info(String message, [dynamic variables]) {
     _print(message, variables);
   }
 
-  static _print(String message, [dynamic variables]) {
+  static void _print(String message, [dynamic variables]) {
     print(message + (variables == null ? "" : variables.toString()));
   }
 }

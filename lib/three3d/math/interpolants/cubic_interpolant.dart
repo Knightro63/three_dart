@@ -1,5 +1,5 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/math/interpolant.dart';
+import '../../constants.dart';
+import '../interpolant.dart';
 
 /// Fast and simple cubic spline interpolant.
 ///
@@ -13,23 +13,33 @@ class CubicInterpolant extends Interpolant {
   late num _weightNext;
   late num _offsetNext;
 
-  CubicInterpolant(parameterPositions, sampleValues, sampleSize, resultBuffer)
-      : super(parameterPositions, sampleValues, sampleSize, resultBuffer) {
+  CubicInterpolant(
+    List<num> parameterPositions, 
+    List<num> sampleValues, 
+    int sampleSize, 
+    List? resultBuffer
+  ):super(parameterPositions, sampleValues, sampleSize, resultBuffer) {
     _weightPrev = -0;
     _offsetPrev = -0;
     _weightNext = -0;
     _offsetNext = -0;
 
-    defaultSettings = {"endingStart": ZeroCurvatureEnding, "endingEnd": ZeroCurvatureEnding};
+    defaultSettings = {
+      "endingStart": ZeroCurvatureEnding,
+      "endingEnd": ZeroCurvatureEnding
+    };
   }
 
   @override
-  intervalChanged(v1, v2, v3) {
-    var pp = parameterPositions;
-    var iPrev = v1 - 2, iNext = v1 + 1, tPrev = pp[iPrev], tNext = pp[iNext];
+  void intervalChanged(int v1, int v2, int v3) {
+    List<num?> pp = parameterPositions;
+    int iPrev = v1 - 2;
+    int iNext = v1 + 1;
+    num? tPrev = pp[iPrev];
+    num? tNext = pp[iNext];
 
     if (tPrev == null) {
-      switch (getSettings().endingStart) {
+      switch (getSettings()['endingStart']) {
         case ZeroSlopeEnding:
 
           // f'(t0) = 0
@@ -42,7 +52,7 @@ class CubicInterpolant extends Interpolant {
 
           // use the other end of the curve
           iPrev = pp.length - 2;
-          tPrev = v2 + pp[iPrev] - pp[iPrev + 1];
+          tPrev = v2 + pp[iPrev]! - pp[iPrev + 1]!;
 
           break;
 
@@ -55,7 +65,7 @@ class CubicInterpolant extends Interpolant {
     }
 
     if (tNext == null) {
-      switch (getSettings().endingEnd) {
+      switch (getSettings()['endingEnd']) {
         case ZeroSlopeEnding:
 
           // f'(tN) = 0
@@ -68,7 +78,7 @@ class CubicInterpolant extends Interpolant {
 
           // use the other end of the curve
           iNext = 1;
-          tNext = v3 + pp[1] - pp[0];
+          tNext = v3 + pp[1]! - pp[0]!;
 
           break;
 
@@ -80,7 +90,7 @@ class CubicInterpolant extends Interpolant {
       }
     }
 
-    var halfDt = (v3 - v2) * 0.5, stride = valueSize;
+    final halfDt = (v3 - v2) * 0.5, stride = valueSize;
 
     _weightPrev = halfDt / (v2 - tPrev);
     _weightNext = halfDt / (tNext - v3);
@@ -89,14 +99,14 @@ class CubicInterpolant extends Interpolant {
   }
 
   @override
-  interpolate(i1, t0, t, t1) {
-    var result = resultBuffer,
+  List? interpolate(int i1, num t0, num t, num t1) {
+    final result = resultBuffer,
         values = sampleValues,
         stride = valueSize,
         o1 = i1 * stride,
         o0 = o1 - stride,
-        oP = _offsetPrev,
-        oN = _offsetNext,
+        oP = _offsetPrev.toInt(),
+        oN = _offsetNext.toInt(),
         wP = _weightPrev,
         wN = _weightNext,
         p = (t - t0) / (t1 - t0),
@@ -105,15 +115,18 @@ class CubicInterpolant extends Interpolant {
 
     // evaluate polynomials
 
-    var sP = -wP * ppp + 2 * wP * pp - wP * p;
-    var s0 = (1 + wP) * ppp + (-1.5 - 2 * wP) * pp + (-0.5 + wP) * p + 1;
-    var s1 = (-1 - wN) * ppp + (1.5 + wN) * pp + 0.5 * p;
-    var sN = wN * ppp - wN * pp;
+    final sP = -wP * ppp + 2 * wP * pp - wP * p;
+    final s0 = (1 + wP) * ppp + (-1.5 - 2 * wP) * pp + (-0.5 + wP) * p + 1;
+    final s1 = (-1 - wN) * ppp + (1.5 + wN) * pp + 0.5 * p;
+    final sN = wN * ppp - wN * pp;
 
     // combine data linearly
 
-    for (var i = 0; i != stride; ++i) {
-      result[i] = sP * values[oP + i] + s0 * values[o0 + i] + s1 * values[o1 + i] + sN * values[oN + i];
+    for (int i = 0; i != stride; ++i) {
+      result?[i] = sP * values[oP + i] +
+          s0 * values[o0 + i] +
+          s1 * values[o1 + i] +
+          sN * values[oN + i];
     }
 
     return result;

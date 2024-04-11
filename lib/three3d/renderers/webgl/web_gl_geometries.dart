@@ -1,12 +1,4 @@
-import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/buffer_attribute.dart';
-import 'package:three_dart/three3d/core/buffer_geometry.dart';
-import 'package:three_dart/three3d/core/event_dispatcher.dart';
-import 'package:three_dart/three3d/core/instanced_buffer_geometry.dart';
-import 'package:three_dart/three3d/renderers/webgl/index.dart';
-import 'package:three_dart/three3d/utils.dart';
-import 'package:three_dart/three3d/weak_map.dart';
-import 'package:three_dart/three_dart.dart';
+part of three_webgl;
 
 class WebGLGeometries {
   dynamic gl;
@@ -15,18 +7,18 @@ class WebGLGeometries {
   WebGLBindingStates bindingStates;
 
   Map<int, bool> geometries = {};
-  var wireframeAttributes = WeakMap();
+  final wireframeAttributes = WeakMap();
 
   WebGLGeometries(this.gl, this.attributes, this.info, this.bindingStates);
 
   void onGeometryDispose(Event event) {
-    var geometry = event.target;
+    final geometry = event.target;
 
     if (geometry.index != null) {
       attributes.remove(geometry.index);
     }
 
-    for (var name in geometry.attributes.keys) {
+    for (String name in geometry.attributes.keys) {
       attributes.remove(geometry.attributes[name]);
     }
 
@@ -34,7 +26,7 @@ class WebGLGeometries {
 
     geometries.remove(geometry.id);
 
-    var attribute = wireframeAttributes.get(geometry);
+    final attribute = wireframeAttributes.get(geometry);
 
     if (attribute != null) {
       attributes.remove(attribute);
@@ -53,7 +45,7 @@ class WebGLGeometries {
     info.memory["geometries"] = info.memory["geometries"]! - 1;
   }
 
-  BufferGeometry get(object, BufferGeometry geometry) {
+  BufferGeometry get(BufferGeometry geometry) {
     if (geometries[geometry.id] == true) return geometry;
 
     geometry.addEventListener('dispose', onGeometryDispose);
@@ -66,22 +58,22 @@ class WebGLGeometries {
   }
 
   void update(BufferGeometry geometry) {
-    var geometryAttributes = geometry.attributes;
+    final geometryAttributes = geometry.attributes;
 
     // Updating index buffer in VAO now. See WebGLBindingStates.
 
-    for (AttributeTypes name in geometryAttributes.keys) {
-      attributes.update(geometryAttributes.getAttribute(name), gl.ARRAY_BUFFER, name: name.name);
+    for (final name in geometryAttributes.keys) {
+      attributes.update(geometryAttributes[name], gl.ARRAY_BUFFER, name: name);
     }
 
     // morph targets
 
-    var morphAttributes = geometry.morphAttributes;
+    final morphAttributes = geometry.morphAttributes;
 
-    for (var name in morphAttributes.keys) {
-      var array = morphAttributes[name]!;
+    for (final name in morphAttributes.keys) {
+      final array = morphAttributes[name]!;
 
-      for (var i = 0, l = array.length; i < l; i++) {
+      for (int i = 0, l = array.length; i < l; i++) {
         attributes.update(array[i], gl.ARRAY_BUFFER, name: "$name - morphAttributes i: $i");
       }
     }
@@ -90,28 +82,28 @@ class WebGLGeometries {
   void updateWireframeAttribute(BufferGeometry geometry) {
     List<int> indices = [];
 
-    var geometryIndex = geometry.index;
-    var geometryPosition = geometry.attributes.positionBuffer;
-    var version = 0;
+    final geometryIndex = geometry.index;
+    final geometryPosition = geometry.attributes["position"];
+    int version = 0;
 
     if (geometryIndex != null) {
-      var array = geometryIndex.array;
+      final array = geometryIndex.array;
       version = geometryIndex.version;
-      for (var i = 0, l = array.length; i < l; i += 3) {
-        var a = array[i + 0].toInt();
-        var b = array[i + 1].toInt();
-        var c = array[i + 2].toInt();
+      for (int i = 0, l = array.length; i < l; i += 3) {
+        final a = array[i + 0].toInt();
+        final b = array[i + 1].toInt();
+        final c = array[i + 2].toInt();
 
         indices.addAll([a, b, b, c, c, a]);
       }
     } else {
-      var array = geometryPosition!.array;
+      final array = geometryPosition.array;
       version = geometryPosition.version;
 
-      for (var i = 0, l = (array.length / 3) - 1; i < l; i += 3) {
-        var a = i + 0;
-        var b = i + 1;
-        var c = i + 2;
+      for (int i = 0, l = (array.length ~/ 3) - 1; i < l; i += 3) {
+        final a = i + 0;
+        final b = i + 1;
+        final c = i + 2;
 
         indices.addAll([a, b, b, c, c, a]);
       }
@@ -131,7 +123,7 @@ class WebGLGeometries {
 
     //
 
-    var previousAttribute = wireframeAttributes.get(geometry);
+    final previousAttribute = wireframeAttributes.get(geometry);
 
     if (previousAttribute != null) attributes.remove(previousAttribute);
 
@@ -141,10 +133,10 @@ class WebGLGeometries {
   }
 
   getWireframeAttribute(BufferGeometry geometry) {
-    var currentAttribute = wireframeAttributes.get(geometry);
+    final currentAttribute = wireframeAttributes.get(geometry);
 
     if (currentAttribute != null) {
-      var geometryIndex = geometry.index;
+      final geometryIndex = geometry.index;
 
       if (geometryIndex != null) {
         // if the attribute is obsolete, create a new one

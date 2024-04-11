@@ -1,14 +1,9 @@
-import 'dart:typed_data';
+part of three_webgl;
 
-import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/renderers/webgl/index.dart';
-import 'package:three_dart/three3d/textures/index.dart';
-
-var emptyTexture = Texture(null, null, null, null, null, null, null, null, null, null);
-var emptyArrayTexture = DataArrayTexture(null);
-var empty3dTexture = Data3DTexture();
-var emptyCubeTexture = CubeTexture(null, null, null, null, null, null, null, null, null, null);
+final emptyTexture = Texture();
+final emptyArrayTexture = DataArrayTexture();
+final empty3dTexture = Data3DTexture();
+final emptyCubeTexture = CubeTexture();
 
 // --- Utilities ---
 
@@ -19,9 +14,9 @@ Map arrayCacheI32 = {};
 
 // Float32List caches used for uploading Matrix uniforms
 
-var mat4array = Float32Array(16);
-var mat3array = Float32Array(9);
-var mat2array = Float32Array(4);
+final mat4array = Float32Array(16);
+final mat3array = Float32Array(9);
+final mat2array = Float32Array(4);
 
 // --- Uniform Classes ---
 
@@ -45,7 +40,7 @@ class SingleUniform with WebGLUniformsHelper {
   //   if(vt == "Color" || vt == "Matrix4" || vt == "Vector3" || vt == "Vector2" || vt == "Matrix3") {
   //     print("SingleUniform. setValue id: ${id} value: ${value.toJSON()}  type: ${activeInfo.type} ");
   //   } else if(value.runtimeType.toString().indexOf("List<") >= 0) {
-  //     var v0 = value[0];
+  //     final v0 = value[0];
   //     String v0t = v0.runtimeType.toString();
   //     if(v0t == "Matrix4" || v0t == "Vector3" || v0t == "Vector2" || v0t == "Matrix3" ) {
   //       print("SingleUniform. setValue id: ${id} value: ${value.map((e) => e.toJSON())}  type: ${activeInfo.type} ");
@@ -85,7 +80,7 @@ class PureArrayUniform with WebGLUniformsHelper {
   //   if(vt == "Color" || vt == "Matrix4" || vt == "Vector3" || vt == "Vector2" || vt == "Matrix3") {
   //     print("PureArrayUniform. setValue id: ${id} value: ${value.toJSON()} type: ${activeInfo.type}");
   //   } else if(value.runtimeType.toString().indexOf("List<") >= 0) {
-  //     var v0 = value[0];
+  //     final v0 = value[0];
   //     String v0t = v0.runtimeType.toString();
   //     if(v0t == "Matrix4" || v0t == "Vector3" || v0t == "Vector2" || v0t == "Matrix3") {
   //       print("PureArrayUniform. setValue id: ${id} value: ${value.map((e) => e.toJSON())} type: ${activeInfo.type}");
@@ -103,8 +98,8 @@ class PureArrayUniform with WebGLUniformsHelper {
 
   // this.path = activeInfo.name; // DEBUG
 
-  updateCache(data) {
-    var cache = this.cache;
+  void updateCache(data) {
+    final cache = this.cache;
 
     // if ( data is Float32Array && cache.length != data.length ) {
     //   this.cache = Float32Array( data.length );
@@ -129,10 +124,10 @@ class StructuredUniform with WebGLUniformsHelper, WebGLUniform {
   }
 
   void setValue(gl, value, textures) {
-    var seq = this.seq;
+    final seq = this.seq;
 
-    for (var i = 0, n = seq.length; i != n; ++i) {
-      var u = seq[i];
+    for (int i = 0, n = seq.length; i != n; ++i) {
+      final u = seq[i];
       u.setValue(gl, value[u.id], textures);
     }
   }
@@ -142,7 +137,7 @@ class StructuredUniform with WebGLUniformsHelper, WebGLUniform {
 
 // Parser - builds up the property tree from the path strings
 
-var rePathPart = RegExp(r"(\w+)(\])?(\[|\.)?"); //g;
+final rePathPart = RegExp(r"(\w+)(\])?(\[|\.)?"); //g;
 
 // extracts
 // 	- the identifier (member name or array index)
@@ -159,24 +154,24 @@ void addUniform(WebGLUniform container, uniformObject) {
 }
 
 void parseUniform(activeInfo, addr, WebGLUniform container) {
-  var path = activeInfo.name;
-  var pathLength = path.length;
+  final path = activeInfo.name;
+  final pathLength = path.length;
 
   // print("WebGLUniformsHelper.parseUniform path: ${path} addr: ${addr} ");
 
   // reset RegExp object, because of the early exit of a previous run
   // RePathPart.lastIndex = 0;
 
-  var matches = rePathPart.allMatches(path);
+  final matches = rePathPart.allMatches(path);
 
-  for (var match in matches) {
+  for (final match in matches) {
     dynamic id = match.group(1);
-    var idIsIndex = match.group(2) == ']';
-    var subscript = match.group(3);
+    final idIsIndex = match.group(2) == ']';
+    final subscript = match.group(3);
 
     if (idIsIndex) id = int.parse(id); // convert to integer
 
-    var matchEnd = match.end;
+    final matchEnd = match.end;
 
     if (subscript == null || subscript == '[' && matchEnd + 2 == pathLength) {
       // bare name or "pure" bottom-level array "[0]" suffix
@@ -188,8 +183,8 @@ void parseUniform(activeInfo, addr, WebGLUniform container) {
     } else {
       // step into inner node / create it in case it doesn't exist
 
-      var map = container.map;
-      var next = map[id];
+      final map = container.map;
+      StructuredUniform? next = map[id];
 
       if (next == null) {
         next = StructuredUniform(id);
@@ -203,19 +198,19 @@ void parseUniform(activeInfo, addr, WebGLUniform container) {
 
 class WebGLUniformsHelper {
   // Flattening for arrays of vectors and matrices
-  // id 类型  string || int
+  // id string || int
   late dynamic id;
   Map<int, dynamic> cache = <int, dynamic>{};
   dynamic addr = 0;
   late int size;
 
   Float32Array flatten(List array, int nBlocks, int blockSize) {
-    var firstElem = array[0];
+    final firstElem = array[0];
 
     if (firstElem is num || firstElem is double || firstElem is int) {
       List<double> array2 = [];
 
-      for (var element in array) {
+      for (final element in array) {
         array2.add(element.toDouble());
       }
 
@@ -225,7 +220,7 @@ class WebGLUniformsHelper {
     // // unoptimized: ! isNaN( firstElem )
     // // see http://jacksondunstan.com/articles/983
 
-    var n = nBlocks * blockSize;
+    final n = nBlocks * blockSize;
     Float32Array? r = arrayCacheF32[n];
 
     if (r == null) {
@@ -236,7 +231,7 @@ class WebGLUniformsHelper {
     if (nBlocks != 0) {
       // firstElem.toArray( r.data, 0 );
 
-      // for ( var i = 1, offset = 0; i != nBlocks; ++ i ) {
+      // for ( final i = 1, offset = 0; i != nBlocks; ++ i ) {
 
       //   offset += blockSize;
       //   array[ i ].toArray( r.data, offset );
@@ -246,7 +241,7 @@ class WebGLUniformsHelper {
       for (int i = 0; i < nBlocks; i++) {
         // print(" i: ${i} this: ${this} nBlocks: ${nBlocks} ");
 
-        List<num> data = array[i].toJSON();
+        List<num> data = array[i].toList();
 
         data.asMap().forEach((index, element) {
           int idx = i * blockSize + index;
@@ -261,7 +256,7 @@ class WebGLUniformsHelper {
       // }
 
       // if(!stringKey) {
-      //   for ( var i = 0; i < nBlocks; i++ ) {
+      //   for ( final i = 0; i < nBlocks; i++ ) {
       //     List<num> _data = array[ i ].toJSON();
 
       //     _data.asMap().forEach((index, element) {
@@ -270,7 +265,7 @@ class WebGLUniformsHelper {
       //     });
       //   }
       // } else {
-      //   for ( var i = 0; i < nBlocks; i++ ) {
+      //   for ( final i = 0; i < nBlocks; i++ ) {
       //     List<num> _data = array[ i.toString() ].toJSON();
 
       //     _data.asMap().forEach((index, element) {
@@ -285,35 +280,35 @@ class WebGLUniformsHelper {
     return r;
   }
 
-  arraysEqual(Map<int, dynamic> a, b) {
+  bool arraysEqual(Map<int, dynamic> a, b) {
     if (a.keys.length != b.length) return false;
 
-    for (var i = 0, l = a.keys.length; i < l; i++) {
+    for (int i = 0, l = a.keys.length; i < l; i++) {
       if (a[i] != b[i]) return false;
     }
 
     return true;
   }
 
-  copyArray(Map<int, dynamic> a, b) {
-    var l = b.length;
+  void copyArray(Map<int, dynamic> a, b) {
+    final l = b.length;
     a.clear();
-    for (var i = 0; i < l; i++) {
+    for (int i = 0; i < l; i++) {
       a[i] = b[i];
     }
   }
 
   // Texture unit allocation
 
-  allocTexUnits(textures, n) {
-    var r = arrayCacheI32[n];
+  Int32List allocTexUnits(textures, n) {
+    Int32List? r = arrayCacheI32[n];
 
     if (r == null) {
       r = Int32List(n);
       arrayCacheI32[n] = r;
     }
 
-    for (var i = 0; i != n; ++i) {
+    for (int i = 0; i != n; ++i) {
       r[i] = textures.allocateTextureUnit();
     }
 
@@ -327,8 +322,8 @@ class WebGLUniformsHelper {
 
   // Single scalar
 
-  setValueV1f(gl, v, textures) {
-    var cache = this.cache;
+  void setValueV1f(gl, v, textures) {
+    final cache = this.cache;
 
     if (cache[0] == v) return;
 
@@ -339,8 +334,8 @@ class WebGLUniformsHelper {
 
   // Single float vector (from flat array or three.VectorN)
 
-  setValueV2f(gl, v, [WebGLTextures? textures]) {
-    var cache = this.cache;
+  void setValueV2f(gl, v, [WebGLTextures? textures]) {
+    final cache = this.cache;
 
     if (v.x != null) {
       if (cache[0] != v.x || cache[1] != v.y) {
@@ -359,7 +354,7 @@ class WebGLUniformsHelper {
   }
 
   void setValueV3f(gl, v, [WebGLTextures? textures]) {
-    var cache = this.cache;
+    final cache = this.cache;
 
     if (v is Vector3) {
       if (cache[0] != v.x || cache[1] != v.y || cache[2] != v.z) {
@@ -370,9 +365,9 @@ class WebGLUniformsHelper {
         cache[2] = v.z;
       }
     } else if (v is Color) {
-      var cacheR;
-      var cacheG;
-      var cacheB;
+      double cacheR = 0;
+      double cacheG = 0;
+      double cacheB = 0;
 
       if (cache.length >= 3) {
         cacheR = cache[0];
@@ -395,8 +390,8 @@ class WebGLUniformsHelper {
     }
   }
 
-  setValueV4f(gl, v, [WebGLTextures? textures]) {
-    var cache = this.cache;
+  void setValueV4f(gl, v, [WebGLTextures? textures]) {
+    final cache = this.cache;
 
     if (v is Vector4) {
       if (cache[0] != v.x || cache[1] != v.y || cache[2] != v.z || cache[3] != v.w) {
@@ -436,9 +431,9 @@ class WebGLUniformsHelper {
 
   // Single matrix (from flat array or three.MatrixN)
 
-  setValueM2(gl, v, [WebGLTextures? textures]) {
-    var cache = this.cache;
-    var elements = v.elements;
+  void setValueM2(gl, v, [WebGLTextures? textures]) {
+    final cache = this.cache;
+    final elements = v.elements;
 
     if (elements == null) {
       if (arraysEqual(cache, v)) return;
@@ -457,9 +452,9 @@ class WebGLUniformsHelper {
     }
   }
 
-  setValueM3(gl, v, [WebGLTextures? textures]) {
-    var cache = this.cache;
-    var elements = v.elements;
+  void setValueM3(gl, v, [WebGLTextures? textures]) {
+    final cache = this.cache;
+    final elements = v.elements;
 
     if (elements == null) {
       if (arraysEqual(cache, v)) return;
@@ -481,9 +476,9 @@ class WebGLUniformsHelper {
     }
   }
 
-  setValueM4(gl, Matrix4 v, [WebGLTextures? textures]) {
-    var cache = this.cache;
-    var elements = v.elements;
+  void setValueM4(gl, Matrix4 v, [WebGLTextures? textures]) {
+    final cache = this.cache;
+    final elements = v.elements;
 
     if (arraysEqual(cache, elements)) {
       return;
@@ -499,9 +494,9 @@ class WebGLUniformsHelper {
 
   // Single texture (2D / Cube)
 
-  setValueT1(gl, v, WebGLTextures textures) {
-    var cache = this.cache;
-    var unit = textures.allocateTextureUnit();
+  void setValueT1(gl, Texture? v, WebGLTextures textures) {
+    final cache = this.cache;
+    final unit = textures.allocateTextureUnit();
 
     if (cache[0] != unit) {
       gl.uniform1i(addr, unit);
@@ -511,9 +506,9 @@ class WebGLUniformsHelper {
     textures.setTexture2D(v ?? emptyTexture, unit);
   }
 
-  setValueT2DArray1(gl, v, textures) {
-    var cache = this.cache;
-    var unit = textures.allocateTextureUnit();
+  void setValueT2DArray1(gl, v, textures) {
+    final cache = this.cache;
+    final unit = textures.allocateTextureUnit();
 
     if (cache[0] != unit) {
       gl.uniform1i(addr, unit);
@@ -523,9 +518,9 @@ class WebGLUniformsHelper {
     textures.setTexture2DArray(v ?? emptyArrayTexture, unit);
   }
 
-  setValueT3D1(gl, v, [WebGLTextures? textures]) {
-    var cache = this.cache;
-    var unit = textures!.allocateTextureUnit();
+  void setValueT3D1(gl, v, [WebGLTextures? textures]) {
+    final cache = this.cache;
+    final unit = textures!.allocateTextureUnit();
 
     if (cache[0] != unit) {
       gl.uniform1i(addr, unit);
@@ -535,9 +530,9 @@ class WebGLUniformsHelper {
     textures.setTexture3D(v ?? empty3dTexture, unit);
   }
 
-  setValueT6(gl, v, [WebGLTextures? textures]) {
-    var cache = this.cache;
-    var unit = textures!.allocateTextureUnit();
+  void setValueT6(gl, v, [WebGLTextures? textures]) {
+    final cache = this.cache;
+    final unit = textures!.allocateTextureUnit();
 
     if (cache[0] != unit) {
       gl.uniform1i(addr, unit);
@@ -549,8 +544,8 @@ class WebGLUniformsHelper {
 
   // Integer / Boolean vectors or arrays thereof (always flat arrays)
 
-  setValueV1i(gl, v, [WebGLTextures? textures]) {
-    var cache = this.cache;
+  void setValueV1i(gl, v, [WebGLTextures? textures]) {
+    final cache = this.cache;
 
     if (cache[0] == v) return;
 
@@ -567,8 +562,8 @@ class WebGLUniformsHelper {
     cache[0] = v;
   }
 
-  setValueV2i(gl, v, textures) {
-    var cache = this.cache;
+  void setValueV2i(gl, v, textures) {
+    final cache = this.cache;
 
     if (arraysEqual(cache, v)) return;
 
@@ -577,8 +572,8 @@ class WebGLUniformsHelper {
     copyArray(cache, v.toArray());
   }
 
-  setValueV3i(gl, v, textures) {
-    var cache = this.cache;
+  void setValueV3i(gl, v, textures) {
+    final cache = this.cache;
 
     if (arraysEqual(cache, v)) return;
 
@@ -587,8 +582,8 @@ class WebGLUniformsHelper {
     copyArray(cache, v);
   }
 
-  setValueV4i(gl, v, textures) {
-    var cache = this.cache;
+  void setValueV4i(gl, v, textures) {
+    final cache = this.cache;
 
     if (arraysEqual(cache, v)) return;
 
@@ -599,8 +594,8 @@ class WebGLUniformsHelper {
 
   // uint
 
-  setValueV1ui(gl, v, textures) {
-    var cache = this.cache;
+  void setValueV1ui(gl, v, textures) {
+    final cache = this.cache;
 
     if (cache[0] == v) return;
 
@@ -609,8 +604,8 @@ class WebGLUniformsHelper {
     cache[0] = v;
   }
 
-  setValueV2ui(gl, v, textures) {
-    var cache = this.cache;
+  void setValueV2ui(gl, v, textures) {
+    final cache = this.cache;
 
     if (arraysEqual(cache, v)) return;
 
@@ -619,8 +614,8 @@ class WebGLUniformsHelper {
     copyArray(cache, v);
   }
 
-  setValueV3ui(gl, v, textures) {
-    var cache = this.cache;
+  void setValueV3ui(gl, v, textures) {
+    final cache = this.cache;
 
     if (arraysEqual(cache, v)) return;
 
@@ -629,8 +624,8 @@ class WebGLUniformsHelper {
     copyArray(cache, v);
   }
 
-  setValueV4ui(gl, v, textures) {
-    var cache = this.cache;
+  void setValueV4ui(gl, v, textures) {
+    final cache = this.cache;
 
     if (arraysEqual(cache, v)) return;
 
@@ -641,8 +636,8 @@ class WebGLUniformsHelper {
 
   // Helper to pick the right setter for the singular case
 
-  getSingularSetter(id, activeInfo) {
-    var type = activeInfo.type;
+  Function getSingularSetter(id, activeInfo) {
+    final type = activeInfo.type;
 
     switch (type) {
       case 0x1406:
@@ -712,132 +707,132 @@ class WebGLUniformsHelper {
   }
 
   // Array of scalars
-  setValueV1fArray(gl, v, textures) {
+  void setValueV1fArray(gl, v, textures) {
     gl.uniform1fv(addr, v);
   }
 
   // Integer / Boolean vectors or arrays thereof (always flat arrays)
-  setValueV1iArray(gl, v, textures) {
+  void setValueV1iArray(gl, v, textures) {
     gl.uniform1iv(addr, v);
   }
 
-  setValueV2iArray(gl, v, textures) {
+  void setValueV2iArray(gl, v, textures) {
     gl.uniform2iv(addr, v);
   }
 
-  setValueV3iArray(gl, v, textures) {
+  void setValueV3iArray(gl, v, textures) {
     gl.uniform3iv(addr, v);
   }
 
-  setValueV4iArray(gl, v, textures) {
+  void setValueV4iArray(gl, v, textures) {
     gl.uniform4iv(addr, v);
   }
 
   // Array of vectors (flat or from THREE classes)
 
-  setValueV2fArray(gl, v, textures) {
-    var data = flatten(v, size, 2);
+  void setValueV2fArray(gl, v, textures) {
+    final data = flatten(v, size, 2);
 
     gl.uniform2fv(addr, data);
   }
 
-  setValueV3fArray(gl, v, textures) {
-    var data = flatten(v, size, 3);
+  void setValueV3fArray(gl, v, textures) {
+    final data = flatten(v, size, 3);
 
     gl.uniform3fv(addr, data);
   }
 
-  setValueV4fArray(gl, v, textures) {
-    var data = flatten(v, size, 4);
+  void setValueV4fArray(gl, v, textures) {
+    final data = flatten(v, size, 4);
     gl.uniform4fv(addr, data);
   }
 
   // Array of matrices (flat or from THREE clases)
 
-  setValueM2Array(gl, v, textures) {
-    var data = flatten(v, size, 4);
+  void setValueM2Array(gl, v, textures) {
+    final data = flatten(v, size, 4);
 
     gl.uniformMatrix2fv(addr, false, data);
   }
 
-  setValueM3Array(gl, v, textures) {
-    var data = flatten(v, size, 9);
+  void setValueM3Array(gl, v, textures) {
+    final data = flatten(v, size, 9);
 
     gl.uniformMatrix3fv(addr, false, data);
   }
 
-  setValueM4Array(gl, v, textures) {
-    var data = flatten(v, size, 16);
+  void setValueM4Array(gl, v, textures) {
+    final data = flatten(v, size, 16);
 
     gl.uniformMatrix4fv(addr, false, data);
   }
 
   // Array of unsigned integer
 
-  setValueV1uiArray(gl, v, textures) {
+  void setValueV1uiArray(gl, v, textures) {
     gl.uniform1uiv(addr, v);
   }
 
   // Array of unsigned integer vectors (from flat array)
 
-  setValueV2uiArray(gl, v, textures) {
+  void setValueV2uiArray(gl, v, textures) {
     gl.uniform2uiv(addr, v);
   }
 
-  setValueV3uiArray(gl, v, textures) {
+  void setValueV3uiArray(gl, v, textures) {
     gl.uniform3uiv(addr, v);
   }
 
-  setValueV4uiArray(gl, v, textures) {
+  void setValueV4uiArray(gl, v, textures) {
     gl.uniform4uiv(addr, v);
   }
 
   // Array of textures (2D / 3D / Cube / 2DArray)
-  setValueT1Array(gl, v, WebGLTextures textures) {
-    var n = v.length;
+  void setValueT1Array(gl, v, WebGLTextures textures) {
+    final n = v.length;
 
-    var units = allocTexUnits(textures, n);
+    final units = allocTexUnits(textures, n);
 
     // print("setValueT1Array n: ${n} ");
     gl.uniform1iv(addr, units);
 
-    for (var i = 0; i != n; ++i) {
+    for (int i = 0; i != n; ++i) {
       textures.setTexture2D(v[i] ?? emptyTexture, units[i]);
     }
   }
 
-  setValueT3DArray(gl, v, textures) {
-    var n = v.length;
+  void setValueT3DArray(gl, v, textures) {
+    final n = v.length;
 
-    var units = allocTexUnits(textures, n);
+    final units = allocTexUnits(textures, n);
 
     gl.uniform1iv(addr, units);
 
-    for (var i = 0; i != n; ++i) {
+    for (int i = 0; i != n; ++i) {
       textures.setTexture3D(v[i] ?? empty3dTexture, units[i]);
     }
   }
 
-  setValueT6Array(gl, v, textures) {
-    var n = v.length;
+  void setValueT6Array(gl, v, textures) {
+    final n = v.length;
 
-    var units = allocTexUnits(textures, n);
+    final units = allocTexUnits(textures, n);
 
     gl.uniform1iv(addr, units);
 
-    for (var i = 0; i != n; ++i) {
+    for (int i = 0; i != n; ++i) {
       textures.setTextureCube(v[i] ?? emptyCubeTexture, units[i]);
     }
   }
 
-  setValueT2DArrayArray(gl, v, textures) {
-    var n = v.length;
+  void setValueT2DArrayArray(gl, v, textures) {
+    final n = v.length;
 
-    var units = allocTexUnits(textures, n);
+    final units = allocTexUnits(textures, n);
 
     gl.uniform1iv(addr, units);
 
-    for (var i = 0; i != n; ++i) {
+    for (int i = 0; i != n; ++i) {
       textures.setTexture2DArray(v[i] ?? emptyArrayTexture, units[i]);
     }
   }
@@ -845,7 +840,7 @@ class WebGLUniformsHelper {
   // Helper to pick the right setter for a pure (bottom-level) array
 
   getPureArraySetter(id, activeInfo) {
-    var type = activeInfo.type;
+    final type = activeInfo.type;
 
     // print("getPureArraySetter id: ${id} type: ${activeInfo.type}  ");
 

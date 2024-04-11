@@ -1,7 +1,7 @@
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 
-var _floatView = Float32List(1);
-var _int32View = Int32List.view(_floatView.buffer);
+final _floatView = Float32List(1);
+final _int32View = Int32List.view(_floatView.buffer);
 
 class DataUtils {
   // Converts float32 to float16 (stored as uint16 value).
@@ -14,11 +14,11 @@ class DataUtils {
 		* by James Tursa?s half-precision code. */
 
     _floatView[0] = val.toDouble();
-    var x = _int32View[0];
+    final x = _int32View[0];
 
-    var bits = (x >> 16) & 0x8000; /* Get the sign */
-    var m = (x >> 12) & 0x07ff; /* Keep one extra bit for rounding */
-    var e = (x >> 23) & 0xff; /* Using int is faster here */
+    int bits = (x >> 16) & 0x8000; /* Get the sign */
+    int m = (x >> 12) & 0x07ff; /* Keep one extra bit for rounding */
+    final e = (x >> 23) & 0xff; /* Using int is faster here */
 
     /* If zero, or denormal, or exponent underflows too much for a denormal
 			* half, return signed zero. */

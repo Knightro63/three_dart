@@ -1,12 +1,16 @@
-import 'package:three_dart/three3d/math/interpolant.dart';
+import '../interpolant.dart';
 
 class LinearInterpolant extends Interpolant {
-  LinearInterpolant(parameterPositions, sampleValues, sampleSize, resultBuffer)
-      : super(parameterPositions, sampleValues, sampleSize, resultBuffer);
+  LinearInterpolant(
+    List<num> parameterPositions, 
+    List<num> sampleValues, 
+    int sampleSize, 
+    List? resultBuffer
+  ):super(parameterPositions, sampleValues, sampleSize, resultBuffer);
 
   @override
-  interpolate(i1, t0, t, t1) {
-    var result = resultBuffer,
+  List? interpolate(int i1, num t0, num t, num t1) {
+    final result = resultBuffer,
         values = sampleValues,
         stride = valueSize,
         offset1 = i1 * stride,
@@ -14,8 +18,8 @@ class LinearInterpolant extends Interpolant {
         weight1 = (t - t0) / (t1 - t0),
         weight0 = 1 - weight1;
 
-    for (var i = 0; i != stride; ++i) {
-      result[i] = values[offset0 + i] * weight0 + values[offset1 + i] * weight1;
+    for (int i = 0; i != stride; ++i) {
+      result?[i] = values[offset0 + i] * weight0 + values[offset1 + i] * weight1;
     }
 
     return result;

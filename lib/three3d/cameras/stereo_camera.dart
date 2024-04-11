@@ -1,9 +1,10 @@
-import 'package:three_dart/three3d/cameras/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
+import 'camera.dart';
+import 'perspective_camera.dart';
 
-var _eyeRight = Matrix4();
-var _eyeLeft = Matrix4();
-var _projectionMatrix = /*@__PURE__*/ Matrix4();
+final _eyeRight = Matrix4();
+final _eyeLeft = Matrix4();
+final _projectionMatrix = Matrix4();
 
 class StereoCamera {
   String type = 'StereoCamera';
@@ -27,10 +28,10 @@ class StereoCamera {
     cameraR.matrixAutoUpdate = false;
   }
 
-  void update(camera) {
-    var cache = _cache;
+  void update(Camera camera) {
+    final cache = _cache;
 
-    var needsUpdate = cache["focus"] != camera.focus ||
+    final needsUpdate = cache["focus"] != camera.focus ||
         cache["fov"] != camera.fov ||
         cache["aspect"] != camera.aspect * aspect ||
         cache["near"] != camera.near ||
@@ -51,10 +52,12 @@ class StereoCamera {
       // http://paulbourke.net/stereographics/stereorender/
 
       _projectionMatrix.copy(camera.projectionMatrix);
-      var eyeSepHalf = cache["eyeSep"] / 2;
-      var eyeSepOnProjection = eyeSepHalf * cache["near"] / cache["focus"];
-      var ymax = (cache["near"] * Math.tan(MathUtils.deg2rad * cache["fov"] * 0.5)) / cache["zoom"];
-      var xmin, xmax;
+      final eyeSepHalf = cache["eyeSep"] / 2;
+      final eyeSepOnProjection = eyeSepHalf * cache["near"] / cache["focus"];
+      final ymax =
+          (cache["near"] * Math.tan(MathUtils.deg2rad * cache["fov"] * 0.5)) /
+              cache["zoom"];
+      double xmin, xmax;
 
       // translate xOffset
 

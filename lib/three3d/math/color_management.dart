@@ -1,55 +1,69 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import 'math.dart';
+import 'color.dart';
 
-double sRGBToLinear(double c) {
-  return (c < 0.04045) ? c * 0.0773993808 : Math.pow(c * 0.9478672986 + 0.0521327014, 2.4).toDouble();
+enum ColorSpace{linear,srgb}
+
+double srgbToLinear(double c){
+	return ( c < 0.04045 ) ? c * 0.0773993808 : Math.pow( c * 0.9478672986 + 0.0521327014, 2.4 ).toDouble();
 }
 
 double linearToSRGB(double c) {
-  return (c < 0.0031308) ? c * 12.92 : 1.055 * (Math.pow(c, 0.41666)) - 0.055;
+	return ( c < 0.0031308 ) ? c * 12.92 : 1.055 * ( Math.pow( c, 0.41666 ) ) - 0.055;
 }
 
 // JavaScript RGB-to-RGB transforms, defined as
 // FN[InputColorSpace][OutputColorSpace] callback functions.
-var fn = {
-  SRGBColorSpace: {LinearSRGBColorSpace: sRGBToLinear},
-  LinearSRGBColorSpace: {SRGBColorSpace: linearToSRGB},
+final fn = {
+	ColorSpace.srgb: { 
+    ColorSpace.linear: srgbToLinear 
+  },
+	ColorSpace.linear: { 
+    ColorSpace.srgb: linearToSRGB 
+  },
 };
 
 class ColorManagement {
-  static bool legacyMode = true;
+	static bool legacyMode = true;
 
-  static get workingColorSpace {
-    return LinearSRGBColorSpace;
-  }
+	static get workingColorSpace {
+		return ColorSpace.linear;
+	}
 
-  static set workingColorSpace(colorSpace) {
-    print('three.ColorManagement: .workingColorSpace is readonly.');
-  }
+	static set workingColorSpace( colorSpace ) {
+		print( 'THREE.ColorManagement: .workingColorSpace is readonly.' );
+	}
 
-  static convert(color, sourceColorSpace, targetColorSpace) {
-    if (legacyMode || sourceColorSpace == targetColorSpace || !sourceColorSpace || !targetColorSpace) {
-      return color;
-    }
+	static Color convert(Color color, ColorSpace? sourceColorSpace, ColorSpace? targetColorSpace){
+		if(
+      legacyMode || 
+      sourceColorSpace == targetColorSpace || 
+      sourceColorSpace == null || 
+      targetColorSpace == null
+    ) {
+			return color;
+		}
 
-    if (fn[sourceColorSpace] != null && fn[sourceColorSpace]![targetColorSpace] != null) {
-      var fun = fn[sourceColorSpace]![targetColorSpace]!;
+		if (
+      fn[sourceColorSpace] != null && 
+      fn[sourceColorSpace]![targetColorSpace] != null
+    ){
+			final fnC = fn[sourceColorSpace]![targetColorSpace]!;
 
-      color.r = fun(color.r);
-      color.g = fun(color.g);
-      color.b = fun(color.b);
+			color.r = fnC(color.r);
+			color.g = fnC(color.g);
+			color.b = fnC(color.b);
 
-      return color;
-    }
+			return color;
+		}
 
-    throw ('Unsupported color space conversion.');
-  }
+		throw( 'Unsupported color space conversion.' );
+	}
 
-  static fromWorkingColorSpace(color, targetColorSpace) {
-    return convert(color, workingColorSpace, targetColorSpace);
-  }
+	static Color fromWorkingColorSpace(Color color, ColorSpace? targetColorSpace){
+		return convert(color, workingColorSpace, targetColorSpace);
+	}
 
-  static toWorkingColorSpace(color, sourceColorSpace) {
-    return convert(color, sourceColorSpace, workingColorSpace);
-  }
+	static Color toWorkingColorSpace(Color color, ColorSpace? sourceColorSpace){
+		return convert(color, sourceColorSpace, workingColorSpace);
+	}
 }

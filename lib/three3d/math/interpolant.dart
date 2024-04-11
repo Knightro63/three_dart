@@ -18,21 +18,21 @@
 ///
 
 class Interpolant {
-  late dynamic parameterPositions;
+  late List<num> parameterPositions;
   int cachedIndex = 0;
-  late dynamic resultBuffer;
-  late dynamic sampleValues;
-  late dynamic valueSize;
-  late dynamic settings;
+  late List? resultBuffer;
+  late List<num> sampleValues;
+  late int valueSize;
+  late Map<String,dynamic>? settings;
 
   // --- Protected interface
 
-  dynamic defaultSettings = {};
+  Map<String,dynamic> defaultSettings = {};
 
-  Interpolant(this.parameterPositions, this.sampleValues, this.valueSize, this.resultBuffer);
+  Interpolant(this.parameterPositions, this.sampleValues, this.valueSize,this.resultBuffer);
 
-  evaluate(double t) {
-    var pp = parameterPositions;
+  List? evaluate(num t) {
+    final pp = parameterPositions;
     int i1 = cachedIndex;
 
     num? t1;
@@ -59,7 +59,7 @@ class Interpolant {
           //- 				if ( t >= t1 || t1 == null ) {
           forward_scan:
           if (t1 == null || t >= t1) {
-            for (var giveUpAt = i1 + 2;;) {
+            for (int giveUpAt = i1 + 2;;) {
               if (t1 == null) {
                 if (t < t0!) break forward_scan;
 
@@ -67,17 +67,17 @@ class Interpolant {
 
                 i1 = pp.length;
                 cachedIndex = i1;
-                return copySampleValue_(i1 - 1);
+                return afterEnd(i1 - 1, t, t0) ?? [];
               }
 
               if (i1 == giveUpAt) break; // this loop
 
               t0 = t1;
 
-              int idx = ++i1;
+              int _idx = ++i1;
 
-              if (idx < pp.length) {
-                t1 = pp[idx];
+              if (_idx < pp.length) {
+                t1 = pp[_idx];
               } else {
                 t1 = null;
               }
@@ -98,7 +98,7 @@ class Interpolant {
           if (t0 == null || !(t >= t0)) {
             // looping?
 
-            var t1global = pp[1];
+            final t1global = pp[1];
 
             if (t < t1global) {
               i1 = 2; // + 1, using the scan for the details
@@ -107,12 +107,12 @@ class Interpolant {
 
             // linear reverse scan
 
-            for (var giveUpAt = i1 - 2;;) {
+            for (int giveUpAt = i1 - 2;;) {
               if (t0 == null) {
                 // before start
 
                 cachedIndex = 0;
-                return copySampleValue_(0);
+                return beforeStart(0, t, t1) ?? [];
               }
 
               if (i1 == giveUpAt) break; // this loop
@@ -146,7 +146,7 @@ class Interpolant {
         // binary search
 
         while (i1 < right) {
-          var mid = (i1 + right) >> 1;
+          final mid = (i1 + right) >> 1;
 
           // print(" Interpolant i1: ${i1} right: ${right} pp: ${pp.length} mid: ${mid} ");
 
@@ -171,35 +171,38 @@ class Interpolant {
 
         if (t0 == null) {
           cachedIndex = 0;
-          return copySampleValue_(0);
+          return beforeStart(0, t, t1) ?? [];
         }
 
         if (t1 == null) {
           i1 = pp.length;
           cachedIndex = i1;
-          return copySampleValue_(i1 - 1);
+          return afterEnd(i1 - 1, t0, t) ?? [];
         }
       } // seek
 
       cachedIndex = i1;
 
-      intervalChanged(i1, t0, t1);
+      intervalChanged(i1, t0.toInt(), t1.toInt());
     } // validate_interval
 
     return interpolate(i1, t0, t, t1!);
   }
 
-  getSettings() {
+  Map<String,dynamic> getSettings() {
     return settings ?? defaultSettings;
   }
 
-  copySampleValue_(num index) {
+  List? copySampleValue(int index) {
     // copies a sample value to the result buffer
 
-    var result = resultBuffer, values = sampleValues, stride = valueSize, offset = index * stride;
+    final result = resultBuffer,
+        values = sampleValues,
+        stride = valueSize,
+        offset = index * stride;
 
-    for (var i = 0; i != stride; ++i) {
-      result[i] = values[offset + i];
+    for (int i = 0; i != stride; ++i) {
+      result?[i] = values[offset + i];
     }
 
     return result;
@@ -207,12 +210,23 @@ class Interpolant {
 
   // Template methods for derived classes:
 
-  interpolate(int i1, num t0, num t, num t1) {
+  List? interpolate(int i1, num t0, num t, num t1) {
     throw ('call to abstract method');
     // implementations shall return this.resultBuffer
   }
 
-  intervalChanged(v1, v2, v3) {
+  void intervalChanged(int v1, int v2, int v3) {
     // empty
+  }
+
+  List? beforeStart(int v1, v2, v3) {
+    return null;//copySampleValue(v1, v2, v3);
+  }
+
+  //( N-1, tN-1, t ), returns this.resultBuffer
+  // afterEnd_: Interpolant.prototype.copySampleValue_,
+
+  List? afterEnd(int v1, v2, v3) {
+    return null;//copySampleValue(v1, v2, v3);
   }
 }

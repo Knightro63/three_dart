@@ -1,24 +1,23 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/buffer_attribute.dart';
-import 'package:three_dart/three3d/core/interleaved_buffer.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import '../math/index.dart';
+import 'buffer_attribute.dart';
+import 'interleaved_buffer.dart';
 
-Vector3 _vector = Vector3();
+final Vector3 _vector = Vector3();
 
 class InterleavedBufferAttribute extends BufferAttribute {
   int offset;
 
   InterleavedBufferAttribute(
-    InterleavedBuffer? data,
-    int itemSize,
-    this.offset,
-    bool normalized,
-  ) : super(Float32Array(0), itemSize) {
+    InterleavedBuffer? data, 
+    int itemSize, 
+    this.offset, 
+    [bool _normalized = false]
+  ): super(Float32Array(0), itemSize) {
     this.data = data;
-
     type = "InterleavedBufferAttribute";
     this.itemSize = itemSize;
-    this.normalized = normalized;
+    normalized = _normalized;
   }
 
   @override
@@ -50,7 +49,7 @@ class InterleavedBufferAttribute extends BufferAttribute {
   }
 
   @override
-  InterleavedBufferAttribute applyNormalMatrix(m) {
+  InterleavedBufferAttribute applyNormalMatrix(Matrix3 m) {
     for (int i = 0, l = count; i < l; i++) {
       _vector.fromBufferAttribute( this, i );
 
@@ -65,9 +64,9 @@ class InterleavedBufferAttribute extends BufferAttribute {
   @override
   InterleavedBufferAttribute transformDirection(Matrix4 m) {
     for (int i = 0, l = count; i < l; i++) {
-      _vector.x = getX(i)!.toDouble();
-      _vector.y = getY(i)!.toDouble();
-      _vector.z = getZ(i)!.toDouble();
+      _vector.x = getX(i).toDouble();
+      _vector.y = getY(i).toDouble();
+      _vector.z = getZ(i).toDouble();
 
       _vector.transformDirection(m);
 
@@ -106,22 +105,22 @@ class InterleavedBufferAttribute extends BufferAttribute {
   }
 
   @override
-  getX(int index) {
+  num getX(int index) {
     return data!.array[index * data!.stride + offset];
   }
 
   @override
-  getY(int index) {
+  num getY(int index) {
     return data!.array[index * data!.stride + offset + 1];
   }
 
   @override
-  getZ(int index) {
+  num getZ(int index) {
     return data!.array[index * data!.stride + offset + 2];
   }
 
   @override
-  getW(int index) {
+  num getW(int index) {
     return data!.array[index * data!.stride + offset + 3];
   }
 
@@ -162,15 +161,15 @@ class InterleavedBufferAttribute extends BufferAttribute {
 
   // 	if ( data == null ) {
 
-  // 		print( 'three.InterleavedBufferAttribute.clone(): Cloning an interlaved buffer attribute will deinterleave buffer data!.' );
+  // 		print( 'THREE.InterleavedBufferAttribute.clone(): Cloning an interlaved buffer attribute will deinterleave buffer data!.' );
 
-  // 		var array = [];
+  // 		List<num> array = [];
 
-  // 		for ( var i = 0; i < this.count; i ++ ) {
+  // 		for ( int i = 0; i < this.count; i ++ ) {
 
-  // 			var index = i * this.data!.stride + this.offset;
+  // 			final index = i * this.data!.stride + this.offset;
 
-  // 			for ( var j = 0; j < this.itemSize; j ++ ) {
+  // 			for ( int j = 0; j < this.itemSize; j ++ ) {
 
   // 				array.add( this.data!.array[ index + j ] );
 
@@ -201,16 +200,15 @@ class InterleavedBufferAttribute extends BufferAttribute {
   // }
 
   @override
-  Map<String, Object> toJSON([data]) {
+  Map<String, Object> toJSON([InterleavedBuffer? data]) {
     if (data == null) {
       print(
-          'three.InterleavedBufferAttribute.toJSON(): Serializing an interlaved buffer attribute will deinterleave buffer data!.');
+          'THREE.InterleavedBufferAttribute.toJSON(): Serializing an interlaved buffer attribute will deinterleave buffer data!.');
 
-      List array = [];
+      List<num> array = [];
 
       for (int i = 0; i < count; i++) {
-        int index = i * this.data!.stride + offset;
-
+        final index = i * this.data!.stride + offset;
         for (int j = 0; j < itemSize; j++) {
           array.add(this.data!.array[index + j]);
         }
@@ -220,18 +218,19 @@ class InterleavedBufferAttribute extends BufferAttribute {
 
       return {
         "itemSize": itemSize,
-        "type": this.array.runtimeType.toString(), // TODO remove runtimeType
+        "type": this.array.runtimeType.toString(),
         "array": array,
         "normalized": normalized
       };
-    } else {
+    } 
+    else {
       // save as true interlaved attribtue
 
-      data.interleavedBuffers ??= {};
+      // data.interleavedBuffers ??= {};
 
-      if (data.interleavedBuffers[this.data!.uuid] == null) {
-        data.interleavedBuffers[this.data!.uuid] = this.data!.toJSON(data);
-      }
+      // if (data.interleavedBuffers[this.data!.uuid] == null) {
+      //   data.interleavedBuffers[this.data!.uuid] = this.data!.toJSON(data);
+      // }
 
       return {
         "isInterleavedBufferAttribute": true,

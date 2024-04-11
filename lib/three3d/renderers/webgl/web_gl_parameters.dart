@@ -1,3 +1,5 @@
+part of three_webgl;
+
 class WebGLParameters {
   late bool isWebGL2;
 

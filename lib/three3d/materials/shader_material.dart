@@ -1,9 +1,8 @@
 import 'dart:convert';
-
-import 'package:three_dart/three3d/materials/material.dart';
 import 'package:three_dart/three3d/renderers/shaders/index.dart';
 import 'package:three_dart/three3d/renderers/shaders/shader_chunk/default_fragment.glsl.dart';
 import 'package:three_dart/three3d/renderers/shaders/shader_chunk/default_vertex.glsl.dart';
+import './material.dart';
 
 class ShaderMaterial extends Material {
   ShaderMaterial([Map<String, dynamic>? parameters]) : super() {
@@ -45,7 +44,8 @@ class ShaderMaterial extends Material {
 
     if (parameters != null) {
       if (parameters["attributes"] != null) {
-        print('three.ShaderMaterial: attributes should now be defined in three.BufferGeometry instead.');
+        print(
+            'THREE.ShaderMaterial: attributes should now be defined in THREE.BufferGeometry instead.');
       }
 
       setValues(parameters);

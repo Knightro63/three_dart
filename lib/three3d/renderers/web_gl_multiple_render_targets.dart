@@ -1,4 +1,4 @@
-import 'package:three_dart/three3d/renderers/web_gl_render_target.dart';
+part of three_renderers;
 
 class WebGLMultipleRenderTargets extends WebGLRenderTarget {
   WebGLMultipleRenderTargets(
@@ -8,9 +8,9 @@ class WebGLMultipleRenderTargets extends WebGLRenderTarget {
     WebGLRenderTargetOptions? options,
   ]) : super(width, height, options) {
     isWebGLMultipleRenderTargets = true;
-    var texture = this.texture;
+    final texture = this.texture;
     this.texture = [];
-    for (var i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
       this.texture.add(texture.clone());
     }
   }
@@ -22,7 +22,7 @@ class WebGLMultipleRenderTargets extends WebGLRenderTarget {
       this.height = height;
       this.depth = depth;
 
-      for (var i = 0, il = texture.length; i < il; i++) {
+      for (int i = 0, il = texture.length; i < il; i++) {
         texture[i].image.width = width;
         texture[i].image.height = height;
         texture[i].image.depth = depth;
@@ -56,7 +56,7 @@ class WebGLMultipleRenderTargets extends WebGLRenderTarget {
 
     texture.length = 0;
 
-    for (var i = 0, il = source.texture.length; i < il; i++) {
+    for (int i = 0, il = source.texture.length; i < il; i++) {
       texture[i] = source.texture[i].clone();
     }
 

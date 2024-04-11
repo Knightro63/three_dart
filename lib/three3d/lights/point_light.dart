@@ -1,28 +1,21 @@
-import 'package:three_dart/three3d/core/object_3d.dart';
-import 'package:three_dart/three3d/lights/light.dart';
-import 'package:three_dart/three3d/lights/point_light_shadow.dart';
-import 'package:three_dart/three3d/math/math.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'package:three_dart/three3d/math/index.dart';
+import 'light.dart';
+import 'point_light_shadow.dart';
 
 class PointLight extends Light {
-  PointLight(
-    color, [
-    double? intensity,
-    double? distance,
-    double? decay,
-  ]) : super(color, intensity) {
-    type = "PointLight";
+  PointLight(int? color, [double? intensity, double? distance, double? decay]):super(color, intensity) {
     // remove default 0  for js 0 is false  but for dart 0 is not.
     // PointLightShadow.updateMatrices  far value
     this.distance = distance;
     this.decay = decay ?? 1; // for physically correct lights, should be 2.
 
     shadow = PointLightShadow();
+    type = "PointLight";
   }
 
-  PointLight.fromJSON(
-    Map<String, dynamic> json,
-    Map<String, dynamic> rootJSON,
-  ) : super.fromJSON(json, rootJSON) {
+  PointLight.fromJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON)
+      : super.fromJSON(json, rootJSON) {
     type = "PointLight";
     distance = json["distance"];
     decay = json["decay"] ?? 1;
@@ -38,7 +31,7 @@ class PointLight extends Light {
   }
 
   @override
-  copy(Object3D source, [bool? recursive]) {
+  PointLight copy(Object3D source, [bool? recursive]) {
     super.copy.call(source);
 
     PointLight source1 = source as PointLight;
@@ -52,7 +45,7 @@ class PointLight extends Light {
   }
 
   @override
-  dispose() {
+  void dispose() {
     shadow?.dispose();
   }
 }

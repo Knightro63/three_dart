@@ -1,21 +1,29 @@
-import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three_dart.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'math.dart';
+import 'matrix3.dart';
+import 'matrix4.dart';
+import 'quaternion.dart';
+import 'vector.dart';
+import 'vector3.dart';
 
 class Vector4 extends Vector{
   String type = "Vector4";
-  late num x;
-  late num y;
-  late num z;
-  late num w;
+  late double z;
+  late double w;
 
   Vector4([num? x, num? y, num? z, num? w]) {
-    this.x = x ?? 0;
-    this.y = y ?? 0;
-    this.z = z ?? 0;
-    this.w = w ?? 0;
+    this.x = x?.toDouble() ?? 0;
+    this.y = y?.toDouble() ?? 0;
+    this.z = z?.toDouble() ?? 0;
+    this.w = w?.toDouble() ?? 0;
   }
 
-  Vector4.fromJSON(List<num>? json) {
+  Vector4.init({double x = 0, double y = 0, this.z = 0, this.w = 1}){
+    this.x = x;
+    this.y = y;
+  }
+
+  Vector4.fromJSON(List<double>? json) {
     if (json != null) {
       x = json[0];
       y = json[1];
@@ -23,8 +31,9 @@ class Vector4 extends Vector{
       w = json[3];
     }
   }
+
   @override
-  List<num> toJSON() {
+  List<num> toList() {
     return [x, y, z, w];
   }
 
@@ -33,18 +42,22 @@ class Vector4 extends Vector{
 
   get height => w;
   set height(value) => w = value;
+
   @override
   Vector4 set(num x, num y, [num? z, num? w]) {
     z ??= this.z;
-    w ??= this.z;
-    
-    this.x = x;
-    this.y = y;
+    w ??= this.w;
+
+    this.x = x.toDouble();
+    this.y = y.toDouble();
+    this.z = z.toDouble();
+    this.w = w.toDouble();
 
     return this;
   }
+
   @override
-  Vector4 setScalar(num scalar) {
+  Vector4 setScalar(double scalar) {
     x = scalar;
     y = scalar;
     z = scalar;
@@ -53,31 +66,31 @@ class Vector4 extends Vector{
     return this;
   }
 
-  Vector4 setX(num x) {
+  Vector4 setX(double x) {
     this.x = x;
 
     return this;
   }
 
-  Vector4 setY(num y) {
+  Vector4 setY(double y) {
     this.y = y;
 
     return this;
   }
 
-  Vector4 setZ(num z) {
+  Vector4 setZ(double z) {
     this.z = z;
 
     return this;
   }
 
-  Vector4 setW(num w) {
+  Vector4 setW(double w) {
     this.w = w;
 
     return this;
   }
 
-  Vector4 setComponent(int index, num value) {
+  Vector4 setComponent(int index, double value) {
     switch (index) {
       case 0:
         x = value;
@@ -98,7 +111,7 @@ class Vector4 extends Vector{
     return this;
   }
   @override
-  num getComponent(int index) {
+  double getComponent(int index) {
     switch (index) {
       case 0:
         return x;
@@ -112,35 +125,42 @@ class Vector4 extends Vector{
         throw ('index is out of range: $index');
     }
   }
+
   @override
   Vector4 clone() {
     return Vector4(x, y, z, w);
   }
   @override
   Vector4 copy(Vector v) {
-    if(v is! Vector4) throw('v needs to be Vector4');
     x = v.x;
     y = v.y;
-    z = v.z;
-    w = v.w;
+    if(v is Vector4){
+      z = v.z;
+      w = v.w;
+    }
+    else if (v is Vector3){
+      z = v.z;
+    }
 
     return this;
   }
-
   @override
-  Vector4 add(Vector a, {Vector? b}) {
-    if(a is! Vector4) throw('v needs to be Vector4');
-    if(b != null && b is! Vector4) throw('w needs to be Vector4 or null');
+  Vector4 add(Vector a, [Vector? b]) {
     if (b != null) {
       print(
-          'THREE.Vector4: .add() now only accepts one argument. Use .addVectors( a, b ) instead.');
-      return addVectors(a, b as Vector4);
+          'THREE.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.');
+      return addVectors(a, b);
     }
 
     x += a.x;
     y += a.y;
-    z += a.z;
-    w += a.w;
+    if(a is Vector4){
+      z += a.z;
+      w += a.w;
+    }
+    else if(a is Vector3){
+      z += a.z;
+    }
 
     return this;
   }
@@ -154,37 +174,55 @@ class Vector4 extends Vector{
     return this;
   }
 
-  Vector4 addVectors(Vector4 a, Vector4 b) {
+  Vector4 addVectors(Vector a, Vector b) {
     x = a.x + b.x;
     y = a.y + b.y;
-    z = a.z + b.z;
-    w = a.w + b.w;
-
+    if(a is Vector4 && b is Vector4){
+      z = a.z + b.z;
+      w = a.w + b.w;
+    }
+    else if(a is Vector3 && b is Vector3){
+      z = a.z + b.z;
+    }
+    else if(a is Vector4 && b is Vector3){
+      z = a.z + b.z;
+    }
+    else if(a is Vector3 && b is Vector4){
+      z = a.z + b.z;
+    }
     return this;
   }
-
-  Vector4 addScaledVector(Vector4 v, num s) {
+  @override
+  Vector4 addScaledVector(Vector v, double s) {
     x += v.x * s;
     y += v.y * s;
-    z += v.z * s;
-    w += v.w * s;
+    if(v is Vector3){
+      z += v.z * s;
+    }
+    else if(v is Vector4){
+      z += v.z * s;
+      w += v.w * s;
+    }
 
     return this;
   }
   @override
-  Vector4 sub(Vector v, {Vector? w}) {
-    if(v is! Vector4) throw('v needs to be Vector4');
-    if(w != null && w is! Vector3) throw('w needs to be Vector4 or null');
-    if (w != null) {
+  Vector4 sub(Vector a, [Vector? b]) {
+    if (b != null) {
       print(
           'THREE.Vector4: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.');
-      return subVectors(v, w as Vector4);
+      return subVectors(a, b);
     }
 
-    x -= v.x;
-    y -= v.y;
-    z -= v.z;
-    this.w -= v.w;
+    x -= a.x;
+    y -= a.y;
+    if(a is Vector4){
+      z -= a.z;
+      w -= a.w;
+    }
+    else if(a is Vector3){
+      z -= a.z;
+    }
 
     return this;
   }
@@ -198,11 +236,22 @@ class Vector4 extends Vector{
     return this;
   }
 
-  Vector4 subVectors(Vector4 a, Vector4 b) {
+  Vector4 subVectors(Vector a, Vector b) {
     x = a.x - b.x;
     y = a.y - b.y;
-    z = a.z - b.z;
-    w = a.w - b.w;
+    if(a is Vector4 && b is Vector4){
+      z = a.z - b.z;
+      w = a.w - b.w;
+    }
+    else if(a is Vector3 && b is Vector3){
+      z = a.z - b.z;
+    }
+    else if(a is Vector4 && b is Vector3){
+      z = a.z - b.z;
+    }
+    else if(a is Vector3 && b is Vector4){
+      z = a.z - b.z;
+    }
 
     return this;
   }
@@ -211,7 +260,7 @@ class Vector4 extends Vector{
 
   Vector4 multiply(Vector4 v) {
     // if ( w != null ) {
-    // 	print( 'three.Vector4: .multiply() now only accepts one argument. Use .multiplyVectors( a, b ) instead.' );
+    // 	print( 'THREE.Vector4: .multiply() now only accepts one argument. Use .multiplyVectors( a, b ) instead.' );
     // 	return this.multiplyVectors( v, w );
     // }
 
@@ -223,9 +272,24 @@ class Vector4 extends Vector{
     return this;
   }
 
-  // multiplyVectors(v, w) {
-
-  // }
+  @override
+  double distanceTo(Vector v) {
+    return Math.sqrt(distanceToSquared(v));
+  }
+  @override
+  double distanceToSquared(Vector v) {
+    final dx = x - v.x; 
+    final dy = y - v.y;
+    double dz = z;
+    if(v is Vector3){
+      dz-= v.z;
+    }
+    else if(v is Vector4){
+      dz-= v.z;
+    }
+    final distance = dx * dx + dy * dy + dz * dz;
+    return distance;
+  }
   @override
   Vector4 multiplyScalar(num scalar) {
     x *= scalar;
@@ -237,8 +301,8 @@ class Vector4 extends Vector{
   }
 
   Vector4 applyMatrix4(Matrix4 m) {
-    num x = this.x, y = this.y, z = this.z, w = this.w;
-    Float32Array e = m.elements;
+    final x = this.x, y = this.y, z = this.z, w = this.w;
+    final e = m.elements;
 
     this.x = e[0] * x + e[4] * y + e[8] * z + e[12] * w;
     this.y = e[1] * x + e[5] * y + e[9] * z + e[13] * w;
@@ -248,7 +312,7 @@ class Vector4 extends Vector{
     return this;
   }
   @override
-  Vector4 divideScalar(num scalar) {
+  Vector4 divideScalar(double scalar) {
     return multiplyScalar(1 / scalar);
   }
 
@@ -259,7 +323,7 @@ class Vector4 extends Vector{
 
     w = 2 * Math.acos(q.w);
 
-    double s = Math.sqrt(1 - q.w * q.w);
+    final s = Math.sqrt(1 - q.w * q.w);
 
     if (s < 0.0001) {
       x = 1;
@@ -273,7 +337,17 @@ class Vector4 extends Vector{
 
     return this;
   }
+  @override
+  Vector4 applyMatrix3(Matrix3 m) {
+    final x = this.x, y = this.y, z = this.z;
+    final e = m.elements;
 
+    this.x = e[0] * x + e[3] * y + e[6] * z;
+    this.y = e[1] * x + e[4] * y + e[7] * z;
+    this.z = e[2] * x + e[5] * y + e[8] * z;
+
+    return this;
+  }
   Vector4 setAxisAngleFromRotationMatrix(Matrix3 m) {
     // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToAngle/index.htm
 
@@ -294,7 +368,9 @@ class Vector4 extends Vector{
     double m32 = te[6];
     double m33 = te[10];
 
-    if ((Math.abs(m12 - m21) < epsilon) && (Math.abs(m13 - m31) < epsilon) && (Math.abs(m23 - m32) < epsilon)) {
+    if ((Math.abs(m12 - m21) < epsilon) &&
+        (Math.abs(m13 - m31) < epsilon) &&
+        (Math.abs(m23 - m32) < epsilon)) {
       // singularity found
       // first check for identity matrix which must have +1 for all terms
       // in leading diagonal and zero in other terms
@@ -315,12 +391,12 @@ class Vector4 extends Vector{
 
       angle = Math.pi;
 
-      double xx = (m11 + 1) / 2;
-      double yy = (m22 + 1) / 2;
-      double zz = (m33 + 1) / 2;
-      double xy = (m12 + m21) / 4;
-      double xz = (m13 + m31) / 4;
-      double yz = (m23 + m32) / 4;
+      final xx = (m11 + 1) / 2;
+      final yy = (m22 + 1) / 2;
+      final zz = (m33 + 1) / 2;
+      final xy = (m12 + m21) / 4;
+      final xz = (m13 + m31) / 4;
+      final yz = (m23 + m32) / 4;
 
       if ((xx > yy) && (xx > zz)) {
         // m11 is the largest diagonal term
@@ -414,7 +490,7 @@ class Vector4 extends Vector{
     return this;
   }
   @override
-  Vector4 clampScalar(num minVal, num maxVal) {
+  Vector4 clampScalar(double minVal, double maxVal) {
     x = Math.max(minVal, Math.min(maxVal, x));
     y = Math.max(minVal, Math.min(maxVal, y));
     z = Math.max(minVal, Math.min(maxVal, z));
@@ -423,44 +499,45 @@ class Vector4 extends Vector{
     return this;
   }
   @override
-  Vector4 clampLength(num min, num max) {
-    double length = this.length();
+  Vector4 clampLength<T extends num>(T min, T max) {
+    final length = this.length();
 
-    return divideScalar(length).multiplyScalar(Math.max(min, Math.min(max, length)));
+    return divideScalar(length)
+        .multiplyScalar(Math.max(min, Math.min(max, length)));
   }
   @override
   Vector4 floor() {
-    x = Math.floor(x);
-    y = Math.floor(y);
-    z = Math.floor(z);
-    w = Math.floor(w);
+    x = Math.floor(x).toDouble();
+    y = Math.floor(y).toDouble();
+    z = Math.floor(z).toDouble();
+    w = Math.floor(w).toDouble();
 
     return this;
   }
   @override
   Vector4 ceil() {
-    x = Math.ceil(x);
-    y = Math.ceil(y);
-    z = Math.ceil(z);
-    w = Math.ceil(w);
+    x = Math.ceil(x).toDouble();
+    y = Math.ceil(y).toDouble();
+    z = Math.ceil(z).toDouble();
+    w = Math.ceil(w).toDouble();
 
     return this;
   }
   @override
   Vector4 round() {
-    x = Math.round(x);
-    y = Math.round(y);
-    z = Math.round(z);
-    w = Math.round(w);
+    x = Math.round(x).toDouble();
+    y = Math.round(y).toDouble();
+    z = Math.round(z).toDouble();
+    w = Math.round(w).toDouble();
 
     return this;
   }
   @override
   Vector4 roundToZero() {
-    x = (x < 0) ? Math.ceil(x) : Math.floor(x);
-    y = (y < 0) ? Math.ceil(y) : Math.floor(y);
-    z = (z < 0) ? Math.ceil(z) : Math.floor(z);
-    w = (w < 0) ? Math.ceil(w) : Math.floor(w);
+    x = (x < 0) ? Math.ceil(x).toDouble() : Math.floor(x).toDouble();
+    y = (y < 0) ? Math.ceil(y).toDouble() : Math.floor(y).toDouble();
+    z = (z < 0) ? Math.ceil(z).toDouble() : Math.floor(z).toDouble();
+    w = (w < 0) ? Math.ceil(w).toDouble() : Math.floor(w).toDouble();
 
     return this;
   }
@@ -473,12 +550,19 @@ class Vector4 extends Vector{
 
     return this;
   }
-
-  num dot(Vector4 v) {
-    return x * v.x + y * v.y + z * v.z + w * v.w;
+  @override
+  double dot(Vector v) {
+    double temp = x * v.x + y * v.y;
+    if(v is Vector3){
+      temp += z * v.z;
+    }
+    else if(v is Vector4){
+      temp += z * v.z+ w * v.w;
+    }
+    return temp;
   }
   @override
-  num lengthSq() {
+  double lengthSq() {
     return x * x + y * y + z * z + w * w;
   }
   @override
@@ -486,19 +570,19 @@ class Vector4 extends Vector{
     return Math.sqrt(x * x + y * y + z * z + w * w);
   }
   @override
-  num manhattanLength() {
-    return Math.abs(x) + Math.abs(y) + Math.abs(z) + Math.abs(w);
+  double manhattanLength() {
+    return (Math.abs(x) + Math.abs(y) + Math.abs(z) + Math.abs(w)).toDouble();
   }
   @override
   Vector4 normalize() {
     return divideScalar(length());
   }
   @override
-  Vector4 setLength(num length) {
+  Vector4 setLength(double length) {
     return normalize().multiplyScalar(length);
   }
 
-  Vector4 lerp(Vector4 v, num alpha) {
+  Vector4 lerp(Vector4 v, double alpha) {
     x += (v.x - x) * alpha;
     y += (v.y - y) * alpha;
     z += (v.z - z) * alpha;
@@ -507,7 +591,7 @@ class Vector4 extends Vector{
     return this;
   }
 
-  Vector4 lerpVectors(Vector4 v1, Vector4 v2, num alpha) {
+  Vector4 lerpVectors(Vector4 v1, Vector4 v2, double alpha) {
     x = v1.x + (v2.x - v1.x) * alpha;
     y = v1.y + (v2.y - v1.y) * alpha;
     z = v1.z + (v2.z - v1.z) * alpha;
@@ -517,11 +601,17 @@ class Vector4 extends Vector{
   }
   @override
   bool equals(Vector v) {
-    if(v is! Vector4) throw('v needs to be Vector4');
-    return ((v.x == x) && (v.y == y) && (v.z == z) && (v.w == w));
+    if(v is Vector3){
+      return (v.x == x) && (v.y == y) && (v.z == z);
+    }
+    else if(v is Vector4){
+      return (v.x == x) && (v.y == y) && (v.z == z) && (v.w == w);
+    }
+    
+    return (v.x == x) && (v.y == y);
   }
   @override
-  Vector4 fromArray(List<num> array, [int offset = 0]) {
+  Vector4 fromArray(array, [int offset = 0]) {
     x = array[offset];
     y = array[offset + 1];
     z = array[offset + 2];
@@ -538,20 +628,19 @@ class Vector4 extends Vector{
         array.add(0.0);
       }
     }
+
     array[offset] = x;
     array[offset + 1] = y;
     array[offset + 2] = z;
     array[offset + 3] = w;
-
     return array;
   }
-
   @override
   Vector4 fromBufferAttribute(BufferAttribute attribute, int index) {
-    x = attribute.getX(index)!;
-    y = attribute.getY(index)!;
-    z = attribute.getZ(index)!;
-    w = attribute.getW(index) ?? 0;
+    x = attribute.getX(index)!.toDouble();
+    y = attribute.getY(index)!.toDouble();
+    z = attribute.getZ(index)!.toDouble();
+    w = (attribute.getW(index) ?? 0).toDouble();
 
     return this;
   }
@@ -572,7 +661,7 @@ class Vector4 extends Vector{
     w = json['w'];
   }
   @override
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJSON() {
     return {'x': x, 'y': y, 'z': z, 'w': w};
   }
 }

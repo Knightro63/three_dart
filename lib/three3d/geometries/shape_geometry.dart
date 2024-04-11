@@ -1,70 +1,60 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/extras/index.dart';
+import '../core/index.dart';
+import '../math/index.dart';
+import '../extras/index.dart';
 
 class ShapeGeometry extends BufferGeometry {
-  NativeArray? verticesArray;
-  NativeArray? normalsArray;
-  NativeArray? uvsArray;
-
-  ShapeGeometry(shapes, {num curveSegments = 12}) : super() {
+  ShapeGeometry(List<Shape> shapes, {num curveSegments = 12}) : super() {
     type = 'ShapeGeometry';
     parameters = {};
     this.curveSegments = curveSegments;
-    if (shapes is List) {
-      this.shapes = List<Shape>.from(shapes);
-    } else {
-      this.shapes = List<Shape>.from([shapes]);
-    }
+    this.shapes = shapes;
 
     init();
   }
 
-  ShapeGeometry.fromJSON(
-    Map<String, dynamic> json,
-    Map<String, dynamic> rootJSON,
-  ) : super.fromJSON(json, rootJSON) {
-    curveSegments = json["curveSegments"];
+  ShapeGeometry.fromJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON): super.fromJSON(json, rootJSON) {
     type = 'ShapeGeometry';
+    curveSegments = json["curveSegments"];
 
-    Shape? shapes;
+    Shape? shps;
 
     if (json["shapes"] != null) {
       List<Shape> rootShapes = rootJSON["shapes"];
 
       String shapeUuid = json["shapes"];
-      shapes = rootShapes.firstWhere((element) => element.uuid == shapeUuid);
+      shps = rootShapes.firstWhere((element) => element.uuid == shapeUuid);
     }
 
-    this.shapes = shapes != null ? [shapes] : [];
+    shapes = shps != null ? [shps] : [];
 
     init();
   }
 
-  init() {
+  void init() {
     parameters!["shapes"] = shapes;
     parameters!["curveSegments"] = curveSegments;
 
     // buffers
 
-    var indices = [];
+    final indices = [];
     List<double> vertices = [];
     List<double> normals = [];
     List<double> uvs = [];
 
     // helper variables
 
-    var groupStart = 0;
-    var groupCount = 0;
+    int groupStart = 0;
+    int groupCount = 0;
 
     // allow single and array values for "shapes" parameter
 
     addShape(shape) {
-      var indexOffset = vertices.length / 3;
-      var points = shape.extractPoints(curveSegments);
+      final indexOffset = vertices.length / 3;
+      final points = shape.extractPoints(curveSegments);
 
-      var shapeVertices = points["shape"];
-      var shapeHoles = points["holes"];
+      List<Vector?> shapeVertices = points["shape"];
+      List<List<Vector?>> shapeHoles = (points["holes"] as List).map((item) => item as List<Vector?>).toList();
 
       // check direction of vertices
 
@@ -72,56 +62,59 @@ class ShapeGeometry extends BufferGeometry {
         shapeVertices = shapeVertices.reversed.toList();
       }
 
-      for (var i = 0, l = shapeHoles.length; i < l; i++) {
-        var shapeHole = shapeHoles[i];
+      for (int i = 0, l = shapeHoles.length; i < l; i++) {
+        final shapeHole = shapeHoles[i];
 
         if (ShapeUtils.isClockWise(shapeHole) == true) {
           shapeHoles[i] = shapeHole.reversed.toList();
         }
       }
 
-      var faces = ShapeUtils.triangulateShape(shapeVertices, shapeHoles);
+      final faces = ShapeUtils.triangulateShape(shapeVertices, shapeHoles);
 
       // join vertices of inner and outer paths to a single array
 
-      for (var i = 0, l = shapeHoles.length; i < l; i++) {
-        var shapeHole = shapeHoles[i];
+      for (int i = 0, l = shapeHoles.length; i < l; i++) {
+        final shapeHole = shapeHoles[i];
         shapeVertices.addAll(shapeHole);
       }
 
       // vertices, normals, uvs
 
-      for (var i = 0, l = shapeVertices.length; i < l; i++) {
-        var vertex = shapeVertices[i];
+      for (int i = 0, l = shapeVertices.length; i < l; i++) {
+        final vertex = shapeVertices[i];
+        if(vertex != null){
+          vertices.addAll([vertex.x.toDouble(), vertex.y.toDouble(), 0.0]);
+          normals.addAll([0.0, 0.0, 1.0]);
+          uvs.addAll([vertex.x.toDouble(), vertex.y.toDouble()]); // world uvs
+        }
 
-        vertices.addAll([vertex.x.toDouble(), vertex.y.toDouble(), 0.0]);
-        normals.addAll([0.0, 0.0, 1.0]);
-        uvs.addAll([vertex.x.toDouble(), vertex.y.toDouble()]); // world uvs
       }
 
       // incides
 
-      for (var i = 0, l = faces.length; i < l; i++) {
-        var face = faces[i];
+      for (int i = 0, l = faces.length; i < l; i++) {
+        final face = faces[i];
 
-        var a = face[0] + indexOffset;
-        var b = face[1] + indexOffset;
-        var c = face[2] + indexOffset;
+        final a = face[0] + indexOffset;
+        final b = face[1] + indexOffset;
+        final c = face[2] + indexOffset;
 
         indices.addAll([a.toInt(), b.toInt(), c.toInt()]);
         groupCount += 3;
       }
     }
 
-    for (var i = 0; i < shapes.length; i++) {
+
+    for (int i = 0; i < shapes.length; i++) {
       addShape(shapes[i]);
       addGroup(groupStart, groupCount, i); // enables MultiMaterial support
       groupStart += groupCount;
       groupCount = 0;
     }
 
-    // if(shapes is List) {
-    //   for ( var i = 0; i < shapes.length; i ++ ) {
+    // if(shapes.runtimeType == List) {
+    //   for ( final i = 0; i < shapes.length; i ++ ) {
 
     //     addShape( shapes[ i ] );
 
@@ -138,28 +131,23 @@ class ShapeGeometry extends BufferGeometry {
     // build geometry
 
     setIndex(indices);
-    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
-    setAttribute(AttributeTypes.normal, Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
-    setAttribute(AttributeTypes.uv, Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
+    setAttribute('position',
+        Float32BufferAttribute(Float32Array.from(vertices), 3, false));
+    setAttribute(
+        'normal', Float32BufferAttribute(Float32Array.from(normals), 3, false));
+    setAttribute(
+        'uv', Float32BufferAttribute(Float32Array.from(uvs), 2, false));
 
     // helper functions
   }
 
-  @override
-  void dispose() {
-    verticesArray?.dispose();
-    normalsArray?.dispose();
-    uvsArray?.dispose();
-    super.dispose();
-  }
-
   // addShape( List<num> vertices, List<num> normals, List<num> uvs, shape, groupCount ) {
 
-  //   var indexOffset = vertices.length / 3;
-  //   var points = shape.extractPoints( curveSegments );
+  //   final indexOffset = vertices.length / 3;
+  //   final points = shape.extractPoints( curveSegments );
 
-  //   var shapeVertices = points["shape"];
-  //   var shapeHoles = points["holes"];
+  //   final shapeVertices = points["shape"];
+  //   final shapeHoles = points["holes"];
 
   //   // check direction of vertices
 
@@ -169,9 +157,9 @@ class ShapeGeometry extends BufferGeometry {
 
   //   }
 
-  //   for ( var i = 0, l = shapeHoles.length; i < l; i ++ ) {
+  //   for ( final i = 0, l = shapeHoles.length; i < l; i ++ ) {
 
-  //     var shapeHole = shapeHoles[ i ];
+  //     final shapeHole = shapeHoles[ i ];
 
   //     if ( ShapeUtils.isClockWise( shapeHole ) == true ) {
 
@@ -181,22 +169,22 @@ class ShapeGeometry extends BufferGeometry {
 
   //   }
 
-  //   var faces = ShapeUtils.triangulateShape( shapeVertices, shapeHoles );
+  //   final faces = ShapeUtils.triangulateShape( shapeVertices, shapeHoles );
 
   //   // join vertices of inner and outer paths to a single array
 
-  //   for ( var i = 0, l = shapeHoles.length; i < l; i ++ ) {
+  //   for ( final i = 0, l = shapeHoles.length; i < l; i ++ ) {
 
-  //     var shapeHole = shapeHoles[ i ];
+  //     final shapeHole = shapeHoles[ i ];
   //     shapeVertices = shapeVertices.concat( shapeHole );
 
   //   }
 
   //   // vertices, normals, uvs
 
-  //   for ( var i = 0, l = shapeVertices.length; i < l; i ++ ) {
+  //   for ( final i = 0, l = shapeVertices.length; i < l; i ++ ) {
 
-  //     var vertex = shapeVertices[ i ];
+  //     final vertex = shapeVertices[ i ];
 
   //     vertices..addAll([vertex.x, vertex.y, 0]);
   //     normals..addAll([0, 0, 1]);
@@ -206,13 +194,13 @@ class ShapeGeometry extends BufferGeometry {
 
   //   // incides
 
-  //   for ( var i = 0, l = faces.length; i < l; i ++ ) {
+  //   for ( final i = 0, l = faces.length; i < l; i ++ ) {
 
-  //     var face = faces[ i ];
+  //     final face = faces[ i ];
 
-  //     var a = face[ 0 ] + indexOffset;
-  //     var b = face[ 1 ] + indexOffset;
-  //     var c = face[ 2 ] + indexOffset;
+  //     final a = face[ 0 ] + indexOffset;
+  //     final b = face[ 1 ] + indexOffset;
+  //     final c = face[ 2 ] + indexOffset;
 
   //     indices.addAll( [a, b, c] );
   //     groupCount += 3;
@@ -222,20 +210,20 @@ class ShapeGeometry extends BufferGeometry {
   // }
 
   @override
-  toJSON({Object3dMeta? meta}) {
-    var data = super.toJSON(meta: meta);
+  Map<String,dynamic> toJSON({Object3dMeta? meta}) {
+    final data = super.toJSON(meta: meta);
 
-    var shapes = parameters!["shapes"];
+    final shapes = parameters!["shapes"];
 
     return toJSON2(shapes, data);
   }
 
-  toJSON2(shapes, data) {
+  Map<String,dynamic> toJSON2(shapes, Map<String,dynamic> data) {
     if (shapes != null) {
       data["shapes"] = [];
 
-      for (var i = 0, l = shapes.length; i < l; i++) {
-        var shape = shapes[i];
+      for (int i = 0, l = shapes.length; i < l; i++) {
+        final shape = shapes[i];
 
         data["shapes"].add(shape.uuid);
       }

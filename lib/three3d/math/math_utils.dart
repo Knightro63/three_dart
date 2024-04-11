@@ -1,15 +1,16 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/math/math.dart';
-import 'package:three_dart/three3d/math/uuid.dart';
+import 'uuid.dart';
+import 'math.dart';
+import 'quaternion.dart';
 
-var _seed = 1234567;
+int _seed = 1234567;
 
 class MathUtils {
-  static num deg2rad = Math.pi / 180.0;
-  static num rad2deg = 180.0 / Math.pi;
+  static double deg2rad = Math.pi / 180.0;
+  static double rad2deg = 180.0 / Math.pi;
 
   static String generateUUID() {
-    var uuid = Uuid().v4();
+    final uuid = Uuid().v4();
     // .toLowerCase() here flattens concatenated strings to save heap memory space.
     return uuid.toLowerCase();
   }
@@ -61,18 +62,14 @@ class MathUtils {
   static num smoothstep(num x, num min, num max) {
     if (x <= min) return 0;
     if (x >= max) return 1;
-
     x = (x - min) / (max - min);
-
     return x * x * (3 - 2 * x);
   }
 
   static num smootherstep(num x, num min, num max) {
     if (x <= min) return 0;
     if (x >= max) return 1;
-
     x = (x - min) / (max - min);
-
     return x * x * x * (x * (x * 6 - 15) + 10);
   }
 
@@ -98,15 +95,11 @@ class MathUtils {
 
   static double seededRandom([int? s]) {
     if (s != null) _seed = s % 2147483647;
-
-    // Park-Miller algorithm
-
     _seed = _seed * 16807 % 2147483647;
-
     return (_seed - 1) / 2147483646;
   }
 
-  static num degToRad(num degrees) {
+  static double degToRad(num degrees) {
     return degrees * MathUtils.deg2rad;
   }
 
@@ -126,99 +119,84 @@ class MathUtils {
     return Math.pow(2, Math.floor(Math.log(value) / Math.ln2).toDouble());
   }
 
-  static void setQuaternionFromProperEuler(q, num a, num b, num c, String order) {
+  static void setQuaternionFromProperEuler(Quaternion q, num a, num b, num c, String order) {
     // Intrinsic Proper Euler Angles - see https://en.wikipedia.org/wiki/Euler_angles
 
     // rotations are applied to the axes in the order specified by 'order'
     // rotation by angle 'a' is applied first, then by angle 'b', then by angle 'c'
     // angles are in radians
 
-    var cos = Math.cos;
-    var sin = Math.sin;
+    final cos = Math.cos;
+    final sin = Math.sin;
 
-    var c2 = cos(b / 2);
-    var s2 = sin(b / 2);
+    final c2 = cos(b / 2);
+    final s2 = sin(b / 2);
 
-    var c13 = cos((a + c) / 2);
-    var s13 = sin((a + c) / 2);
+    final c13 = cos((a + c) / 2);
+    final s13 = sin((a + c) / 2);
 
-    var c1_3 = cos((a - c) / 2);
-    var s1_3 = sin((a - c) / 2);
+    final c1_3 = cos((a - c) / 2);
+    final s1_3 = sin((a - c) / 2);
 
-    var c3_1 = cos((c - a) / 2);
-    var s3_1 = sin((c - a) / 2);
+    final c3_1 = cos((c - a) / 2);
+    final s3_1 = sin((c - a) / 2);
 
     switch (order) {
       case 'XYX':
         q.set(c2 * s13, s2 * c1_3, s2 * s1_3, c2 * c13);
         break;
-
       case 'YZY':
         q.set(s2 * s1_3, c2 * s13, s2 * c1_3, c2 * c13);
         break;
-
       case 'ZXZ':
         q.set(s2 * c1_3, s2 * s1_3, c2 * s13, c2 * c13);
         break;
-
       case 'XZX':
         q.set(c2 * s13, s2 * s3_1, s2 * c3_1, c2 * c13);
         break;
-
       case 'YXY':
         q.set(s2 * c3_1, c2 * s13, s2 * s3_1, c2 * c13);
         break;
-
       case 'ZYZ':
         q.set(s2 * s3_1, s2 * c3_1, c2 * s13, c2 * c13);
         break;
-
       default:
-        print('three.MathUtils: .setQuaternionFromProperEuler() encountered an unknown order: $order');
+        print('THREE.MathUtils: .setQuaternionFromProperEuler() encountered an unknown order: $order');
     }
   }
 
-  static denormalize(num value, array) {
-    switch (array) {
+
+  static denormalize(num value, array ) {
+    switch ( array ) {
       case Float32Array:
         return value;
-
       case Uint16Array:
         return value / 65535.0;
-
       case Uint8Array:
         return value / 255.0;
-
       case Int16Array:
-        return Math.max(value / 32767.0, -1.0);
-
+        return Math.max( value / 32767.0, - 1.0 );
       case Int8Array:
-        return Math.max(value / 127.0, -1.0);
-
+        return Math.max( value / 127.0, - 1.0 );
       default:
-        throw ('Invalid component type.');
+        throw( 'Invalid component type.' );
     }
   }
 
-  static normalize(value, array) {
-    switch (array) {
+  static normalize(num value, array) {
+    switch ( array ) {
       case Float32Array:
         return value;
-
       case Uint16Array:
-        return Math.round(value * 65535.0);
-
+        return Math.round( value * 65535.0 );
       case Uint8Array:
-        return Math.round(value * 255.0);
-
+        return Math.round( value * 255.0 );
       case Int16Array:
-        return Math.round(value * 32767.0);
-
+        return Math.round( value * 32767.0 );
       case Int8Array:
-        return Math.round(value * 127.0);
-
+        return Math.round( value * 127.0 );
       default:
-        throw ('Invalid component type.');
+        throw( 'Invalid component type.' );
     }
   }
 }

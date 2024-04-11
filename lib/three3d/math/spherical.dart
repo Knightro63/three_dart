@@ -5,8 +5,9 @@
  * The azimuthal angle (theta) is measured from the positive z-axis.
  */
 
-import 'package:three_dart/three3d/math/math.dart';
-import 'package:three_dart/three3d/math/math_utils.dart';
+import 'math_utils.dart';
+import 'math.dart';
+import 'vector3.dart';
 
 class Spherical {
   late num radius;
@@ -43,7 +44,7 @@ class Spherical {
     return this;
   }
 
-  Spherical setFromVector3(v) {
+  Spherical setFromVector3(Vector3 v) {
     return setFromCartesianCoords(v.x, v.y, v.z);
   }
 

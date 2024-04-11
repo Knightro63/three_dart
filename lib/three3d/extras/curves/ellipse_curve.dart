@@ -1,39 +1,36 @@
-import 'package:three_dart/three3d/extras/core/curve.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import '../../math/index.dart';
+import '../core/curve.dart';
 
 class EllipseCurve extends Curve {
-  late double aX;
-  late double aY;
-  late double xRadius;
-  late double yRadius;
+  late num aX;
+  late num aY;
+  late num xRadius;
+  late num yRadius;
 
-  late double aStartAngle;
-  late double aEndAngle;
-
+  late num aStartAngle;
+  late num aEndAngle;
   late bool aClockwise;
+  late num aRotation;
 
-  late double aRotation;
+  EllipseCurve(aX, aY, xRadius, yRadius, [aStartAngle, aEndAngle, aClockwise, aRotation]) {
 
-  @override
-  bool isEllipseCurve = true;
+    this.aX = aX ?? 0;
+    this.aY = aY ?? 0;
 
-  EllipseCurve([
-    this.aX = 0, 
-    this.aY = 0, 
-    this.xRadius = 1, 
-    this.yRadius = 1, 
-    this.aStartAngle = 0, 
-    this.aEndAngle = 2*Math.pi, 
-    this.aClockwise = false, 
-    this.aRotation = 0
-  ]) {
-    type = 'EllipseCurve';
+    this.xRadius = xRadius ?? 1;
+    this.yRadius = yRadius ?? 1;
+
+    this.aStartAngle = aStartAngle ?? 0;
+    this.aEndAngle = aEndAngle ?? 2 * Math.pi;
+
+    this.aClockwise = aClockwise ?? false;
+
+    this.aRotation = aRotation ?? 0;
+
+    isEllipseCurve = true;
   }
 
   EllipseCurve.fromJSON(Map<String, dynamic> json) : super.fromJSON(json) {
-    type = 'EllipseCurve';
-    isEllipseCurve = true;
-
     aX = json["aX"];
     aY = json["aY"];
 
@@ -46,14 +43,17 @@ class EllipseCurve extends Curve {
     aClockwise = json["aClockwise"];
 
     aRotation = json["aRotation"];
+
+    isEllipseCurve = true;
   }
 
   @override
   Vector? getPoint(num t, [Vector? optionalTarget]) {
-    Vector2 point = (optionalTarget as Vector2?) ?? Vector2();
-    double twoPi = Math.pi * 2;
-    double deltaAngle = aEndAngle - aStartAngle;
-    bool samePoints = Math.abs(deltaAngle) < Math.epsilon;
+    final point = optionalTarget ?? Vector2(null, null);
+
+    final twoPi = Math.pi * 2;
+    num deltaAngle = aEndAngle - aStartAngle;
+    final samePoints = Math.abs(deltaAngle) < Math.epsilon;
 
     // ensures that deltaAngle is 0 .. 2 PI
     while (deltaAngle < 0) {
@@ -79,16 +79,16 @@ class EllipseCurve extends Curve {
       }
     }
 
-    double angle = aStartAngle + t * deltaAngle;
+    final angle = aStartAngle + t * deltaAngle;
     double x = aX + xRadius * Math.cos(angle);
     double y = aY + yRadius * Math.sin(angle);
 
     if (aRotation != 0) {
-      double cos = Math.cos(aRotation);
-      double sin = Math.sin(aRotation);
+      final cos = Math.cos(aRotation);
+      final sin = Math.sin(aRotation);
 
-      double tx = x - aX;
-      double ty = y - aY;
+      final tx = x - aX;
+      final ty = y - aY;
 
       // Rotate the point about the center of the ellipse.
       x = tx * cos - ty * sin + aX;
@@ -100,28 +100,29 @@ class EllipseCurve extends Curve {
 
   @override
   EllipseCurve copy(Curve source) {
-    if(source is! EllipseCurve) throw('source Curve must be EllipseCurve');
-    super.copy(source);
+    if(source is EllipseCurve){
+      super.copy(source);
 
-    aX = source.aX;
-    aY = source.aY;
+      aX = source.aX;
+      aY = source.aY;
 
-    xRadius = source.xRadius;
-    yRadius = source.yRadius;
+      xRadius = source.xRadius;
+      yRadius = source.yRadius;
 
-    aStartAngle = source.aStartAngle;
-    aEndAngle = source.aEndAngle;
+      aStartAngle = source.aStartAngle;
+      aEndAngle = source.aEndAngle;
 
-    aClockwise = source.aClockwise;
+      aClockwise = source.aClockwise;
 
-    aRotation = source.aRotation;
+      aRotation = source.aRotation;
+    }
 
     return this;
   }
 
   @override
-  Map<String, dynamic> toJSON() {
-    Map<String, dynamic> data = super.toJSON();
+  Map<String,dynamic> toJSON() {
+    Map<String,dynamic> data = super.toJSON();
 
     data["aX"] = aX;
     data["aY"] = aY;

@@ -1,16 +1,22 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import '../core/index.dart';
+import '../math/index.dart';
 
 class PlaneGeometry extends BufferGeometry {
-  NativeArray? verticesArray;
-  NativeArray? normalsArray;
-  NativeArray? uvsArray;
-
-  PlaneGeometry([num width = 1, num height = 1, num widthSegments = 1, num heightSegments = 1]) : super() {
+  PlaneGeometry([
+    num width = 1,
+    num height = 1,
+    num widthSegments = 1,
+    num heightSegments = 1]
+  ): super() {
     type = 'PlaneGeometry';
 
-    parameters = {"width": width, "height": height, "widthSegments": widthSegments, "heightSegments": heightSegments};
+    parameters = {
+      "width": width,
+      "height": height,
+      "widthSegments": widthSegments,
+      "heightSegments": heightSegments
+    };
 
     num widthHalf = width / 2.0;
     num heightHalf = height / 2.0;
@@ -31,11 +37,11 @@ class PlaneGeometry extends BufferGeometry {
     List<double> normals = [];
     List<double> uvs = [];
 
-    for (var iy = 0; iy < gridY1; iy++) {
-      var y = iy * segmentHeight - heightHalf;
+    for (int iy = 0; iy < gridY1; iy++) {
+      final y = iy * segmentHeight - heightHalf;
 
-      for (var ix = 0; ix < gridX1; ix++) {
-        var x = ix * segmentWidth - widthHalf;
+      for (int ix = 0; ix < gridX1; ix++) {
+        final x = ix * segmentWidth - widthHalf;
 
         vertices.addAll([x.toDouble(), -y.toDouble(), 0.0]);
 
@@ -46,12 +52,12 @@ class PlaneGeometry extends BufferGeometry {
       }
     }
 
-    for (var iy = 0; iy < gridY; iy++) {
-      for (var ix = 0; ix < gridX; ix++) {
-        var a = ix + gridX1 * iy;
-        var b = ix + gridX1 * (iy + 1);
-        var c = (ix + 1) + gridX1 * (iy + 1);
-        var d = (ix + 1) + gridX1 * iy;
+    for (int iy = 0; iy < gridY; iy++) {
+      for (int ix = 0; ix < gridX; ix++) {
+        final a = ix + gridX1 * iy;
+        final b = ix + gridX1 * (iy + 1);
+        final c = (ix + 1) + gridX1 * (iy + 1);
+        final d = (ix + 1) + gridX1 * iy;
 
         indices.addAll([a, b, d]);
         indices.addAll([b, c, d]);
@@ -59,20 +65,16 @@ class PlaneGeometry extends BufferGeometry {
     }
 
     setIndex(indices);
-    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
-    setAttribute(AttributeTypes.normal, Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
-    setAttribute(AttributeTypes.uv, Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
+    setAttribute('position',
+        Float32BufferAttribute(Float32Array.from(vertices), 3, false));
+    setAttribute('normal',
+        Float32BufferAttribute(Float32Array.from(normals), 3, false));
+    setAttribute(
+        'uv', Float32BufferAttribute(Float32Array.from(uvs), 2, false));
   }
 
   static fromJSON(data) {
-    return PlaneGeometry(data["width"], data["height"], data["widthSegments"], data["heightSegments"]);
-  }
-
-  @override
-  void dispose() {
-    verticesArray?.dispose();
-    normalsArray?.dispose();
-    uvsArray?.dispose();
-    super.dispose();
+    return PlaneGeometry(data["width"], data["height"],
+        data["widthSegments"], data["heightSegments"]);
   }
 }

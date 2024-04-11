@@ -1,5 +1,4 @@
-// 支持List 自动扩展长度
-listSetter(List list, int idx, dynamic value) {
+void listSetter(List list, int idx, dynamic value) {
   if (list.length > idx) {
     list[idx] = value;
   } else if (list.length == idx) {
@@ -19,13 +18,18 @@ dynamic or(value, defaultValue) => falsey(value)
         : defaultValue
     : value;
 
-bool falsey(value) => value == null || value == false || value == '' || value == 0 || value == double.nan;
+bool falsey(value) =>
+    value == null ||
+    value == false ||
+    value == '' ||
+    value == 0 ||
+    value == double.nan;
 
 bool truthy(value) => !falsey(value);
 
 /// Arrays
 List splice(List list, int index, [num howMany = 0, dynamic elements]) {
-  var endIndex = index + howMany.truncate();
+  final endIndex = index + howMany.truncate();
   list.removeRange(index, endIndex >= list.length ? list.length : endIndex);
   if (elements != null) {
     list.insertAll(index, elements is List ? elements : <String>[elements]);
@@ -34,8 +38,8 @@ List splice(List list, int index, [num howMany = 0, dynamic elements]) {
 }
 
 List concat(List lists) {
-  var ret = [];
-  for (var item in lists) {
+  final ret = [];
+  for (dynamic item in lists) {
     if (item is Iterable) {
       ret.addAll(item);
     } else {
@@ -71,16 +75,21 @@ List<T> slice<T>(List<T> list, int begin, [int? end]) => list
                 : end)
     .toList();
 
-bool every(List list, dynamic Function(dynamic e) fn) => list.every((x) => truthy(fn(x)));
+bool every(List list, dynamic Function(dynamic e) fn) =>
+    list.every((x) => truthy(fn(x)));
 
-bool some(List list, dynamic Function(dynamic e) fn) => list.any((x) => truthy(fn(x)));
+bool some(List list, dynamic Function(dynamic e) fn) =>
+    list.any((x) => truthy(fn(x)));
 
-List filter(List list, dynamic Function(dynamic e) fn) => list.where((x) => truthy(fn(x))).toList();
+List filter(List list, dynamic Function(dynamic e) fn) =>
+    list.where((x) => truthy(fn(x))).toList();
 
-dynamic reduce(List list, dynamic Function(dynamic prev, dynamic curr, int index, List list) fn, [initialValue]) {
-  var index = 0;
+dynamic reduce(List list,
+    dynamic Function(dynamic prev, dynamic curr, int index, List list) fn,
+    [initialValue]) {
+  int index = 0;
   var value;
-  var isValueSet = false;
+  bool isValueSet = false;
   if (1 < list.length) {
     value = initialValue;
     isValueSet = true;
@@ -99,11 +108,13 @@ dynamic reduce(List list, dynamic Function(dynamic prev, dynamic curr, int index
   return value;
 }
 
-dynamic reduceRight(List list, dynamic Function(dynamic prev, dynamic curr, int index, List list) fn, [initialValue]) {
-  var length = list.length;
-  var index = length - 1;
+dynamic reduceRight(List list,
+    dynamic Function(dynamic prev, dynamic curr, int index, List list) fn,
+    [initialValue]) {
+  final length = list.length;
+  int index = length - 1;
   var value;
-  var isValueSet = false;
+  bool isValueSet = false;
   if (1 < list.length) {
     value = initialValue;
     isValueSet = true;
@@ -143,7 +154,7 @@ String substr(String str, int start, [int? length]) {
   if (start > str.length) {
     start = str.length;
   }
-  var end = length == null
+  final end = length == null
       ? str.length
       : start + length > str.length
           ? str.length
@@ -155,22 +166,25 @@ String trimLeft(String str) => str.replaceAll(RegExp(r'^\s+'), '');
 
 String trimRight(String str) => str.replaceAll(RegExp(r'\s+$'), '');
 
-String escapeHtml(String html) =>
-    html.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+String escapeHtml(String html) => html
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 
 /// RegEx
 List<String?>? exec(RegExp regex, String str) {
-  var m = regex.firstMatch(str);
+  final m = regex.firstMatch(str);
   if (m == null) {
     return null;
   }
 
-  var groups = <int>[];
-  for (var i = 0; i <= m.groupCount; i++) {
+  final groups = <int>[];
+  for (int i = 0; i <= m.groupCount; i++) {
     groups.add(i);
   }
 
-  var retVal = m.groups(groups);
+  final retVal = m.groups(groups);
   return retVal;
 }
 
@@ -186,7 +200,7 @@ void setList<T>(List<T> target, List<T> source) {
   int tlen = target.length;
   int slen = source.length;
 
-  for (var i = 0; i < slen; i++) {
+  for (int i = 0; i < slen; i++) {
     if (i >= tlen) {
       break;
     }

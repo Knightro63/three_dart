@@ -1,5 +1,5 @@
-import 'package:three_dart/three3d/animation/property_binding.dart';
-import 'package:three_dart/three3d/math/quaternion.dart';
+import 'package:three_dart/three3d/math/index.dart';
+import 'property_binding.dart';
 
 class PropertyMixer {
   late PropertyBinding binding;
@@ -15,10 +15,10 @@ class PropertyMixer {
   late int cumulativeWeight;
   late int cumulativeWeightAdditive;
   late List buffer;
-  late int cacheIndex;
+  late int? cacheIndex;
 
   PropertyMixer(this.binding, String typeName, this.valueSize) {
-    dynamic mixFunction, mixFunctionAdditive, setIdentity;
+    Function mixFunction, mixFunctionAdditive, setIdentity;
 
     // buffer layout: [ incoming | accu0 | accu1 | orig | addAccu | (optional work) ]
     //
@@ -85,31 +85,26 @@ class PropertyMixer {
   }
 
   // accumulate data in the 'incoming' region into 'accu<i>'
-  accumulate(int accuIndex, int weight) {
+  void accumulate(int accuIndex, int weight) {
     // note: happily accumulating nothing when weight = 0, the caller knows
     // the weight and shouldn't have made the call in the first place
 
-    var buffer = this.buffer;
-
+    final buffer = this.buffer;
     int stride = valueSize;
-
     int offset = accuIndex * stride + stride;
-
-    var currentWeight = cumulativeWeight;
+    int currentWeight = cumulativeWeight;
 
     if (currentWeight == 0) {
       // accuN := incoming * weight
-
-      for (var i = 0; i != stride; ++i) {
+      for (int i = 0; i != stride; ++i) {
         buffer[offset + i] = buffer[i];
       }
-
       currentWeight = weight;
-    } else {
+    } 
+    else {
       // accuN := accuN + incoming * weight
-
       currentWeight += weight;
-      var mix = weight / currentWeight;
+      final mix = weight / currentWeight;
       _mixBufferRegion(buffer, offset, 0, mix, stride);
     }
 
@@ -117,8 +112,10 @@ class PropertyMixer {
   }
 
   // accumulate data in the 'incoming' region into 'add'
-  accumulateAdditive(int weight) {
-    var buffer = this.buffer, stride = valueSize, offset = stride * _addIndex;
+  void accumulateAdditive(int weight) {
+    final buffer = this.buffer,
+        stride = valueSize,
+        offset = stride * _addIndex;
 
     if (cumulativeWeightAdditive == 0) {
       // add = identity
@@ -133,8 +130,8 @@ class PropertyMixer {
   }
 
   // apply the state of 'accu<i>' to the binding when accus differ
-  apply(accuIndex) {
-    var stride = valueSize,
+  void apply(accuIndex) {
+    final stride = valueSize,
         buffer = this.buffer,
         offset = accuIndex * stride + stride,
         weight = cumulativeWeight,
@@ -147,18 +144,20 @@ class PropertyMixer {
     if (weight < 1) {
       // accuN := accuN + original * ( 1 - cumulativeWeight )
 
-      var originalValueOffset = stride * _origIndex;
+      final originalValueOffset = stride * _origIndex;
 
-      _mixBufferRegion(buffer, offset, originalValueOffset, 1 - weight, stride);
+      _mixBufferRegion(
+          buffer, offset, originalValueOffset, 1 - weight, stride);
     }
 
     if (weightAdditive > 0) {
       // accuN := accuN + additive accuN
 
-      _mixBufferRegionAdditive(buffer, offset, _addIndex * stride, 1, stride);
+      _mixBufferRegionAdditive(
+          buffer, offset, _addIndex * stride, 1, stride);
     }
 
-    for (var i = stride, e = stride + stride; i != e; ++i) {
+    for (int i = stride, e = stride + stride; i != e; ++i) {
       if (buffer[i] != buffer[i + stride]) {
         // value has changed -> update scene graph
         binding.setValue(buffer, offset);
@@ -168,15 +167,17 @@ class PropertyMixer {
   }
 
   // remember the state of the bound property and copy it to both accus
-  saveOriginalState() {
-    var binding = this.binding;
+  void saveOriginalState() {
+    final binding = this.binding;
 
-    var buffer = this.buffer, stride = valueSize, originalValueOffset = stride * _origIndex;
+    final buffer = this.buffer,
+        stride = valueSize,
+        originalValueOffset = stride * _origIndex;
 
     binding.getValue(buffer, originalValueOffset);
 
     // accu[0..1] := orig -- initially detect changes against the original
-    for (var i = stride, e = originalValueOffset; i != e; ++i) {
+    for (int i = stride, e = originalValueOffset; i != e; ++i) {
       buffer[i] = buffer[originalValueOffset + (i % stride)];
     }
 
@@ -188,71 +189,73 @@ class PropertyMixer {
   }
 
   // apply the state previously taken via 'saveOriginalState' to the binding
-  restoreOriginalState() {
-    var originalValueOffset = valueSize * 3;
+  void restoreOriginalState() {
+    final originalValueOffset = valueSize * 3;
     binding.setValue(buffer, originalValueOffset);
   }
 
-  _setAdditiveIdentityNumeric() {
-    var startIndex = _addIndex * valueSize;
-    var endIndex = startIndex + valueSize;
+  void _setAdditiveIdentityNumeric() {
+    final startIndex = _addIndex * valueSize;
+    final endIndex = startIndex + valueSize;
 
-    for (var i = startIndex; i < endIndex; i++) {
+    for (int i = startIndex; i < endIndex; i++) {
       buffer[i] = 0;
     }
   }
 
-  _setAdditiveIdentityQuaternion() {
+  void _setAdditiveIdentityQuaternion() {
     _setAdditiveIdentityNumeric();
     buffer[_addIndex * valueSize + 3] = 1;
   }
 
-  _setAdditiveIdentityOther() {
-    var startIndex = _origIndex * valueSize;
-    var targetIndex = _addIndex * valueSize;
+  void _setAdditiveIdentityOther() {
+    final startIndex = _origIndex * valueSize;
+    final targetIndex = _addIndex * valueSize;
 
-    for (var i = 0; i < valueSize; i++) {
+    for (int i = 0; i < valueSize; i++) {
       buffer[targetIndex + i] = buffer[startIndex + i];
     }
   }
 
   // mix functions
 
-  _select(buffer, dstOffset, srcOffset, t, stride) {
+  void _select(buffer, int dstOffset, int srcOffset, double t, int stride) {
     if (t >= 0.5) {
-      for (var i = 0; i != stride; ++i) {
+      for (int i = 0; i != stride; ++i) {
         buffer[dstOffset + i] = buffer[srcOffset + i];
       }
     }
   }
 
-  _slerp(buffer, dstOffset, srcOffset, t, stride) {
+  void _slerp(buffer, int dstOffset, int srcOffset, double t, int stride) {
     Quaternion.slerpFlat(buffer, dstOffset, buffer, dstOffset, buffer, srcOffset, t);
   }
 
-  _slerpAdditive(buffer, dstOffset, srcOffset, t, stride) {
-    var workOffset = _workIndex * stride;
+  void _slerpAdditive(buffer, int dstOffset, int srcOffset, double t, int stride) {
+    final workOffset = _workIndex * stride;
 
     // Store result in intermediate buffer offset
-    Quaternion.multiplyQuaternionsFlat(buffer, workOffset, buffer, dstOffset, buffer, srcOffset);
+    Quaternion.multiplyQuaternionsFlat(
+        buffer, workOffset, buffer, dstOffset, buffer, srcOffset);
 
     // Slerp to the intermediate result
-    Quaternion.slerpFlat(buffer, dstOffset, buffer, dstOffset, buffer, workOffset, t);
+    Quaternion.slerpFlat(
+        buffer, dstOffset, buffer, dstOffset, buffer, workOffset, t);
   }
 
-  _lerp(buffer, dstOffset, srcOffset, t, stride) {
-    var s = 1 - t;
+  void _lerp(buffer, int dstOffset, int srcOffset, double t, int stride) {
+    final s = 1 - t;
 
-    for (var i = 0; i != stride; ++i) {
-      var j = dstOffset + i;
+    for (int i = 0; i != stride; ++i) {
+      final j = dstOffset + i;
 
       buffer[j] = buffer[j] * s + buffer[srcOffset + i] * t;
     }
   }
 
-  _lerpAdditive(buffer, dstOffset, srcOffset, t, stride) {
-    for (var i = 0; i != stride; ++i) {
-      var j = dstOffset + i;
+  void _lerpAdditive(buffer, dstOffset, srcOffset, t, stride) {
+    for (int i = 0; i != stride; ++i) {
+      final j = dstOffset + i;
 
       buffer[j] = buffer[j] + buffer[srcOffset + i] * t;
     }

@@ -1,6 +1,6 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/materials/material.dart';
-import 'package:three_dart/three3d/math/color.dart';
+import './material.dart';
+import '../math/index.dart';
+import '../constants.dart';
 
 class MeshLambertMaterial extends Material {
   MeshLambertMaterial([parameters]) : super() {
@@ -40,30 +40,34 @@ class MeshLambertMaterial extends Material {
   }
 
   @override
-  MeshLambertMaterial copy(Material source) {
-    super.copy(source);
-    color.copy(source.color);
-    map = source.map;
-    lightMap = source.lightMap;
-    lightMapIntensity = source.lightMapIntensity;
-    aoMap = source.aoMap;
-    aoMapIntensity = source.aoMapIntensity;
-    emissive!.copy(source.emissive!);
-    emissiveMap = source.emissiveMap;
-    emissiveIntensity = source.emissiveIntensity;
-    specularMap = source.specularMap;
-    alphaMap = source.alphaMap;
-    envMap = source.envMap;
-    combine = source.combine;
-    reflectivity = source.reflectivity;
-    refractionRatio = source.refractionRatio;
-    wireframe = source.wireframe;
-    wireframeLinewidth = source.wireframeLinewidth;
-    wireframeLinecap = source.wireframeLinecap;
-    wireframeLinejoin = source.wireframeLinejoin;
+  MeshLambertMaterial clone() {
+    return MeshLambertMaterial(<String, dynamic>{}).copy(this);
+  }
 
-    fog = source.fog;
-
-    return this;
+  @override
+  MeshLambertMaterial copy( Material source ) {
+    super.copy( source );
+		color.copy( source.color );
+		map = source.map;
+		lightMap = source.lightMap;
+		lightMapIntensity = source.lightMapIntensity;
+		aoMap = source.aoMap;
+		aoMapIntensity = source.aoMapIntensity;
+		emissive!.copy( source.emissive! );
+		emissiveMap = source.emissiveMap;
+		emissiveIntensity = source.emissiveIntensity;
+		specularMap = source.specularMap;
+		alphaMap = source.alphaMap;
+		envMap = source.envMap;
+		combine = source.combine;
+		reflectivity = source.reflectivity;
+		refractionRatio = source.refractionRatio;
+		wireframe = source.wireframe;
+		wireframeLinewidth = source.wireframeLinewidth;
+		wireframeLinecap = source.wireframeLinecap;
+		wireframeLinejoin = source.wireframeLinejoin;
+		fog = source.fog;
+    
+		return this;
   }
 }

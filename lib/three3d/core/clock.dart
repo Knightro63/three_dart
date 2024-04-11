@@ -43,7 +43,7 @@ class Clock {
     }
 
     if (running) {
-      int newTime = now();
+      final newTime = now();
 
       diff = (newTime - oldTime) / 1000;
       oldTime = newTime;

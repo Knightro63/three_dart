@@ -1,11 +1,7 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/extras/pmrem_generator.dart';
-import 'package:three_dart/three3d/renderers/web_gl_renderer.dart';
-import 'package:three_dart/three3d/textures/index.dart';
-import 'package:three_dart/three3d/weak_map.dart';
+part of three_webgl;
 
 class WebGLCubeUVMaps {
-  var cubeUVmaps = WeakMap();
+  WeakMap cubeUVmaps = WeakMap();
   WebGLRenderer renderer;
   PMREMGenerator? pmremGenerator;
 
@@ -13,7 +9,7 @@ class WebGLCubeUVMaps {
 
   Texture? get(Texture? texture) {
     if (texture != null) {
-      var mapping = texture.mapping;
+      final mapping = texture.mapping;
 
       bool isEquirectMap = (mapping == EquirectangularReflectionMapping || mapping == EquirectangularRefractionMapping);
       bool isCubeMap = (mapping == CubeReflectionMapping || mapping == CubeRefractionMapping);
@@ -23,7 +19,7 @@ class WebGLCubeUVMaps {
         if (texture.isRenderTargetTexture && texture.needsPMREMUpdate == true) {
           texture.needsPMREMUpdate = false;
 
-          var renderTarget = cubeUVmaps.get(texture);
+          dynamic renderTarget = cubeUVmaps.get(texture);
 
           pmremGenerator ??= PMREMGenerator(renderer);
 
@@ -37,13 +33,13 @@ class WebGLCubeUVMaps {
           if (cubeUVmaps.has(texture)) {
             return cubeUVmaps.get(texture).texture;
           } else {
-            var image = texture.image;
+            final image = texture.image;
 
             if ((isEquirectMap && image != null && image.height > 0) ||
                 (isCubeMap && image != null && isCubeTextureComplete(image))) {
               pmremGenerator ??= PMREMGenerator(renderer);
 
-              var renderTarget =
+              final renderTarget =
                   isEquirectMap ? pmremGenerator!.fromEquirectangular(texture) : pmremGenerator!.fromCubemap(texture);
               cubeUVmaps.add(key: texture, value: renderTarget);
 
@@ -63,22 +59,22 @@ class WebGLCubeUVMaps {
     return texture;
   }
 
-  isCubeTextureComplete(image) {
-    var count = 0;
-    var length = 6;
+  bool isCubeTextureComplete(image) {
+    int count = 0;
+    final length = 6;
 
-    for (var i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++) {
       if (image[i] != null) count++;
     }
 
     return count == length;
   }
 
-  onTextureDispose(event) {
-    var texture = event.target;
+  void onTextureDispose(event) {
+    final texture = event.target;
     texture.removeEventListener('dispose', onTextureDispose);
 
-    var cubemapUV = cubeUVmaps.get(texture);
+    final cubemapUV = cubeUVmaps.get(texture);
 
     if (cubemapUV != null) {
       cubemapUV.delete(texture);
@@ -86,7 +82,7 @@ class WebGLCubeUVMaps {
     }
   }
 
-  dispose() {
+  void dispose() {
     cubeUVmaps = WeakMap();
 
     if (pmremGenerator != null) {

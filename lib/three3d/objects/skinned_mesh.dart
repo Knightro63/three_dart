@@ -1,12 +1,15 @@
-import 'package:three_dart/three_dart.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'package:three_dart/three3d/math/index.dart';
+import './mesh.dart';
+import './skeleton.dart';
 
-var _basePosition = Vector3();
+final _basePosition = Vector3();
 
-var _skinIndex = Vector4();
-var _skinWeight = Vector4();
+final _skinIndex = Vector4.init();
+final _skinWeight = Vector4.init();
 
-var _vector = Vector3();
-var _matrix = Matrix4();
+final _vector = Vector3();
+final _matrix = Matrix4();
 
 class SkinnedMesh extends Mesh {
   String bindMode = "attached";
@@ -57,22 +60,17 @@ class SkinnedMesh extends Mesh {
   }
 
   void normalizeSkinWeights() {
-    Vector4 vector = Vector4();
-
-    var skinWeight = geometry!.attributes.skinWeightsBuffer!;
-
+    final vector = Vector4.init();
+    final skinWeight = geometry!.attributes["skinWeight"];
     for (int i = 0, l = skinWeight.count; i < l; i++) {
-      vector.fromBufferAttribute(skinWeight, i);
-
-      var scale = 1.0 / vector.manhattanLength();
-
+      vector.fromBufferAttribute( skinWeight, i );
+      final scale = 1.0 / vector.manhattanLength();
       if (scale != double.infinity) {
         vector.multiplyScalar(scale);
-      } else {
+      } 
+      else {
         vector.set(1, 0, 0, 0); // do something reasonable
-
       }
-
       skinWeight.setXYZW(i, vector.x.toDouble(), vector.y.toDouble(), vector.z.toDouble(), vector.w.toDouble());
     }
   }
@@ -86,33 +84,29 @@ class SkinnedMesh extends Mesh {
     } else if (bindMode == 'detached') {
       bindMatrixInverse.copy(bindMatrix!).invert();
     } else {
-      print('three.SkinnedMesh: Unrecognized bindMode: $bindMode');
+      print('THREE.SkinnedMesh: Unrecognized bindMode: $bindMode');
     }
   }
 
   Vector3 boneTransform(int index, Vector3 target) {
-    Skeleton? skeleton = this.skeleton;
-    BufferGeometry? geometry = this.geometry!;
+    final skeleton = this.skeleton;
+    final geometry = this.geometry!;
 
-    _skinIndex.fromBufferAttribute(geometry.attributes.skinIndexBuffer!, index);
-    _skinWeight.fromBufferAttribute(geometry.attributes.skinWeightsBuffer!, index);
-
+    _skinIndex.fromBufferAttribute(geometry.attributes["skinIndex"], index);
+    _skinWeight.fromBufferAttribute(geometry.attributes["skinWeight"], index);
     _basePosition.copy(target).applyMatrix4(bindMatrix!);
-
     target.set(0, 0, 0);
 
-    for (var i = 0; i < 4; i++) {
-      var weight = _skinWeight.getComponent(i);
-
+    for (int i = 0; i < 4; i++) {
+      final weight = _skinWeight.getComponent(i);
       if (weight != 0) {
-        var boneIndex = _skinIndex.getComponent(i).toInt();
-
-        _matrix.multiplyMatrices(skeleton!.bones[boneIndex].matrixWorld, skeleton.boneInverses[boneIndex]);
-
-        target.addScaledVector(_vector.copy(_basePosition).applyMatrix4(_matrix), weight);
+        final boneIndex = _skinIndex.getComponent(i).toInt();
+        _matrix.multiplyMatrices(skeleton!.bones[boneIndex].matrixWorld,
+            skeleton.boneInverses[boneIndex]);
+        target.addScaledVector(
+            _vector.copy(_basePosition).applyMatrix4(_matrix), weight);
       }
     }
-
     return target.applyMatrix4(bindMatrixInverse);
   }
 
@@ -120,9 +114,11 @@ class SkinnedMesh extends Mesh {
   Matrix4? getValue(String name) {
     if (name == "bindMatrix") {
       return bindMatrix;
-    } else if (name == "bindMatrixInverse") {
+    } 
+    else if (name == "bindMatrixInverse") {
       return bindMatrixInverse;
-    } else {
+    } 
+    else {
       return super.getValue(name);
     }
   }

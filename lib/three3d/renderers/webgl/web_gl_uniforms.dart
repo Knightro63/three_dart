@@ -43,7 +43,7 @@
 
 // Root Container
 
-import 'package:three_dart/three3d/renderers/webgl/index.dart';
+part of three_webgl;
 
 class WebGLUniforms with WebGLUniform {
   dynamic gl;
@@ -53,32 +53,32 @@ class WebGLUniforms with WebGLUniform {
     seq = [];
     map = {};
 
-    var n = gl.getProgramParameter(program.program, gl.ACTIVE_UNIFORMS);
+    final n = gl.getProgramParameter(program.program, gl.ACTIVE_UNIFORMS);
 
-    for (var i = 0; i < n; ++i) {
-      var info = gl.getActiveUniform(program.program, i);
-      var addr = gl.getUniformLocation(program.program, info.name);
+    for (int i = 0; i < n; ++i) {
+      final info = gl.getActiveUniform(program.program, i);
+      final addr = gl.getUniformLocation(program.program, info.name);
       parseUniform(info, addr, this);
     }
   }
 
   void setValue(gl, name, value, [WebGLTextures? textures]) {
-    var u = map[name];
+    final u = map[name];
     if (u != null) u.setValue(gl, value, textures);
   }
 
-  setOptional(gl, object, name) {
-    var v = object.getValue(name);
+  void setOptional(gl, object, name) {
+    final v = object.getValue(name);
     if (v != null) setValue(gl, name, v);
   }
 
   static void upload(gl, List seq, Map<String, dynamic> values, textures) {
-    for (var i = 0, n = seq.length; i != n; ++i) {
-      var u = seq[i];
-      var v = values[u.id];
+    for (int i = 0, n = seq.length; i != n; ++i) {
+      final u = seq[i];
+      final v = values[u.id];
 
-      // var value = v["value"];
-      // var _vt = value.runtimeType.toString();
+      // final value = v["value"];
+      // final _vt = value.runtimeType.toString();
       // print("WebGLUniforms.upload ${_vt} name: ${u.id}  value: ${value} ");
       // if(_vt == "Matrix4" || _vt == "Matrix3" || _vt == "Color" || _vt == "Vector2" || _vt == "Vector3") {
       //   print(value.toJSON());
@@ -110,8 +110,8 @@ class WebGLUniforms with WebGLUniform {
   static List<dynamic> seqWithValue(List seq, Map<String, dynamic> values) {
     List<dynamic> r = [];
 
-    for (var i = 0, n = seq.length; i != n; ++i) {
-      var u = seq[i];
+    for (int i = 0, n = seq.length; i != n; ++i) {
+      final u = seq[i];
 
       // print("seqWithValue  u.id: ${u.id} ");
 

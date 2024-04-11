@@ -1,9 +1,13 @@
-import 'package:three_dart/three3d/animation/keyframe_track.dart';
+import '../keyframe_track.dart';
 
 /// A Track of vectored keyframe values.
-
 class VectorKeyframeTrack extends KeyframeTrack {
-  VectorKeyframeTrack(name, times, values, [interpolation]) : super(name, times, values, interpolation) {
+  VectorKeyframeTrack(String name, List<num> times, List<num> values, [int? interpolation]):super(name, times, values, interpolation){
     valueTypeName = 'vector';
+  }
+
+  @override
+  VectorKeyframeTrack clone(){
+    return VectorKeyframeTrack(name, times, values);
   }
 }

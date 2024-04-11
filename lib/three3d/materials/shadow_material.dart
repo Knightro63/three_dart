@@ -1,8 +1,8 @@
-import 'package:three_dart/three3d/materials/material.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import './material.dart';
+import '../math/index.dart';
 
 class ShadowMaterial extends Material {
-  ShadowMaterial([parameters]) : super() {
+  ShadowMaterial([Map<String, dynamic>? parameters]) : super() {
     type = 'ShadowMaterial';
     color = Color.fromHex(0x000000);
     transparent = true;

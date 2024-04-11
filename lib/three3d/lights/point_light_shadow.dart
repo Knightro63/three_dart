@@ -1,24 +1,19 @@
-import 'package:three_dart/three3d/cameras/camera.dart';
-import 'package:three_dart/three3d/cameras/perspective_camera.dart';
-import 'package:three_dart/three3d/core/object_3d.dart';
-import 'package:three_dart/three3d/lights/light_shadow.dart';
+import 'package:three_dart/three3d/cameras/index.dart';
+import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
-
-final Matrix4 _projScreenMatrix = Matrix4();
-final Vector3 _lightPositionWorld = Vector3();
-final Vector3 _lookTarget = Vector3();
-final Frustum _frustum = Frustum();
+import 'light_shadow.dart';
 
 class PointLightShadow extends LightShadow {
   late List<Vector3> _cubeDirections;
   late List<Vector3> _cubeUps;
 
-  PointLightShadow() : super(PerspectiveCamera(90, 1, 0.5, 500)) {
-    frameExtents = Vector2(4, 2);
+  PointLightShadow():super(PerspectiveCamera(90, 1, 0.5, 500)) {
+    frameExtents.copy(Vector2(4, 2));
 
     viewportCount = 6;
-
-    viewports = [
+    
+    viewports.removeAt(0);
+    viewports.addAll([
       // These viewports map a cube-map onto a 2D texture with the
       // following orientation:
       //
@@ -44,7 +39,7 @@ class PointLightShadow extends LightShadow {
       Vector4(3, 0, 1, 1),
       // negative Y
       Vector4(1, 0, 1, 1)
-    ];
+    ]);
 
     _cubeDirections = [
       Vector3(1, 0, 0),
@@ -65,34 +60,38 @@ class PointLightShadow extends LightShadow {
     ];
   }
 
-  PointLightShadow.fromJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON) : super.fromJSON(json, rootJSON) {
+  PointLightShadow.fromJSON(
+      Map<String, dynamic> json, Map<String, dynamic> rootJSON)
+      : super.fromJSON(json, rootJSON) {
     camera = Object3D.castJSON(json["camera"], rootJSON) as Camera;
   }
 
   @override
-  updateMatrices(light, {viewportIndex = 0}) {
-    var camera = this.camera;
-    var shadowMatrix = matrix;
+  void updateMatrices(light, {viewportIndex = 0}) {
+    final camera = this.camera;
+    final shadowMatrix = matrix;
 
-    var far = light.distance ?? camera!.far;
+    final far = light.distance ?? camera!.far;
 
     if (far != camera!.far) {
       camera.far = far;
       camera.updateProjectionMatrix();
     }
 
-    _lightPositionWorld.setFromMatrixPosition(light.matrixWorld);
-    camera.position.copy(_lightPositionWorld);
+    lightPositionWorld.setFromMatrixPosition(light.matrixWorld);
+    camera.position.copy(lightPositionWorld);
 
-    _lookTarget.copy(camera.position);
-    _lookTarget.add(_cubeDirections[viewportIndex]);
+    lookTarget.copy(camera.position);
+    lookTarget.add(_cubeDirections[viewportIndex]);
     camera.up.copy(_cubeUps[viewportIndex]);
-    camera.lookAt(_lookTarget);
+    camera.lookAt(lookTarget);
     camera.updateMatrixWorld(false);
 
-    shadowMatrix.makeTranslation(-_lightPositionWorld.x, -_lightPositionWorld.y, -_lightPositionWorld.z);
+    shadowMatrix.makeTranslation(
+        -lightPositionWorld.x, -lightPositionWorld.y, -lightPositionWorld.z);
 
-    _projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-    _frustum.setFromProjectionMatrix(_projScreenMatrix);
+    projScreenMatrix.multiplyMatrices(
+        camera.projectionMatrix, camera.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(projScreenMatrix);
   }
 }

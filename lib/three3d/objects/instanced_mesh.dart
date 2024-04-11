@@ -1,23 +1,23 @@
 import 'package:flutter_gl/flutter_gl.dart';
 import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/core/instanced_buffer_attribute.dart';
 import 'package:three_dart/three3d/materials/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/objects/mesh.dart';
+import './mesh.dart';
 
-var _instanceLocalMatrix = Matrix4();
-var _instanceWorldMatrix = Matrix4();
+final _instanceLocalMatrix = Matrix4();
+final _instanceWorldMatrix = Matrix4();
 
 List<Intersection> _instanceIntersects = [];
 
-var _mesh = Mesh(BufferGeometry(), Material());
+final _mesh = Mesh(BufferGeometry(), Material());
 
 class InstancedMesh extends Mesh {
-  InstancedMesh(BufferGeometry? geometry, material, int count)
-      : super(geometry, material) {
+
+
+  InstancedMesh(BufferGeometry? geometry, Material? material, int count): super(geometry, material) {
     type = "InstancedMesh";
 
-    var dl = Float32Array(count * 16);
+    final dl = Float32Array(count * 16);
     instanceMatrix = InstancedBufferAttribute(dl, 16, false);
     instanceColor = null;
 
@@ -43,21 +43,21 @@ class InstancedMesh extends Mesh {
     return color.fromArray(instanceColor!.array.data, index * 3);
   }
 
-  getMatrixAt(int index, matrix) {
+  Matrix4 getMatrixAt(int index, Matrix4 matrix) {
     return matrix.fromArray(instanceMatrix!.array, index * 16);
   }
 
   @override
   void raycast(Raycaster raycaster, List<Intersection> intersects) {
-    var matrixWorld = this.matrixWorld;
-    var raycastTimes = count;
+    final matrixWorld = this.matrixWorld;
+    final raycastTimes = count;
 
     _mesh.geometry = geometry;
     _mesh.material = material;
 
     if (_mesh.material == null) return;
 
-    for (var instanceId = 0; instanceId < raycastTimes!; instanceId++) {
+    for (int instanceId = 0; instanceId < raycastTimes!; instanceId++) {
       // calculate the world matrix for each instance
 
       getMatrixAt(instanceId, _instanceLocalMatrix);
@@ -72,8 +72,8 @@ class InstancedMesh extends Mesh {
 
       // process the result of raycast
 
-      for (var i = 0, l = _instanceIntersects.length; i < l; i++) {
-        var intersect = _instanceIntersects[i];
+      for (int i = 0, l = _instanceIntersects.length; i < l; i++) {
+        final intersect = _instanceIntersects[i];
         intersect.instanceId = instanceId;
         intersect.object = this;
         intersects.add(intersect);
@@ -87,11 +87,11 @@ class InstancedMesh extends Mesh {
     instanceColor ??= InstancedBufferAttribute(
         Float32Array((instanceMatrix!.count * 3).toInt()), 3, false);
 
-    color.toArray(instanceColor!.array, index * 3);
+    return color.toArray(instanceColor!.array, index * 3);
   }
 
   void setMatrixAt(int index, Matrix4 matrix) {
-    matrix.toArray(instanceMatrix!.array, index * 16);
+    matrix.toArray(instanceMatrix!.array.toDartList(), index * 16);
   }
 
   @override
@@ -99,6 +99,6 @@ class InstancedMesh extends Mesh {
 
   @override
   void dispose() {
-    dispatchEvent(Event({"type": "dispose"}));
+    dispatchEvent(Event(type: "dispose"));
   }
 }

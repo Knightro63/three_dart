@@ -1,4 +1,4 @@
-import 'package:three_dart/three3d/renderers/webgl/web_gl_extensions.dart';
+part of three_webgl;
 
 class WebGLCapabilities {
   bool isWebGL2 = true;
@@ -61,7 +61,7 @@ class WebGLCapabilities {
   num getMaxAnisotropy() {
     if (maxAnisotropy != null) return maxAnisotropy!;
 
-    var extension = extensions.get('EXT_texture_filter_anisotropic');
+    final extension = extensions.get('EXT_texture_filter_anisotropic');
 
     if (extension != null) {
       maxAnisotropy = gl.getParameter(gl.MAX_TEXTURE_MAX_ANISOTROPY_EXT);

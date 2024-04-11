@@ -1,13 +1,12 @@
-import 'package:three_dart/three3d/renderers/webgl/index.dart';
-import 'package:three_dart/three3d/weak_map.dart';
+part of three_webgl;
 
 class WebGLRenderLists {
   WebGLRenderLists();
 
-  var lists = WeakMap();
+  WeakMap lists = WeakMap();
 
   WebGLRenderList get(scene, renderCallDepth) {
-    var list;
+    dynamic list;
 
     if (lists.has(scene) == false) {
       list = WebGLRenderList();
@@ -24,7 +23,7 @@ class WebGLRenderLists {
     return list;
   }
 
-  dispose() {
+  void dispose() {
     lists = WeakMap();
   }
 }

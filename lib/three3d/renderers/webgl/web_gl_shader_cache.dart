@@ -1,21 +1,21 @@
-import 'package:three_dart/three3d/materials/index.dart';
+part of three_webgl;
 
 int _id = 0;
 
 class WebGLShaderCache {
-  var shaderCache = {};
-  var materialCache = {};
+  final shaderCache = {};
+  final materialCache = {};
 
   WebGLShaderCache();
 
   WebGLShaderCache update(Material material) {
-    var vertexShader = material.vertexShader;
-    var fragmentShader = material.fragmentShader;
+    final vertexShader = material.vertexShader;
+    final fragmentShader = material.fragmentShader;
 
-    var vertexShaderStage = _getShaderStage(vertexShader!);
-    var fragmentShaderStage = _getShaderStage(fragmentShader!);
+    final vertexShaderStage = _getShaderStage(vertexShader!);
+    final fragmentShaderStage = _getShaderStage(fragmentShader!);
 
-    var materialShaders = _getShaderCacheForMaterial(material);
+    final materialShaders = _getShaderCacheForMaterial(material);
 
     if (materialShaders.contains(vertexShaderStage) == false) {
       materialShaders.add(vertexShaderStage);
@@ -31,9 +31,9 @@ class WebGLShaderCache {
   }
 
   WebGLShaderCache remove(Material material) {
-    var materialShaders = materialCache[material];
+    final materialShaders = materialCache[material];
 
-    for (var shaderStage in materialShaders) {
+    for (final shaderStage in materialShaders) {
       shaderStage.usedTimes--;
 
       if (shaderStage.usedTimes == 0) shaderCache.remove(shaderStage.code);
@@ -58,7 +58,7 @@ class WebGLShaderCache {
   }
 
   _getShaderCacheForMaterial(Material material) {
-    var cache = materialCache;
+    final cache = materialCache;
 
     if (cache.containsKey(material) == false) {
       cache[material] = [];
@@ -68,10 +68,10 @@ class WebGLShaderCache {
   }
 
   _getShaderStage(String code) {
-    var cache = shaderCache;
+    final cache = shaderCache;
 
     if (cache.containsKey(code) == false) {
-      var stage = WebGLShaderStage(code);
+      final stage = WebGLShaderStage(code);
       cache[code] = stage;
     }
 

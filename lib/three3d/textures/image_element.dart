@@ -1,8 +1,8 @@
 class ImageElement {
   String? uuid;
   dynamic url;
-  late int width;
-  late int height;
+  late num width;
+  late num height;
   String? src;
   bool complete = true;
 
@@ -18,7 +18,18 @@ class ImageElement {
     this.depth = 1,
   });
 
-  dispose() {
+  void dispose() {
     data?.dispose();
+  }
+
+  String toString(){
+    return {
+      'uuid': uuid,
+      'widht': width,
+      'height': height,
+      'src': src,
+      'complete': complete,
+      'depth': depth
+    }.toString();
   }
 }

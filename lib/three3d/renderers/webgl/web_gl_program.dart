@@ -1,10 +1,4 @@
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/renderers/shaders/index.dart';
-import 'package:three_dart/three3d/renderers/web_gl_renderer.dart';
-import 'package:three_dart/three3d/renderers/webgl/index.dart';
+part of three_webgl;
 
 int programIdCount = 0;
 
@@ -58,7 +52,7 @@ class WebGLProgram extends DefaultProgram with WebGLProgramExtra {
 
     String defaultVersionString = (!kIsWeb && (Platform.isMacOS || Platform.isWindows)) ? "#version 410\n" : "";
 
-    var versionString = parameters.glslVersion != null ? '#version ${parameters.glslVersion}\n' : defaultVersionString;
+    String versionString = parameters.glslVersion != null ? '#version ${parameters.glslVersion}\n' : defaultVersionString;
 
     if (parameters.isRawShaderMaterial) {
       prefixVertex = [customDefines].where((s) => filterEmptyLine(s)).join('\n');

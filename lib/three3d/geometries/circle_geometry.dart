@@ -1,18 +1,24 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import '../core/index.dart';
+import '../math/index.dart';
 
 class CircleGeometry extends BufferGeometry {
-  NativeArray? positionsArray;
-  NativeArray? normalsArray;
-  NativeArray? uvsArray;
-
-  CircleGeometry({radius = 1, segments = 8, thetaStart = 0, thetaLength = Math.pi * 2}) : super() {
+  CircleGeometry({
+    double radius = 1, 
+    int segments = 8, 
+    num thetaStart = 0, 
+    double thetaLength = Math.pi * 2
+  }):super() {
     type = 'CircleGeometry';
 
-    parameters = {"radius": radius, "segments": segments, "thetaStart": thetaStart, "thetaLength": thetaLength};
+    parameters = {
+      "radius": radius,
+      "segments": segments,
+      "thetaStart": thetaStart,
+      "thetaLength": thetaLength
+    };
 
-    segments = Math.max<num>(3, segments);
+    segments = Math.max<int>(3, segments);
 
     // buffers
 
@@ -23,8 +29,8 @@ class CircleGeometry extends BufferGeometry {
 
     // helper variables
 
-    Vector3 vertex = Vector3();
-    Vector2 uv = Vector2();
+    final vertex = Vector3();
+    final uv = Vector2();
 
     // center point
 
@@ -33,14 +39,15 @@ class CircleGeometry extends BufferGeometry {
     uvs.addAll([0.5, 0.5]);
 
     for (int s = 0, i = 3; s <= segments; s++, i += 3) {
-      var segment = thetaStart + s / segments * thetaLength;
+      final segment = thetaStart + s / segments * thetaLength;
 
       // vertex
 
       vertex.x = radius * Math.cos(segment);
       vertex.y = radius * Math.sin(segment);
 
-      vertices.addAll([vertex.x.toDouble(), vertex.y.toDouble(), vertex.z.toDouble()]);
+      vertices.addAll(
+          [vertex.x.toDouble(), vertex.y.toDouble(), vertex.z.toDouble()]);
 
       // normal
 
@@ -63,17 +70,11 @@ class CircleGeometry extends BufferGeometry {
     // build geometry
 
     setIndex(indices);
-    setAttribute(AttributeTypes.position, Float32BufferAttribute(positionsArray = Float32Array.from(vertices), 3, false));
-    setAttribute(AttributeTypes.normal, Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3, false));
-    setAttribute(AttributeTypes.uv, Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2, false));
-  }
-
-  @override
-  void dispose() {
-    positionsArray?.dispose();
-    normalsArray?.dispose();
-    uvsArray?.dispose();
-
-    super.dispose();
+    setAttribute('position',
+        Float32BufferAttribute(Float32Array.from(vertices), 3, false));
+    setAttribute('normal',
+        Float32BufferAttribute(Float32Array.from(normals), 3, false));
+    setAttribute(
+        'uv', Float32BufferAttribute(Float32Array.from(uvs), 2, false));
   }
 }

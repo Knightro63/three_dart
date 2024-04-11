@@ -1,13 +1,10 @@
-import 'package:three_dart/three3d/renderers/webgl/web_gl_buffer_renderer.dart';
-import 'package:three_dart/three3d/renderers/webgl/web_gl_capabilities.dart';
-import 'package:three_dart/three3d/renderers/webgl/web_gl_extensions.dart';
-import 'package:three_dart/three3d/renderers/webgl/web_gl_info.dart';
+part of three_webgl;
 
 class WebGLIndexedBufferRenderer extends BaseWebGLBufferRenderer {
   bool isWebGL2 = false;
-  var mode;
-  var type;
-  var bytesPerElement;
+  dynamic mode;
+  dynamic type;
+  late int bytesPerElement;
   dynamic gl;
   WebGLExtensions extensions;
   WebGLInfo info;
@@ -18,12 +15,12 @@ class WebGLIndexedBufferRenderer extends BaseWebGLBufferRenderer {
   }
 
   @override
-  setMode(value) {
+  void setMode(value) {
     mode = value;
   }
 
   @override
-  setIndex(value) {
+  void setIndex(value) {
     type = value["type"];
     bytesPerElement = value["bytesPerElement"];
   }
@@ -36,7 +33,7 @@ class WebGLIndexedBufferRenderer extends BaseWebGLBufferRenderer {
   }
 
   @override
-  renderInstances(start, count, primcount) {
+  void renderInstances(num start, num count, int? primcount) {
     if (primcount == 0) return;
 
     // var extension, methodName;

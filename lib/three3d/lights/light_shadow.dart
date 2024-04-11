@@ -1,8 +1,7 @@
-import 'package:flutter/foundation.dart';
-import 'package:three_dart/three3d/cameras/camera.dart';
-import 'package:three_dart/three3d/lights/light.dart';
+import 'package:three_dart/three3d/cameras/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/renderers/web_gl_render_target.dart';
+import 'package:three_dart/three3d/renderers/index.dart';
+import 'light.dart';
 
 class LightShadow {
   Camera? camera;
@@ -21,28 +20,18 @@ class LightShadow {
   bool autoUpdate = true;
   bool needsUpdate = false;
 
-  final Frustum _frustum = Frustum(null, null, null, null, null, null);
+  final Frustum frustum = Frustum();
+  final frameExtents = Vector2(1, 1);
+  int viewportCount = 1;
+  final List<Vector4> viewports = [Vector4(0, 0, 1, 1)];
 
-  @protected
-  late Vector2 frameExtents;
-
-  @protected
-  late num viewportCount;
-
-  @protected
-  late List<Vector4> viewports;
-
-  final Matrix4 _projScreenMatrix = Matrix4();
-  final Vector3 _lightPositionWorld = Vector3();
-  final Vector3 _lookTarget = Vector3();
+  final Matrix4 projScreenMatrix = Matrix4();
+  final Vector3 lightPositionWorld = Vector3();
+  final Vector3 lookTarget = Vector3();
 
   late num focus;
 
-  LightShadow(this.camera) {
-    frameExtents = Vector2(1, 1);
-    viewportCount = 1;
-    viewports = [Vector4(0, 0, 1, 1)];
-  }
+  LightShadow(this.camera);
 
   LightShadow.fromJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON);
 
@@ -51,26 +40,28 @@ class LightShadow {
   }
 
   Frustum getFrustum() {
-    return _frustum;
+    return frustum;
   }
 
   void updateMatrices(Light light, {int viewportIndex = 0}) {
-    var shadowCamera = camera;
-    var shadowMatrix = matrix;
+    final shadowCamera = camera;
+    final shadowMatrix = matrix;
 
-    var lightPositionWorld = _lightPositionWorld;
+    final lightPositionWorld = this.lightPositionWorld;
 
     lightPositionWorld.setFromMatrixPosition(light.matrixWorld);
     shadowCamera!.position.copy(lightPositionWorld);
 
-    _lookTarget.setFromMatrixPosition(light.target!.matrixWorld);
-    shadowCamera.lookAt(_lookTarget);
+    lookTarget.setFromMatrixPosition(light.target!.matrixWorld);
+    shadowCamera.lookAt(lookTarget);
     shadowCamera.updateMatrixWorld(false);
 
-    _projScreenMatrix.multiplyMatrices(shadowCamera.projectionMatrix, shadowCamera.matrixWorldInverse);
-    _frustum.setFromProjectionMatrix(_projScreenMatrix);
+    projScreenMatrix.multiplyMatrices(
+        shadowCamera.projectionMatrix, shadowCamera.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(projScreenMatrix);
 
-    shadowMatrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);
+    shadowMatrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5,
+        0.0, 0.0, 0.0, 1.0);
 
     shadowMatrix.multiply(shadowCamera.projectionMatrix);
     shadowMatrix.multiply(shadowCamera.matrixWorldInverse);

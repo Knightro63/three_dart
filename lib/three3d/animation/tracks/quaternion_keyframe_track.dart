@@ -1,19 +1,16 @@
-import 'package:three_dart/three3d/animation/keyframe_track.dart';
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/math/interpolants/quaternion_linear_interpolant.dart';
-
-import '../../math/interpolant.dart';
+import 'package:three_dart/three3d/math/index.dart';
+import '../../constants.dart';
+import '../keyframe_track.dart';
 
 /// A Track of quaternion keyframe values.
-
 class QuaternionKeyframeTrack extends KeyframeTrack {
-  QuaternionKeyframeTrack(name, times, values, [interpolation]) : super(name, times, values, interpolation) {
-    valueTypeName = 'quaternion';
+  QuaternionKeyframeTrack(String name, List<num> times, List<num> values, [int? interpolation]): super(name, times, values, interpolation){
     defaultInterpolation = InterpolateLinear;
+    valueTypeName = 'quaternion';
   }
 
   @override
-  Interpolant? interpolantFactoryMethodLinear(result) {
+  Interpolant interpolantFactoryMethodLinear(result) {
     return QuaternionLinearInterpolant(times, values, getValueSize(), result);
   }
 
@@ -21,6 +18,9 @@ class QuaternionKeyframeTrack extends KeyframeTrack {
   Interpolant? interpolantFactoryMethodSmooth(result) {
     return null;
   }
-  // not yet implemented
 
+  @override
+  QuaternionKeyframeTrack clone(){
+    return QuaternionKeyframeTrack(name, times, values);
+  }
 }

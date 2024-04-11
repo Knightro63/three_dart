@@ -1,4 +1,4 @@
-import 'package:three_dart/three3d/core/event_dispatcher.dart';
+part of three_renderers;
 
 class WebXRManager with EventDispatcher {
   bool enabled = false;

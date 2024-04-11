@@ -1,11 +1,14 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three_dart.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'package:three_dart/three3d/lights/index.dart';
+import 'package:three_dart/three3d/materials/index.dart';
+import 'package:three_dart/three3d/math/index.dart';
+import 'package:three_dart/three3d/objects/index.dart';
 
-var _spotLightHelpervector = /*@__PURE__*/ Vector3();
+final spotLightHelperVector = Vector3();
 
 class SpotLightHelper extends Object3D {
   late Light light;
-
   late Color? color;
   late LineSegments cone;
 
@@ -15,7 +18,7 @@ class SpotLightHelper extends Object3D {
 
     matrix = light.matrixWorld;
 
-    var geometry = BufferGeometry();
+    final geometry = BufferGeometry();
 
     List<double> positions = [
       0,
@@ -50,16 +53,19 @@ class SpotLightHelper extends Object3D {
       1
     ];
 
-    for (var i = 0, j = 1, l = 32; i < l; i++, j++) {
-      var p1 = (i / l) * Math.pi * 2;
-      var p2 = (j / l) * Math.pi * 2;
+    for (int i = 0, j = 1, l = 32; i < l; i++, j++) {
+      final p1 = (i / l) * Math.pi * 2;
+      final p2 = (j / l) * Math.pi * 2;
 
-      positions.addAll([Math.cos(p1), Math.sin(p1), 1, Math.cos(p2), Math.sin(p2), 1]);
+      positions.addAll(
+          [Math.cos(p1), Math.sin(p1), 1, Math.cos(p2), Math.sin(p2), 1]);
     }
 
-    geometry.setAttribute(AttributeTypes.position, Float32BufferAttribute(Float32Array.from(positions), 3, false));
+    geometry.setAttribute(
+        'position',
+        Float32BufferAttribute(Float32Array.from(positions), 3, false));
 
-    var material = LineBasicMaterial({"fog": false, "toneMapped": false});
+    final material = LineBasicMaterial({"fog": false, "toneMapped": false});
 
     cone = LineSegments(geometry, material);
     add(cone);
@@ -68,27 +74,28 @@ class SpotLightHelper extends Object3D {
   }
 
   @override
-  dispose() {
-    cone.geometry!.dispose();
+  void dispose() {
+    cone.geometry?.dispose();
     cone.material?.dispose();
   }
 
-  update() {
+  void update() {
     light.updateMatrixWorld(false);
 
     double coneLength = light.distance ?? 1000;
-    var coneWidth = coneLength * Math.tan(light.angle!);
+    final coneWidth = coneLength * Math.tan(light.angle!);
 
     cone.scale.set(coneWidth, coneWidth, coneLength);
 
-    _spotLightHelpervector.setFromMatrixPosition(light.target!.matrixWorld);
+    spotLightHelperVector.setFromMatrixPosition(
+        light.target!.matrixWorld);
 
-    cone.lookAt(_spotLightHelpervector);
+    cone.lookAt(spotLightHelperVector);
 
     if (color != null) {
-      cone.material?.color.copy(color!);
+      cone.material.color.copy(color);
     } else {
-      cone.material?.color.copy(light.color!);
+      cone.material.color.copy(light.color);
     }
   }
 }

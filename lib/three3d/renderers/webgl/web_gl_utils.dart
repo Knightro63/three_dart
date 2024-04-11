@@ -1,6 +1,4 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/renderers/webgl/index.dart';
-import 'package:three_dart/extra/console.dart';
+part of three_webgl;
 
 class WebGLUtils {
   bool isWebGL2 = true;
@@ -12,7 +10,7 @@ class WebGLUtils {
     isWebGL2 = capabilities.isWebGL2;
   }
 
-  convert(p, [encoding]) {
+  dynamic convert(p, [encoding]) {
     var extension;
 
     if (p == UnsignedByteType) return gl.UNSIGNED_BYTE;
@@ -47,8 +45,7 @@ class WebGLUtils {
     if (p == RedFormat) return gl.RED;
 
     if (p == RGBFormat) {
-      console.warn(
-          'three.WebGLRenderer: three.RGBFormat has been removed. Use three.RGBAFormat instead. https://github.com/mrdoob/three.js/pull/23228');
+      Console.warn('three.WebGLRenderer: three.RGBFormat has been removed. Use three.RGBAFormat instead. https://github.com/mrdoob/three.js/pull/23228');
       return gl.RGBA;
     }
 

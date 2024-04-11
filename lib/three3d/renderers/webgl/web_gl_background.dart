@@ -1,16 +1,4 @@
-import 'package:three_dart/extra/console.dart';
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/core/object_3d.dart';
-import 'package:three_dart/three3d/geometries/index.dart';
-import 'package:three_dart/three3d/materials/index.dart';
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/objects/mesh.dart';
-import 'package:three_dart/three3d/renderers/index.dart';
-import 'package:three_dart/three3d/renderers/shaders/index.dart';
-import 'package:three_dart/three3d/renderers/webgl/index.dart';
-import 'package:three_dart/three3d/scenes/index.dart';
-import 'package:three_dart/three3d/textures/index.dart';
-import 'package:three_dart/three_dart.dart';
+part of three_webgl;
 
 class WebGLBackground {
   WebGLCubeMaps cubemaps;
@@ -27,17 +15,17 @@ class WebGLBackground {
   Mesh? planeMesh;
   Mesh? boxMesh;
 
-  var currentBackground;
+  dynamic currentBackground;
   int currentBackgroundVersion = 0;
-  var currentTonemapping;
+  late int currentTonemapping;
 
   WebGLBackground(this.renderer, this.cubemaps, this.state, this.objects, this.alpha, this.premultipliedAlpha) {
     clearAlpha = alpha == true ? 0.0 : 1.0;
   }
 
   void render(WebGLRenderList renderList, Object3D scene) {
-    var forceClear = false;
-    var background = scene is Scene ? scene.background : null;
+    bool forceClear = false;
+    dynamic background = scene is Scene ? scene.background : null;
 
     if (background != null && background is Texture) {
       background = cubemaps.get(background);
@@ -46,8 +34,8 @@ class WebGLBackground {
     // Ignore background in AR
     // TODO: Reconsider this.
 
-    // var xr = renderer.xr;
-    // var session = xr.getSession && xr.getSession();
+    // final xr = renderer.xr;
+    // final session = xr.getSession && xr.getSession();
 
     // if ( session && session.environmentBlendMode == 'additive' ) {
 
@@ -82,8 +70,8 @@ class WebGLBackground {
               "fog": false
             }));
 
-        boxMesh!.geometry?.deleteAttribute(AttributeTypes.normal);
-        boxMesh!.geometry?.deleteAttribute(AttributeTypes.uv);
+        boxMesh!.geometry?.deleteAttribute('normal');
+        boxMesh!.geometry?.deleteAttribute('uv');
 
         boxMesh!.onBeforeRender = ({renderer, scene, camera, renderTarget, mesh, geometry, material, group}) {
           boxMesh!.matrixWorld.copyPosition(camera.matrixWorld);
@@ -103,14 +91,14 @@ class WebGLBackground {
         objects.update(boxMesh!);
       }
 
-      boxMesh!.material?.uniforms["envMap"]["value"] = background;
-      boxMesh!.material?.uniforms["flipEnvMap"]["value"] =
+      boxMesh!.material.uniforms["envMap"]["value"] = background;
+      boxMesh!.material.uniforms["flipEnvMap"]["value"] =
           (background is CubeTexture && background is WebGL3DRenderTarget) ? -1 : 1;
 
       if (currentBackground != background ||
           currentBackgroundVersion != background.version ||
           currentTonemapping != renderer.toneMapping) {
-        boxMesh!.material?.needsUpdate = true;
+        boxMesh!.material.needsUpdate = true;
 
         currentBackground = background;
         currentBackgroundVersion = background.version;
@@ -120,7 +108,7 @@ class WebGLBackground {
       boxMesh!.layers.enableAll();
 
       // push to the pre-sorted opaque render list
-      renderList.unshift(boxMesh!, boxMesh!.geometry, boxMesh!.material!, 0, 0, null);
+      renderList.unshift(boxMesh!, boxMesh!.geometry, boxMesh!.material, 0, 0, null);
     } else if (background != null && background is Texture) {
       if (planeMesh == undefined) {
         planeMesh = Mesh(
@@ -136,7 +124,7 @@ class WebGLBackground {
               "fog": false
             }));
 
-        planeMesh!.geometry?.deleteAttribute(AttributeTypes.normal);
+        planeMesh!.geometry?.deleteAttribute('normal');
 
         // enable code injection for non-built-in material
         // Object.defineProperty( planeMesh.material, 'map', {
@@ -152,18 +140,18 @@ class WebGLBackground {
         objects.update(planeMesh!);
       }
 
-      planeMesh!.material?.uniforms["t2D"]["value"] = background;
+      planeMesh!.material.uniforms["t2D"]["value"] = background;
 
       if (background.matrixAutoUpdate == true) {
         background.updateMatrix();
       }
 
-      planeMesh!.material?.uniforms["uvTransform"]["value"].copy(background.matrix);
+      planeMesh!.material.uniforms["uvTransform"]["value"].copy(background.matrix);
 
       if (currentBackground != background ||
           currentBackgroundVersion != background.version ||
           currentTonemapping != renderer.toneMapping) {
-        planeMesh!.material?.needsUpdate = true;
+        planeMesh!.material.needsUpdate = true;
 
         currentBackground = background;
         currentBackgroundVersion = background.version;
@@ -173,7 +161,7 @@ class WebGLBackground {
       planeMesh!.layers.enableAll();
 
       // push to the pre-sorted opaque render list
-      renderList.unshift(planeMesh!, planeMesh!.geometry, planeMesh!.material!, 0, 0, null);
+      renderList.unshift(planeMesh!, planeMesh!.geometry, planeMesh!.material, 0, 0, null);
     }
   }
 

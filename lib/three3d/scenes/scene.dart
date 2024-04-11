@@ -1,19 +1,19 @@
 import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/extras/index.dart';
 import 'package:three_dart/three3d/materials/index.dart';
-import 'package:three_dart/three3d/scenes/fog.dart';
+
+import './fog.dart';
 
 class Scene extends Object3D {
   FogBase? fog;
 
-  Scene() : super() {
+  Scene() : super(){
+    autoUpdate = true; // checked by the renderer
     type = 'Scene';
-    autoUpdate = true;
   }
 
-  Scene.fromJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON) : super.fromJSON(json, rootJSON) {
+  Scene.fromJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON): super.fromJSON(json, rootJSON){
     type = 'Scene';
-    autoUpdate = true;
   }
 
   static Scene initJSON(Map<String, dynamic> json) {
@@ -21,20 +21,20 @@ class Scene extends Object3D {
 
     List<Shape> shapes = [];
     List<Map<String, dynamic>> shapesJSON = json["shapes"];
-    for (var shape in shapesJSON) {
+    for (Map<String, dynamic> shape in shapesJSON) {
       shapes.add(Curve.castJSON(shape) as Shape);
     }
     rootJSON["shapes"] = shapes;
 
     List<BufferGeometry> geometries = [];
     List<Map<String, dynamic>> geometriesJSON = json["geometries"];
-    for (var geometry in geometriesJSON) {
+    for (Map<String, dynamic> geometry in geometriesJSON) {
       geometries.add(BufferGeometry.castJSON(geometry, rootJSON));
     }
 
     List<Material> materials = [];
     List<Map<String, dynamic>> materialsJSON = json["materials"];
-    for (var material in materialsJSON) {
+    for (Map<String, dynamic> material in materialsJSON) {
       materials.add(Material.fromJSON(material, {}));
     }
 

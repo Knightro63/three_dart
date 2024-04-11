@@ -1,10 +1,10 @@
-import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three_dart.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'math.dart';
+import 'matrix3.dart';
+import 'vector.dart';
 
 class Vector2 extends Vector{
-  String type = "Vector2";
-
-  Vector2([num? x, num? y]) {
+  Vector2([double? x, double? y]) {
     this.x = x ?? 0;
     this.y = y ?? 0;
   }
@@ -16,15 +16,16 @@ class Vector2 extends Vector{
     }
   }
 
-  double get width => x.toDouble();
+  double get width => x;
   set width(double value) => x = value;
 
-  double get height => y.toDouble();
+  double get height => y;
   set height(double value) => y = value;
+
   @override
   Vector2 set(num x, num y) {
-    this.x = x;
-    this.y = y;
+    this.x = x.toDouble();
+    this.y = y.toDouble();
 
     return this;
   }
@@ -79,20 +80,17 @@ class Vector2 extends Vector{
   }
   @override
   Vector2 copy(Vector v) {
-    if(v is! Vector2) throw('v needs to be Vector2');
     x = v.x;
     y = v.y;
 
     return this;
   }
   @override
-  Vector2 add(Vector a, {Vector? b}) {
-    if(a is! Vector2) throw('v needs to be Vector2');
-    if(b != null && b is! Vector2) throw('w needs to be Vector2 or null');
+  Vector2 add(Vector a, [Vector? b]) {
     if (b != null) {
       print(
           'THREE.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.');
-      return addVectors(a, b as Vector2);
+      return addVectors(a, b);
     }
 
     x += a.x;
@@ -108,31 +106,30 @@ class Vector2 extends Vector{
     return this;
   }
 
-  Vector2 addVectors(Vector2 a, Vector2 b) {
+  Vector2 addVectors(Vector a, Vector b) {
     x = a.x + b.x;
     y = a.y + b.y;
 
     return this;
   }
 
-  Vector2 addScaledVector(Vector2 v, double s) {
+  @override
+  Vector2 addScaledVector(Vector v, double s) {
     x += v.x * s;
     y += v.y * s;
 
     return this;
   }
   @override
-  Vector2 sub(Vector v, {Vector? w}) {
-    if(v is! Vector2) throw('v needs to be Vector2');
-    if(w != null && w is! Vector2) throw('w needs to be Vector2 or null');
-    if (w != null) {
+  Vector2 sub(Vector a, [Vector? b]) {
+    if (b != null) {
       print(
           'THREE.Vector2: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.');
-      return subVectors(v, w as Vector2);
+      return subVectors(a, b);
     }
 
-    x -= v.x;
-    y -= v.y;
+    x -= a.x;
+    y -= a.y;
 
     return this;
   }
@@ -144,7 +141,7 @@ class Vector2 extends Vector{
     return this;
   }
 
-  Vector2 subVectors(Vector2 a, Vector2 b) {
+  Vector2 subVectors(Vector a, Vector b) {
     x = a.x - b.x;
     y = a.y - b.y;
 
@@ -177,9 +174,9 @@ class Vector2 extends Vector{
   }
   @override
   Vector2 applyMatrix3(Matrix3 m) {
-    double x = this.x.toDouble();
-    double y = this.y.toDouble();
-    Float32Array e = m.elements;
+    final x = this.x;
+    final y = this.y;
+    final e = m.elements;
 
     this.x = e[0] * x + e[3] * y + e[6];
     this.y = e[1] * x + e[4] * y + e[7];
@@ -217,10 +214,11 @@ class Vector2 extends Vector{
     return this;
   }
   @override
-  Vector2 clampLength(double min, double max) {
-    double length = this.length();
+  Vector2 clampLength<T extends num>(T min, T max) {
+    final length = this.length();
 
-    return divideScalar(length).multiplyScalar(Math.max(min, Math.min(max, length)));
+    return divideScalar(length)
+        .multiplyScalar(Math.max(min, Math.min(max, length)));
   }
   @override
   Vector2 floor() {
@@ -257,8 +255,8 @@ class Vector2 extends Vector{
 
     return this;
   }
-
-  num dot(Vector2 v) {
+  @override
+  num dot(Vector v) {
     return x * v.x + y * v.y;
   }
 
@@ -281,19 +279,20 @@ class Vector2 extends Vector{
   Vector2 normalize() {
     return divideScalar(length());
   }
-  @override
+
   double angle() {
     // computes the angle in radians with respect to the positive x-axis
-    double angle = Math.atan2(-y, -x) + Math.pi;
+    final angle = Math.atan2(-y, -x) + Math.pi;
     return angle;
   }
 
-  double distanceTo(Vector2 v) {
+  @override
+  num distanceTo(Vector v) {
     return Math.sqrt(distanceToSquared(v));
   }
-
-  num distanceToSquared(Vector2 v) {
-    double dx = x - v.x.toDouble(), dy = y - v.y.toDouble();
+  @override
+  num distanceToSquared(Vector v) {
+    final dx = x - v.x, dy = y - v.y;
     return dx * dx + dy * dy;
   }
 
@@ -320,35 +319,27 @@ class Vector2 extends Vector{
   }
   @override
   bool equals(Vector v) {
-    if(v is! Vector2) throw('v needs to be Vector2');
     return ((v.x == x) && (v.y == y));
   }
   @override
-  Vector2 fromArray(List<num> array, [int offset = 0]) {
-    x = array[offset].toDouble();
-    y = array[offset + 1].toDouble();
+  Vector2 fromArray(array, [int offset = 0]) {
+    x = array[offset];
+    y = array[offset + 1];
 
     return this;
   }
   @override
   List<num> toArray([List<num>? array, int offset = 0]) {
-    if (array == null) {
-      array = List<num>.filled(offset + 2, 0);
-    } else {
-      while (array.length < offset + 2) {
-        array.add(0.0);
-      }
-    }
+    array ??= List<num>.filled(2, 0.0);
 
     array[offset] = x;
     array[offset + 1] = y;
     return array;
   }
   @override
-  List<num> toJSON() {
+  List<num> toList() {
     return [x, y];
   }
-
   @override
   Vector2 fromBufferAttribute(BufferAttribute attribute, int index) {
     x = attribute.getX(index)!.toDouble();
@@ -360,8 +351,8 @@ class Vector2 extends Vector{
   Vector2 rotateAround(Vector2 center, double angle) {
     double c = Math.cos(angle), s = Math.sin(angle);
 
-    double x = this.x - center.x.toDouble();
-    double y = this.y - center.y.toDouble();
+    double x = this.x - center.x;
+    double y = this.y - center.y;
 
     this.x = x * c - y * s + center.x;
     this.y = x * s + y * c + center.y;
@@ -376,12 +367,13 @@ class Vector2 extends Vector{
     return this;
   }
 
-  Vector2.fromJson(Map<String, double> json) {
+  Vector2.fromJson(Map<String, dynamic> json) {
     x = json['x']!;
     y = json['y']!;
   }
+
   @override
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJSON() {
     return {'x': x, 'y': y};
   }
 }

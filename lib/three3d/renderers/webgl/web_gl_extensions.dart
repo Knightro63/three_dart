@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+part of three_webgl;
 
 class WebGLExtensions {
   Map<String, dynamic> extensions = {};
@@ -6,7 +6,7 @@ class WebGLExtensions {
 
   WebGLExtensions(this.gl);
 
-  getExtension(name) {
+  dynamic getExtension(String name) {
     return has(name);
   }
 
@@ -28,20 +28,21 @@ class WebGLExtensions {
     getExtension('EXT_color_buffer_half_float');
   }
 
-  has(String name) {
+  dynamic has(String name) {
     if (kIsWeb) {
       return hasForWeb(name);
-    } else {
+    } 
+    else {
       return hasForApp(name);
     }
   }
 
-  hasForWeb(String name) {
+  dynamic hasForWeb(String name) {
     if (extensions[name] != null) {
       return extensions[name];
     }
 
-    var extension;
+    dynamic extension;
 
     switch (name) {
       case 'WEBGL_depth_texture':
@@ -76,12 +77,12 @@ class WebGLExtensions {
     return extension;
   }
 
-  bool hasForApp(name) {
+  dynamic hasForApp(name) {
     if (extensions.keys.isEmpty) {
       List<String> ex = gl.getExtension(name);
 
       extensions = {};
-      for (var element in ex) {
+      for (String element in ex) {
         extensions[element] = element;
       }
     }
@@ -98,20 +99,21 @@ class WebGLExtensions {
       "GL_EXT_texture_compression_astc_decode_mode_rgb9e5": "GL_EXT_texture_compression_astc_decode_mode_rgb9e5"
     };
 
-    var n = names[name] ?? name;
+    String n = names[name] ?? name;
 
     // print(" has for app : ${name} ");
     // developer.log( extensions.keys.toList().toString() );
 
     if (extensions.containsKey(n)) {
       return extensions.containsKey(n);
-    } else {
+    } 
+    else {
       return false;
     }
   }
 
-  get(String name) {
-    var extension = getExtension(name);
+  dynamic get(String name) {
+    dynamic extension = getExtension(name);
 
     if (extension == null) {
       print('three.WebGLExtensions.get: $name extension not supported.');

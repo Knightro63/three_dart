@@ -1,13 +1,13 @@
-import 'package:three_dart/three3d/textures/texture.dart';
-import 'package:three_dart/three3d/textures/image_element.dart';
 import 'package:three_dart/three3d/constants.dart';
+import 'image_element.dart';
+import './texture.dart';
 
 class DataArrayTexture extends Texture {
   bool isDataTexture2DArray = true;
 
-  DataArrayTexture(data, [int width = 1, int height = 1, int depth = 1])
-      : super(null, null, null, null, null, null, null, null, null, null) {
-    image = ImageElement(data: data, width: width, height: height, depth: depth);
+  DataArrayTexture([data, int width = 1, int height = 1, int depth = 1]):super() {
+    image =
+        ImageElement(data: data, width: width, height: height, depth: depth);
 
     magFilter = NearestFilter;
     minFilter = NearestFilter;

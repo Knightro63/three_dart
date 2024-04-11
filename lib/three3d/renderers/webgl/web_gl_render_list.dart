@@ -1,6 +1,4 @@
-import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/materials/index.dart';
-import 'package:three_dart/three3d/renderers/webgl/index.dart';
+part of three_webgl;
 
 class RenderItem {
   int id = 0;
@@ -11,7 +9,7 @@ class RenderItem {
   int groupOrder = 0;
   int renderOrder = 0;
   double z = 0;
-  GroupGeometry? group;
+  Map<String, dynamic>? group;
 
   RenderItem(Map<String, dynamic> json) {
     if (json["id"] != null) {
@@ -40,7 +38,7 @@ class RenderItem {
       z = json["z"];
     }
     if (json["group"] != null) {
-      group = GroupGeometry.fromJson(json["group"]);
+      group = json["group"];
     }
   }
 }
@@ -55,7 +53,7 @@ class WebGLRenderList {
   List<RenderItem> transmissive = [];
   List<RenderItem> transparent = [];
 
-  var defaultProgram = DefaultProgram();
+  final defaultProgram = DefaultProgram();
 
   void init() {
     renderItemsIndex = 0;
@@ -65,9 +63,9 @@ class WebGLRenderList {
     transparent.length = 0;
   }
 
-  RenderItem getNextRenderItem(Object3D object, BufferGeometry? geometry, Material? material, int groupOrder, num z,
-      GroupGeometry? group) {
-    var renderItem = renderItems[renderItemsIndex];
+  RenderItem getNextRenderItem(Object3D object, BufferGeometry? geometry, Material? material, int groupOrder, double z,
+      Map<String, dynamic>? group) {
+    RenderItem? renderItem = renderItems[renderItemsIndex];
 
     if (renderItem == null) {
       renderItem = RenderItem({
@@ -89,7 +87,7 @@ class WebGLRenderList {
       renderItem.material = material;
       renderItem.groupOrder = groupOrder;
       renderItem.renderOrder = object.renderOrder;
-      renderItem.z = z.toDouble();
+      renderItem.z = z;
       renderItem.group = group;
     }
 
@@ -98,8 +96,8 @@ class WebGLRenderList {
     return renderItem;
   }
 
-  void push(Object3D object, BufferGeometry geometry, material, int groupOrder, num z, GroupGeometry? group) {
-    var renderItem = getNextRenderItem(object, geometry, material, groupOrder, z, group);
+  void push(Object3D object, BufferGeometry geometry, material, int groupOrder, double z, Map<String, dynamic>? group) {
+    final renderItem = getNextRenderItem(object, geometry, material, groupOrder, z, group);
 
     if (material.transmission > 0.0) {
       transmissive.add(renderItem);
@@ -113,8 +111,8 @@ class WebGLRenderList {
   }
 
   void unshift(Object3D object, BufferGeometry? geometry, Material material, int groupOrder, double z,
-      GroupGeometry? group) {
-    var renderItem = getNextRenderItem(object, geometry, material, groupOrder, z, group);
+      Map<String, dynamic>? group) {
+    final renderItem = getNextRenderItem(object, geometry, material, groupOrder, z, group);
 
     if (material.transmission > 0.0) {
       transmissive.insert(0, renderItem);
@@ -144,8 +142,8 @@ class WebGLRenderList {
   void finish() {
     // Clear references from inactive renderItems in the list
 
-    for (var i = renderItemsIndex, il = renderItems.length; i < il; i++) {
-      var renderItem = renderItems[i]!;
+    for (int i = renderItemsIndex, il = renderItems.length; i < il; i++) {
+      final renderItem = renderItems[i]!;
 
       if (renderItem.id == 0) break;
 

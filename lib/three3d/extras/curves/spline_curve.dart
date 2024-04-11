@@ -1,8 +1,9 @@
-import 'package:three_dart/three_dart.dart';
+import '../../math/index.dart';
+import '../core/curve.dart';
+import '../core/interpolations.dart';
 
 class SplineCurve extends Curve {
   SplineCurve(points) : super() {
-    type = 'SplineCurve';
     this.points = points;
     isSplineCurve = true;
   }
@@ -11,45 +12,48 @@ class SplineCurve extends Curve {
     points = [];
 
     for (int i = 0, l = json["points"].length; i < l; i++) {
-      var point = json["points"][i];
+      final point = json["points"][i];
       points.add(Vector2().fromArray(point));
     }
+
+    isSplineCurve = true;
   }
 
   @override
   Vector? getPoint(num t, [Vector? optionalTarget]) {
-    var point = optionalTarget ?? Vector2();
+    final point = optionalTarget ?? Vector2();
 
-    List<Vector> points = this.points;
+    final points = this.points;
     num p = (points.length - 1) * t;
 
-    int intPoint = Math.floor(p).toInt();
-    double weight = p - intPoint.toDouble();
+    final intPoint = Math.floor(p).toInt();
+    final weight = p - intPoint;
 
-    Vector p0 = points[intPoint == 0 ? intPoint : intPoint - 1];
-    Vector p1 = points[intPoint];
-    Vector p2 =
+    final p0 = points[intPoint == 0 ? intPoint : intPoint - 1];
+    final p1 = points[intPoint];
+    final p2 =
         points[intPoint > points.length - 2 ? points.length - 1 : intPoint + 1];
-    Vector p3 =
+    final p3 =
         points[intPoint > points.length - 3 ? points.length - 1 : intPoint + 2];
 
-    point.set(catmullRom(weight, p0.x, p1.x, p2.x, p3.x),
-        catmullRom(weight, p0.y, p1.y, p2.y, p3.y));
+    point.set(PathInterpolations.catmullRom(weight, p0.x, p1.x, p2.x, p3.x),
+        PathInterpolations.catmullRom(weight, p0.y, p1.y, p2.y, p3.y));
 
     return point;
   }
 
   @override
-  SplineCurve copy(source) {
-    if(source is! LineCurve) throw('source Curve must be LineCurve');
-    super.copy(source);
+  SplineCurve copy(Curve source) {
+    if(source is SplineCurve){
+      super.copy(source);
 
-    points = [];
+      points = [];
 
-    for (int i = 0, l = source.points.length; i < l; i++) {
-      Vector point = source.points[i];
+      for (int i = 0, l = source.points.length; i < l; i++) {
+        final point = source.points[i];
 
-      points.add(point.clone());
+        points.add(point.clone());
+      }
     }
 
     return this;
@@ -62,7 +66,7 @@ class SplineCurve extends Curve {
     data["points"] = [];
 
     for (int i = 0, l = points.length; i < l; i++) {
-      Vector point = points[i];
+      final point = points[i];
       data["points"].add(point.toArray());
     }
 

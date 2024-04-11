@@ -1,54 +1,26 @@
+import 'dart:convert';
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/extras/index.dart';
-import 'package:three_dart/three3d/geometries/index.dart';
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/utils.dart';
 import 'package:three_dart/extra/console.dart';
+import 'package:three_dart/three3d/utils.dart';
+
+import '../math/index.dart';
+import '../geometries/index.dart';
+import '../extras/index.dart';
+import 'buffer_attribute.dart';
+import 'event_dispatcher.dart';
+import 'gl_buffer_attribute.dart';
+import 'interleaved_buffer_attribute.dart';
+import 'object_3d.dart';
+import './morph_target.dart';
 
 int _bufferGeometryId = 1; // BufferGeometry uses odd numbers as Id
 
-Matrix4 _bufferGeometrym1 = Matrix4();
-Object3D _bufferGeometryobj = Object3D();
-Vector3 _bufferGeometryoffset = Vector3();
-Box3 _bufferGeometrybox = Box3();
-Box3 _bufferGeometryboxMorphTargets = Box3();
-Vector3 _bufferGeometryvector = Vector3();
-
-class GroupGeometry{
-  GroupGeometry.fromJson(json){
-    start = json['start'] ?? 0;
-    count = json['count'] ?? 0;
-    materialIndex = json['materialIndex'] ?? 0;
-  }
-  GroupGeometry({
-    required this.start,
-    required this.count,
-    this.materialIndex = 0
-  });
-  
-  late int start;
-  late int count;
-  late int materialIndex;
-
-  GroupGeometry clone(){
-    return GroupGeometry(
-      start: start, 
-      count: count,
-      materialIndex: materialIndex
-    );
-  }
-
-  Map<String,dynamic> toJson(){
-    return {
-      'start': start,
-      'count': count,
-      'materialIndex': materialIndex
-    };
-  }
-}
-
-Matrix4 _m1 = Matrix4();
+final _bufferGeometrym1 = Matrix4();
+final _bufferGeometryobj = Object3D();
+final _bufferGeometryoffset = Vector3();
+final _bufferGeometrybox = Box3(null, null);
+final _bufferGeometryboxMorphTargets = Box3(null, null);
+final _bufferGeometryvector = Vector3();
 
 class BufferGeometry with EventDispatcher {
   int id = _bufferGeometryId += 2;
@@ -57,17 +29,17 @@ class BufferGeometry with EventDispatcher {
   String type = "BufferGeometry";
   Box3? boundingBox;
   String name = "";
-  Attributes attributes = Attributes();
+  Map<String, dynamic> attributes = {};
   Map<String, List<BufferAttribute>> morphAttributes = {};
   bool morphTargetsRelative = false;
   Sphere? boundingSphere;
-  GroupGeometry drawRange = GroupGeometry(start: 0, count: double.maxFinite.toInt());
+  Map<String, int> drawRange = {"start": 0, "count": double.maxFinite.toInt()};
   Map<String, dynamic> userData = {};
-  List<GroupGeometry> groups = [];
+  List<Map<String, dynamic>> groups = [];
   BufferAttribute? index;
 
-  late var morphTargets;
-  late var directGeometry;
+  late List<MorphTarget> morphTargets;
+  late BufferGeometry directGeometry;
 
   bool elementsNeedUpdate = false;
   bool verticesNeedUpdate = false;
@@ -87,8 +59,6 @@ class BufferGeometry with EventDispatcher {
 
   int? maxInstanceCount;
   int? instanceCount;
-
-  Float32Array? array;
 
   BufferGeometry();
 
@@ -114,55 +84,45 @@ class BufferGeometry with EventDispatcher {
   BufferAttribute? getIndex() => index;
 
   void setIndex(index) {
-    // if ( Array.isArray( index ) ) {
-
-    // 	this.index = new ( arrayMax( index ) > 65535 ? Uint32BufferAttribute : Uint16BufferAttribute )( index, 1 );
-
-    // } else {
-
-    // this.index = index;
-
-    // }
-
     if (index is List) {
       final list = index.map<int>((e) => e.toInt()).toList();
       final max = arrayMax(list);
       if (max != null && max > 65535) {
         this.index = Uint32BufferAttribute(Uint32Array.from(list), 1, false);
-      } else {
+      } 
+      else {
         this.index = Uint16BufferAttribute(Uint16Array.from(list), 1, false);
       }
-    } else {
+    } 
+    else {
       this.index = index;
     }
   }
 
-  dynamic getAttribute(AttributeTypes type) {
-    attributes.getAttribute(type);
+  dynamic getAttribute(String name) {
+    return attributes[name];
+  }
+
+  BufferGeometry setAttribute(String name, attribute) {
+    attributes[name] = attribute;
     return this;
   }
 
-  BufferGeometry setAttribute(AttributeTypes type, BufferAttribute<NativeArray<num>>? attribute) {
-    //attributes[name] = attribute;
-    attributes.setAttribute(type, attribute);
+  BufferGeometry deleteAttribute(String name) {
+    attributes.remove(name);
     return this;
   }
 
-  BufferGeometry deleteAttribute(AttributeTypes type) {
-    attributes.setAttribute(type);
-    return this;
+  bool hasAttribute(String name) {
+    return attributes[name] != null;
   }
-
-  // bool hasAttribute(String name) {
-  //   return attributes[name] != null;
-  // }
 
   void addGroup(int start, int count, [int materialIndex = 0]) {
-    groups.add(GroupGeometry(
-      start: start,
-      count: count,
-      materialIndex: materialIndex,
-    ));
+    groups.add({
+      "start": start,
+      "count": count,
+      "materialIndex": materialIndex,
+    });
   }
 
   void clearGroups() {
@@ -170,28 +130,28 @@ class BufferGeometry with EventDispatcher {
   }
 
   void setDrawRange(int start, int count) {
-    drawRange.start = start;
-    drawRange.count = count;
+    drawRange["start"] = start;
+    drawRange["count"] = count;
   }
 
   void applyMatrix4(Matrix4 matrix) {
-    BufferAttribute<NativeArray<num>>? position = attributes.positionBuffer;
+    final position = attributes["position"];
     if (position != null) {
       position.applyMatrix4(matrix);
       position.needsUpdate = true;
     }
 
-    BufferAttribute<NativeArray<num>>? normal = attributes.normalBuffer;
+    final normal = attributes["normal"];
 
     if (normal != null) {
-      Matrix3 normalMatrix = Matrix3().getNormalMatrix(matrix);
+      final normalMatrix = Matrix3().getNormalMatrix(matrix);
 
       normal.applyNormalMatrix(normalMatrix);
 
       normal.needsUpdate = true;
     }
 
-    BufferAttribute<NativeArray<num>>? tangent = attributes.tangentBuffer;
+    final tangent = attributes["tangent"];
 
     if (tangent != null) {
       tangent.transformDirection(matrix);
@@ -209,49 +169,36 @@ class BufferGeometry with EventDispatcher {
   }
 
   BufferGeometry applyQuaternion(Quaternion q) {
-    _m1.makeRotationFromQuaternion(q);
-
-    applyMatrix4(_m1);
-
+    m1.makeRotationFromQuaternion(q);
+    applyMatrix4(m1);
     return this;
   }
 
   BufferGeometry rotateX(num angle) {
     // rotate geometry around world x-axis
-
     _bufferGeometrym1.makeRotationX(angle);
-
     applyMatrix4(_bufferGeometrym1);
-
     return this;
   }
 
   BufferGeometry rotateY(num angle) {
     // rotate geometry around world y-axis
-
     _bufferGeometrym1.makeRotationY(angle);
-
     applyMatrix4(_bufferGeometrym1);
-
     return this;
   }
 
   BufferGeometry rotateZ(num angle) {
     // rotate geometry around world z-axis
-
     _bufferGeometrym1.makeRotationZ(angle);
-
     applyMatrix4(_bufferGeometrym1);
-
     return this;
   }
 
   BufferGeometry translate(num x, num y, num z) {
     // translate geometry
-
     _bufferGeometrym1.makeTranslation(x, y, z);
     applyMatrix4(_bufferGeometrym1);
-
     return this;
   }
 
@@ -261,21 +208,15 @@ class BufferGeometry with EventDispatcher {
 
   BufferGeometry scale(num x, num y, num z) {
     // scale geometry
-
     _bufferGeometrym1.makeScale(x, y, z);
-
     applyMatrix4(_bufferGeometrym1);
-
     return this;
   }
 
   BufferGeometry lookAt(Vector3 vector) {
     _bufferGeometryobj.lookAt(vector);
-
     _bufferGeometryobj.updateMatrix();
-
     applyMatrix4(_bufferGeometryobj.matrix);
-
     return this;
   }
 
@@ -285,43 +226,44 @@ class BufferGeometry with EventDispatcher {
     boundingBox!.getCenter(_bufferGeometryoffset);
     _bufferGeometryoffset.negate();
 
-    translate(_bufferGeometryoffset.x, _bufferGeometryoffset.y, _bufferGeometryoffset.z);
+    translate(_bufferGeometryoffset.x, _bufferGeometryoffset.y,
+        _bufferGeometryoffset.z);
   }
 
-  BufferGeometry setFromPoints(List<Vector> points) {
+  BufferGeometry setFromPoints(points) {
     List<double> position = [];
 
     for (int i = 0, l = points.length; i < l; i++) {
-      Vector point = points[i];
+      final point = points[i];
 
-      if (point is Vector3) {
-        position.addAll([point.x.toDouble(), point.y.toDouble(), point.z.toDouble()]);
-      } else if (point is Vector4) {
-        position.addAll([point.x.toDouble(), point.y.toDouble(), point.z.toDouble()]);
-      } else {
+      if (point is Vector2) {
         position.addAll([point.x.toDouble(), point.y.toDouble(), 0.0]);
+      } 
+      else {
+        position.addAll([point.x.toDouble(), point.y.toDouble(), (point.z ?? 0).toDouble()]);
       }
     }
 
     final array = Float32Array.from(position);
-    //setAttribute('position', );
-    attributes.positionBuffer = Float32BufferAttribute(array, 3, false);
+    setAttribute('position', Float32BufferAttribute(array, 3, false));
+
     return this;
   }
 
   void computeBoundingBox() {
-    boundingBox ??= Box3();
+    boundingBox ??= Box3(null, null);
 
-    BufferAttribute<NativeArray<num>>? position = attributes.positionBuffer;
-    List<BufferAttribute<NativeArray<num>>>? morphAttributesPosition = morphAttributes['position'];
+    final position = attributes["position"];
+    final morphAttributesPosition = morphAttributes["position"];
 
     if (position != null && position is GLBufferAttribute) {
       print(
-          'three.BufferGeometry.computeBoundingBox(): GLBufferAttribute requires a manual bounding box. Alternatively set "mesh.frustumCulled" to "false". $this');
+          'THREE.BufferGeometry.computeBoundingBox(): GLBufferAttribute requires a manual bounding box. Alternatively set "mesh.frustumCulled" to "false". $this');
 
-      double inf = 9999999999.0;
+      double infinity = 9999999999.0;
 
-      boundingBox!.set(Vector3(-inf, -inf, -inf), Vector3(inf, inf, inf));
+      boundingBox!.set(Vector3(-infinity, -infinity, -infinity),
+          Vector3(infinity, infinity, infinity));
 
       return;
     }
@@ -333,14 +275,16 @@ class BufferGeometry with EventDispatcher {
 
       if (morphAttributesPosition != null) {
         for (int i = 0, il = morphAttributesPosition.length; i < il; i++) {
-          BufferAttribute<NativeArray<num>> morphAttribute = morphAttributesPosition[i];
+          final morphAttribute = morphAttributesPosition[i];
           _bufferGeometrybox.setFromBufferAttribute(morphAttribute);
 
           if (morphTargetsRelative) {
-            _bufferGeometryvector.addVectors(boundingBox!.min, _bufferGeometrybox.min);
+            _bufferGeometryvector.addVectors(
+                boundingBox!.min, _bufferGeometrybox.min);
             boundingBox!.expandByPoint(_bufferGeometryvector);
 
-            _bufferGeometryvector.addVectors(boundingBox!.max, _bufferGeometrybox.max);
+            _bufferGeometryvector.addVectors(
+                boundingBox!.max, _bufferGeometrybox.max);
             boundingBox!.expandByPoint(_bufferGeometryvector);
           } else {
             boundingBox!.expandByPoint(_bufferGeometrybox.min);
@@ -356,15 +300,15 @@ class BufferGeometry with EventDispatcher {
     //     boundingBox!.min.y == null ||
     //     boundingBox!.min.z == null) {
     //   print(
-    //       'three.BufferGeometry.computeBoundingBox(): Computed min/max have NaN values. The "position" attribute is likely to have NaN values. ${this}');
+    //       'THREE.BufferGeometry.computeBoundingBox(): Computed min/max have NaN values. The "position" attribute is likely to have NaN values. ${this}');
     // }
   }
 
   void computeBoundingSphere() {
-    boundingSphere ??= Sphere();
+    boundingSphere ??= Sphere(null, null);
 
-    BufferAttribute<NativeArray<num>>? position = attributes.positionBuffer;
-    List<BufferAttribute<NativeArray<num>>>? morphAttributesPosition = morphAttributes["position"];
+    final position = attributes["position"];
+    final morphAttributesPosition = morphAttributes["position"];
 
     if (position != null && position is GLBufferAttribute) {
       boundingSphere!.set(Vector3(), 99999999999);
@@ -375,7 +319,7 @@ class BufferGeometry with EventDispatcher {
     if (position != null) {
       // first, find the center of the bounding sphere
 
-      Vector3 center = boundingSphere!.center;
+      final center = boundingSphere!.center;
 
       _bufferGeometrybox.setFromBufferAttribute(position);
 
@@ -383,18 +327,22 @@ class BufferGeometry with EventDispatcher {
 
       if (morphAttributesPosition != null) {
         for (int i = 0, il = morphAttributesPosition.length; i < il; i++) {
-          BufferAttribute<NativeArray<num>> morphAttribute = morphAttributesPosition[i];
+          final morphAttribute = morphAttributesPosition[i];
           _bufferGeometryboxMorphTargets.setFromBufferAttribute(morphAttribute);
 
           if (morphTargetsRelative) {
-            _bufferGeometryvector.addVectors(_bufferGeometrybox.min, _bufferGeometryboxMorphTargets.min);
+            _bufferGeometryvector.addVectors(
+                _bufferGeometrybox.min, _bufferGeometryboxMorphTargets.min);
             _bufferGeometrybox.expandByPoint(_bufferGeometryvector);
 
-            _bufferGeometryvector.addVectors(_bufferGeometrybox.max, _bufferGeometryboxMorphTargets.max);
+            _bufferGeometryvector.addVectors(
+                _bufferGeometrybox.max, _bufferGeometryboxMorphTargets.max);
             _bufferGeometrybox.expandByPoint(_bufferGeometryvector);
           } else {
-            _bufferGeometrybox.expandByPoint(_bufferGeometryboxMorphTargets.min);
-            _bufferGeometrybox.expandByPoint(_bufferGeometryboxMorphTargets.max);
+            _bufferGeometrybox
+                .expandByPoint(_bufferGeometryboxMorphTargets.min);
+            _bufferGeometrybox
+                .expandByPoint(_bufferGeometryboxMorphTargets.max);
           }
         }
       }
@@ -416,8 +364,8 @@ class BufferGeometry with EventDispatcher {
 
       if (morphAttributesPosition != null) {
         for (int i = 0, il = morphAttributesPosition.length; i < il; i++) {
-          BufferAttribute<NativeArray<num>>? morphAttribute = morphAttributesPosition[i];
-          bool morphTargetsRelative = this.morphTargetsRelative;
+          final morphAttribute = morphAttributesPosition[i];
+          final morphTargetsRelative = this.morphTargetsRelative;
 
           for (int j = 0, jl = morphAttribute.count; j < jl; j++) {
             _bufferGeometryvector.fromBufferAttribute(morphAttribute, j);
@@ -439,7 +387,7 @@ class BufferGeometry with EventDispatcher {
 
       if (boundingSphere?.radius == null) {
         print(
-            'three.BufferGeometry.computeBoundingSphere(): Computed radius is NaN. The "position" attribute is likely to have NaN values. $this');
+            'THREE.BufferGeometry.computeBoundingSphere(): Computed radius is NaN. The "position" attribute is likely to have NaN values. $this');
       }
     }
   }
@@ -449,60 +397,59 @@ class BufferGeometry with EventDispatcher {
   }
 
   void computeTangents() {
-    BufferAttribute<NativeArray<num>>? index = this.index;
-    Attributes attributes = this.attributes;
+    final index = this.index;
+    final attributes = this.attributes;
 
     // based on http://www.terathon.com/code/tangent.html
     // (per vertex tangents)
 
     if (index == null ||
-        attributes.position == null ||
-        attributes.normal == null ||
-        attributes.uv == null) {
-      console.error(
-          'three.BufferGeometry: .computeTangents() failed. Missing required attributes (index, position, normal or uv)');
+        attributes["position"] == null ||
+        attributes["normal"] == null ||
+        attributes["uv"] == null) {
+      Console.error(
+          'THREE.BufferGeometry: .computeTangents() failed. Missing required attributes (index, position, normal or uv)');
       return;
     }
 
     final indices = index.array;
-    List<num>? positions = attributes.positionBuffer?.array.toDartList();
-    List<num>? normals = attributes.normalBuffer?.array.toDartList();
-    List<num>? uvs = attributes.uvBuffer?.array.toDartList();
+    final positions = attributes["position"].array;
+    final normals = attributes["normal"].array;
+    final uvs = attributes["uv"].array;
 
-    int nVertices = positions!.length ~/ 3;
-    if (attributes.tangent == null) {
-      // setAttribute(
-      //     'tangent', Float32BufferAttribute(Float32Array(4 * nVertices), 4));
-      attributes.tangentBuffer = Float32BufferAttribute(Float32Array(4 * nVertices), 4);
+    int nVertices = positions.length ~/ 3;
+
+    if (attributes["tangent"] == null) {
+      setAttribute(
+          'tangent', Float32BufferAttribute(Float32Array(4 * nVertices), 4));
     }
 
-    List<num>? tangents = attributes.tangentBuffer?.array.toDartList();
+    final tangents = attributes["tangent"].array;
 
-    List<Vector3> tan1 = [], tan2 = [];
+    final List<Vector3> tan1 = [], tan2 = [];
 
     for (int i = 0; i < nVertices; i++) {
       tan1.add(Vector3());
       tan2.add(Vector3());
     }
 
-    Vector3 vA = Vector3(),
+    final vA = Vector3(),
         vB = Vector3(),
         vC = Vector3(),
+        uvA = Vector2(),
+        uvB = Vector2(),
+        uvC = Vector2(),
         sdir = Vector3(),
         tdir = Vector3();
-    Vector2 uvA = Vector2(),
-        uvB = Vector2(),
-        uvC = Vector2();
-
 
     void handleTriangle(int a, int b, int c) {
-      vA = Vector3().fromArray(positions,a * 3);
-      vB = Vector3().fromArray(positions, b * 3);
-      vC = Vector3().fromArray(positions, c * 3);
+      vA.fromArray(positions, a * 3);
+      vB.fromArray(positions, b * 3);
+      vC.fromArray(positions, c * 3);
 
-      uvA = Vector2().fromArray(uvs!, a * 2);
-      uvB = Vector2().fromArray(uvs, b * 2);
-      uvC = Vector2().fromArray(uvs, c * 2);
+      uvA.fromArray(uvs, a * 2);
+      uvB.fromArray(uvs, b * 2);
+      uvC.fromArray(uvs, c * 2);
 
       vB.sub(vA);
       vC.sub(vA);
@@ -516,8 +463,16 @@ class BufferGeometry with EventDispatcher {
 
       if (!r.isFinite) return;
 
-      sdir.copy(vB).multiplyScalar(uvC.y).addScaledVector(vC, -uvB.y).multiplyScalar(r);
-      tdir.copy(vC).multiplyScalar(uvB.x).addScaledVector(vB, -uvC.x).multiplyScalar(r);
+      sdir
+          .copy(vB)
+          .multiplyScalar(uvC.y)
+          .addScaledVector(vC, -uvB.y)
+          .multiplyScalar(r);
+      tdir
+          .copy(vC)
+          .multiplyScalar(uvB.x)
+          .addScaledVector(vB, -uvC.x)
+          .multiplyScalar(r);
 
       tan1[a].add(sdir);
       tan1[b].add(sdir);
@@ -528,19 +483,19 @@ class BufferGeometry with EventDispatcher {
       tan2[c].add(tdir);
     }
 
-    List<GroupGeometry> groups = this.groups;
+    List<Map<String,dynamic>> groups = this.groups;
 
     if (groups.isEmpty) {
       groups = [
-        GroupGeometry(start: 0, count: indices.length)
+        {"start": 0, "count": indices.length}
       ];
     }
 
     for (int i = 0, il = groups.length; i < il; ++i) {
-      GroupGeometry group = groups[i];
+      final group = groups[i];
 
-      int start = group.start;
-      int count = group.count;
+      final start = group["start"];
+      final count = group["count"];
 
       for (int j = start, jl = start + count; j < jl; j += 3) {
         handleTriangle(
@@ -551,14 +506,14 @@ class BufferGeometry with EventDispatcher {
       }
     }
 
-    Vector3 tmp = Vector3(), tmp2 = Vector3();
-    Vector3 n = Vector3(), n2 = Vector3();
+    final tmp = Vector3(), tmp2 = Vector3();
+    final n = Vector3(), n2 = Vector3();
 
     void handleVertex(int v) {
-      n.fromArray(normals!, v * 3);
+      n.fromArray(normals, v * 3);
       n2.copy(n);
 
-      Vector3 t = tan1[v];
+      final t = tan1[v];
 
       // Gram-Schmidt orthogonalize
 
@@ -568,20 +523,20 @@ class BufferGeometry with EventDispatcher {
       // Calculate handedness
 
       tmp2.crossVectors(n2, t);
-      num test = tmp2.dot(tan2[v]);
-      double w = (test < 0.0) ? -1.0 : 1.0;
+      final test = tmp2.dot(tan2[v]);
+      final w = (test < 0.0) ? -1.0 : 1.0;
 
-      tangents![v * 4] = tmp.x;
+      tangents[v * 4] = tmp.x;
       tangents[v * 4 + 1] = tmp.y;
       tangents[v * 4 + 2] = tmp.z;
       tangents[v * 4 + 3] = w;
     }
 
     for (int i = 0, il = groups.length; i < il; ++i) {
-      GroupGeometry group = groups[i];
+      final group = groups[i];
 
-      int start = group.start;
-      int count = group.count;
+      final start = group["start"];
+      final count = group["count"];
 
       for (int j = start, jl = start + count; j < jl; j += 3) {
         handleVertex(indices[j + 0].toInt());
@@ -592,37 +547,35 @@ class BufferGeometry with EventDispatcher {
   }
 
   void computeVertexNormals() {
-    BufferAttribute<NativeArray<num>>? index = this.index;
-    BufferAttribute<NativeArray<num>>? positionAttribute = attributes.positionBuffer;//getAttribute('position');
+    final index = this.index;
+    final positionAttribute = getAttribute('position');
 
     if (positionAttribute != null) {
-      BufferAttribute<NativeArray<num>>? normalAttribute = attributes.normalBuffer;//getAttribute('normal');
+      Float32BufferAttribute? normalAttribute = getAttribute('normal');
 
       if (normalAttribute == null) {
         final array = List<double>.filled(positionAttribute.count * 3, 0);
-        normalAttribute =
-            Float32BufferAttribute(Float32Array.from(array), 3, false);
-        //setAttribute('normal', normalAttribute);
-        attributes.normalBuffer = normalAttribute;
-      } else {
+        normalAttribute = Float32BufferAttribute(Float32Array.from(array), 3, false);
+        setAttribute('normal', normalAttribute);
+      } 
+      else {
         // reset existing normals to zero
-
         for (int i = 0, il = normalAttribute.count; i < il; i++) {
           normalAttribute.setXYZ(i, 0, 0, 0);
         }
       }
 
-      Vector3 pA = Vector3(), pB = Vector3(), pC = Vector3();
-      Vector3 nA = Vector3(), nB = Vector3(), nC = Vector3();
-      Vector3 cb = Vector3(), ab = Vector3();
+      final pA = Vector3(), pB = Vector3(), pC = Vector3();
+      final nA = Vector3(), nB = Vector3(), nC = Vector3();
+      final cb = Vector3(), ab = Vector3();
 
       // indexed elements
 
       if (index != null) {
         for (int i = 0, il = index.count; i < il; i += 3) {
-          int vA = index.getX(i + 0)!.toInt();
-          int vB = index.getX(i + 1)!.toInt();
-          int vC = index.getX(i + 2)!.toInt();
+          final vA = index.getX(i + 0)!.toInt();
+          final vB = index.getX(i + 1)!.toInt();
+          final vC = index.getX(i + 2)!.toInt();
 
           pA.fromBufferAttribute(positionAttribute, vA);
           pB.fromBufferAttribute(positionAttribute, vB);
@@ -671,30 +624,30 @@ class BufferGeometry with EventDispatcher {
   BufferGeometry merge(BufferGeometry geometry, [int? offset]) {
     // if (!(geometry && geometry.isBufferGeometry)) {
     //   print(
-    //       'three.BufferGeometry.merge(): geometry not an instance of three.BufferGeometry. $geometry');
+    //       'THREE.BufferGeometry.merge(): geometry not an instance of THREE.BufferGeometry. $geometry');
     //   return;
     // }
 
     if (offset == null) {
       offset = 0;
 
-      print('three.BufferGeometry.merge(): Overwriting original geometry, starting at offset=0. '
+      print(
+          'THREE.BufferGeometry.merge(): Overwriting original geometry, starting at offset=0. '
           'Use BufferGeometryUtils.mergeBufferGeometries() for lossless merge.');
     }
 
-    Attributes attributes = this.attributes;
+    final attributes = this.attributes;
 
-    for (int type = 0; type < AttributeTypes.values.length; type++) {
-      AttributeTypes ty = AttributeTypes.values[type];
-      if (geometry.attributes.hasAttribute(ty)) {
-        BufferAttribute<NativeArray<num>> attribute1 = attributes.getAttribute(ty)!;
-        NativeArray<num> attributeArray1 = attribute1.array;
+    for (String key in attributes.keys) {
+      if (geometry.attributes[key] != null) {
+        final attribute1 = attributes[key];
+        final attributeArray1 = attribute1.array;
 
-        BufferAttribute<NativeArray<num>> attribute2 = geometry.attributes.getAttribute(ty)!;
-        NativeArray<num> attributeArray2 = attribute2.array;
+        final attribute2 = geometry.attributes[key];
+        final attributeArray2 = attribute2.array;
 
-        int attributeOffset = attribute2.itemSize * offset;
-        int length = Math.min<int>(
+        final attributeOffset = attribute2.itemSize * offset;
+        final length = Math.min<int>(
             attributeArray2.length, attributeArray1.length - attributeOffset);
 
         for (int i = 0, j = attributeOffset; i < length; i++, j++) {
@@ -707,38 +660,39 @@ class BufferGeometry with EventDispatcher {
   }
 
   void normalizeNormals() {
-    BufferAttribute<NativeArray<num>>? normals = attributes.normalBuffer;
+    final normals = attributes["normal"];
 
-    for (int i = 0, il = normals!.count; i < il; i++) {
+    for (int i = 0, il = normals.count; i < il; i++) {
       _bufferGeometryvector.fromBufferAttribute(normals, i);
 
       _bufferGeometryvector.normalize();
 
-      normals.setXYZ(i, _bufferGeometryvector.x, _bufferGeometryvector.y, _bufferGeometryvector.z);
+      normals.setXYZ(i, _bufferGeometryvector.x, _bufferGeometryvector.y,
+          _bufferGeometryvector.z);
     }
   }
 
   BufferGeometry toNonIndexed() {
-    Float32BufferAttribute convertBufferAttribute(BufferAttribute attribute, List<num> indices) {
+    convertBufferAttribute(attribute, indices) {
       print("BufferGeometry.convertBufferAttribute todo  ");
 
-      NativeArray<num> array = attribute.array;
-      int itemSize = attribute.itemSize;
-      bool normalized = attribute.normalized;
+      final array = attribute.array;
+      final itemSize = attribute.itemSize;
+      final normalized = attribute.normalized;
 
-      Float32Array array2 = Float32Array(indices.length * itemSize);
+      final array2 = Float32Array(indices.length * itemSize);
 
       int index = 0, index2 = 0;
 
       for (int i = 0, l = indices.length; i < l; i++) {
         if (attribute is InterleavedBufferAttribute) {
-          index = indices[i].toInt() * attribute.data!.stride + attribute.offset;
+          index = indices[i] * attribute.data!.stride + attribute.offset;
         } else {
-          index = indices[i].toInt() * itemSize;
+          index = indices[i] * itemSize;
         }
 
         for (int j = 0; j < itemSize; j++) {
-          array2[index2++] = array[index++].toDouble();
+          array2[index2++] = array[index++];
         }
       }
 
@@ -748,37 +702,39 @@ class BufferGeometry with EventDispatcher {
     //
 
     if (index == null) {
-      print('three.BufferGeometry.toNonIndexed(): Geometry is already non-indexed.');
+      print(
+          'THREE.BufferGeometry.toNonIndexed(): Geometry is already non-indexed.');
       return this;
     }
 
-    BufferGeometry geometry2 = BufferGeometry();
+    final geometry2 = BufferGeometry();
 
-    List<num> indices = index!.array.toDartList();
-    Attributes attributes = this.attributes;
+    final indices = index!.array;
+    final attributes = this.attributes;
 
     // attributes
-    geometry2.attributes = attributes.clone();
-    // for (var name in attributes.keys) {
-    //   var attribute = attributes[name];
 
-    //   Float32BufferAttribute newAttribute = convertBufferAttribute(attribute, indices);
+    for (String name in attributes.keys) {
+      final attribute = attributes[name];
 
-    //   geometry2.setAttribute(name, newAttribute);
-    // }
+      final newAttribute = convertBufferAttribute(attribute, indices);
+
+      geometry2.setAttribute(name, newAttribute);
+    }
 
     // morph attributes
 
-    Map<String,List<BufferAttribute<NativeArray<num>>>> morphAttributes = this.morphAttributes;
+    final morphAttributes = this.morphAttributes;
 
     for (String name in morphAttributes.keys) {
       List<BufferAttribute> morphArray = [];
-      List<BufferAttribute> morphAttribute = morphAttributes[name]!; // morphAttribute: array of Float32BufferAttributes
+      List<BufferAttribute> morphAttribute = morphAttributes[
+          name]!; // morphAttribute: array of Float32BufferAttributes
 
       for (int i = 0, il = morphAttribute.length; i < il; i++) {
-        BufferAttribute<NativeArray<num>> attribute = morphAttribute[i];
+        final attribute = morphAttribute[i];
 
-        Float32BufferAttribute newAttribute = convertBufferAttribute(attribute, indices);
+        final newAttribute = convertBufferAttribute(attribute, indices);
 
         morphArray.add(newAttribute);
       }
@@ -789,11 +745,13 @@ class BufferGeometry with EventDispatcher {
     geometry2.morphTargetsRelative = morphTargetsRelative;
 
     // groups
-    List<GroupGeometry> groups = this.groups;
+
+    List<Map<String,dynamic>> groups = this.groups;
+
     for (int i = 0, l = groups.length; i < l; i++) {
-      GroupGeometry group = groups[i].clone();
-      //geometry2.addGroup(group["start"], group["count"], group["materialIndex"]);
-      geometry2.groups.add(group);
+      final group = groups[i];
+      geometry2.addGroup(
+          group["start"], group["count"], group["materialIndex"]);
     }
 
     return geometry2;
@@ -801,7 +759,11 @@ class BufferGeometry with EventDispatcher {
 
   Map<String, dynamic> toJSON({Object3dMeta? meta}) {
     Map<String, dynamic> data = {
-      "metadata": {"version": 4.5, "type": 'BufferGeometry', "generator": 'BufferGeometry.toJSON'}
+      "metadata": {
+        "version": 4.5,
+        "type": 'BufferGeometry',
+        "generator": 'BufferGeometry.toJSON'
+      }
     };
 
     // standard BufferGeometry serialization
@@ -824,43 +786,40 @@ class BufferGeometry with EventDispatcher {
     data["data"] = {};
     data["data"]["attributes"] = {};
 
-    BufferAttribute<NativeArray<num>>? index = this.index;
+    final index = this.index;
 
     if (index != null) {
       // TODO
       data["data"]["index"] = {
-        "type": index.array.runtimeType.toString(), // TODO remove runtimeType
+        "type": index.array.runtimeType.toString(),
         "array": index.array.sublist(0)
       };
     }
 
-    Attributes attributes = this.attributes;
+    final attributes = this.attributes;
 
-    for (int type = 0; type < AttributeTypes.values.length; type++) {
-      BufferAttribute<NativeArray<num>>? attribute = 
-        attributes.getAttribute(AttributeTypes.values[type]);
+    for (String key in attributes.keys) {
+      final attribute = attributes[key];
 
       // TODO
       // data["data"]["attributes"][ key ] = attribute.toJSON( data["data"] );
-      if(attribute != null){
-        data["data"]["attributes"][AttributeTypes.values[type].name] = attribute.toJSON();
-      }
+      data["data"]["attributes"][key] = attribute.toJSON();
     }
 
     Map<String, List<BufferAttribute>> morphAttributes = {};
     bool hasMorphAttributes = false;
 
     for (String key in morphAttributes.keys) {
-      List<BufferAttribute<NativeArray<num>>> attributeArray = this.morphAttributes[key]!;
+      final attributeArray = this.morphAttributes[key]!;
 
       List<BufferAttribute> array = [];
 
       for (int i = 0, il = attributeArray.length; i < il; i++) {
-        BufferAttribute<NativeArray<num>> attribute = attributeArray[i];
+        final attribute = attributeArray[i];
 
         // TODO
-        // var attributeData = attribute.toJSON( data["data"] );
-        //var attributeData = attribute.toJSON();
+        // final attributeData = attribute.toJSON( data["data"] );
+        // final attributeData = attribute.toJSON();
 
         array.add(attribute);
       }
@@ -877,17 +836,13 @@ class BufferGeometry with EventDispatcher {
       data["data"].morphTargetsRelative = morphTargetsRelative;
     }
 
-    List<GroupGeometry> groups = this.groups;
+    List<Map<String,dynamic>> groups = this.groups;
 
     if (groups.isNotEmpty) {
-      data["data"]["groups"] = <Map>[];
-      for(int hmg = 0; hmg < groups.length; hmg++){
-        data["data"]["groups"].add(groups[hmg].toJson());
-      }
-      //data["data"]["groups"] = ;//json.decode(json.encode(groups));
+      data["data"]["groups"] = json.decode(json.encode(groups));
     }
 
-    Sphere? boundingSphere = this.boundingSphere;
+    final boundingSphere = this.boundingSphere;
 
     if (boundingSphere != null) {
       data["data"]["boundingSphere"] = {
@@ -914,13 +869,16 @@ class BufferGeometry with EventDispatcher {
     // this.boundingSphere = null;
 
     // used for storing cloned, shared data
+
+    // Map data = {};
+
     // name
 
     name = source.name;
 
     // index
 
-    BufferAttribute<NativeArray<num>>? index = source.index;
+    final index = source.index;
 
     if (index != null) {
       setIndex(index.clone());
@@ -928,20 +886,20 @@ class BufferGeometry with EventDispatcher {
 
     // attributes
 
-    Attributes attributes = source.attributes;
+    final attributes = source.attributes;
 
-    for (int type = 0; type < AttributeTypes.values.length;type++) {
-      BufferAttribute<NativeArray<num>>? attribute = attributes.getAttribute(AttributeTypes.values[type]);
-      setAttribute(AttributeTypes.values[type], attribute?.clone());
+    for (String name in attributes.keys) {
+      final attribute = attributes[name];
+      setAttribute(name, attribute.clone());
     }
 
     // morph attributes
 
-    Map<String, List<BufferAttribute<NativeArray<num>>>> morphAttributes = source.morphAttributes;
+    final morphAttributes = source.morphAttributes;
 
     for (String name in morphAttributes.keys) {
       List<BufferAttribute> array = [];
-      List<BufferAttribute<NativeArray<num>>> morphAttribute = morphAttributes[name]!;
+      final morphAttribute = morphAttributes[name]!;
       // morphAttribute: array of Float32BufferAttributes
 
       for (int i = 0, l = morphAttribute.length; i < l; i++) {
@@ -955,16 +913,16 @@ class BufferGeometry with EventDispatcher {
 
     // groups
 
-    List<GroupGeometry> groups = source.groups;
+    List<Map<String,dynamic>> groups = source.groups;
 
     for (int i = 0, l = groups.length; i < l; i++) {
-      GroupGeometry group = groups[i];
-      addGroup(group.start, group.count, group.materialIndex);
+      final group = groups[i];
+      addGroup(group["start"], group["count"], group["materialIndex"]);
     }
 
     // bounding box
 
-    Box3? boundingBox = source.boundingBox;
+    final boundingBox = source.boundingBox;
 
     if (boundingBox != null) {
       this.boundingBox = boundingBox.clone();
@@ -972,7 +930,7 @@ class BufferGeometry with EventDispatcher {
 
     // bounding sphere
 
-    Sphere? boundingSphere = source.boundingSphere;
+    final boundingSphere = source.boundingSphere;
 
     if (boundingSphere != null) {
       this.boundingSphere = boundingSphere.clone();
@@ -980,8 +938,8 @@ class BufferGeometry with EventDispatcher {
 
     // draw range
 
-    drawRange.start = source.drawRange.start;
-    drawRange.count = source.drawRange.count;
+    drawRange["start"] = source.drawRange["start"]!;
+    drawRange["count"] = source.drawRange["count"]!;
 
     // user data
 
@@ -993,23 +951,7 @@ class BufferGeometry with EventDispatcher {
   void dispose() {
     print(" BufferGeometry dispose ........... ");
 
-    dispatchEvent(Event({"type": "dispose"}));
-
-    if (attributes.colorBuffer != null) {
-      attributes.colorBuffer!.array.dispose();
-    }
-    if (attributes.positionBuffer != null) {
-      attributes.positionBuffer!.array.dispose();
-    }
-    if (attributes.normalBuffer != null) {
-      attributes.normalBuffer!.array.dispose();
-    }
-    if (attributes.uvBuffer != null) {
-      attributes.uvBuffer!.array.dispose();
-    }
-
-    index?.array.dispose();
-    array?.dispose();
+    dispatchEvent(Event(type: "dispose"));
   }
 }
 
@@ -1025,10 +967,8 @@ class BufferGeometryParameters {
   late num bevelOffset;
   late num bevelSegments;
   late Curve extrudePath;
-  late dynamic uVGenerator;
+  late dynamic uvGenerator;
   late num amount;
-
-  // UVGenerator
 
   BufferGeometryParameters(Map<String, dynamic> json) {
     shapes = json["shapes"];

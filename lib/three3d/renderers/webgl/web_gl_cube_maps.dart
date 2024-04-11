@@ -1,12 +1,8 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/renderers/web_gl_cube_render_target.dart';
-import 'package:three_dart/three3d/renderers/web_gl_renderer.dart';
-import 'package:three_dart/three3d/textures/index.dart';
-import 'package:three_dart/three3d/weak_map.dart';
+part of three_webgl;
 
 class WebGLCubeMaps {
   WebGLRenderer renderer;
-  var cubemaps = WeakMap();
+  WeakMap cubemaps = WeakMap();
 
   WebGLCubeMaps(this.renderer);
 
@@ -21,17 +17,17 @@ class WebGLCubeMaps {
 
   Texture? get(Texture? texture) {
     if (texture != null && texture.isRenderTargetTexture == false) {
-      var mapping = texture.mapping;
+      final mapping = texture.mapping;
 
       if (mapping == EquirectangularReflectionMapping || mapping == EquirectangularRefractionMapping) {
         if (cubemaps.has(texture)) {
-          var cubemap = cubemaps.get(texture).texture;
+          final cubemap = cubemaps.get(texture).texture;
           return mapTextureMapping(cubemap, texture.mapping);
         } else {
-          var image = texture.image;
+          final image = texture.image;
 
           if (image != null && image.height > 0) {
-            var renderTarget = WebGLCubeRenderTarget(image.height ~/ 2, null, null);
+            final renderTarget = WebGLCubeRenderTarget(image.height ~/ 2);
             renderTarget.fromEquirectangularTexture(renderer, texture);
             cubemaps.add(key: texture, value: renderTarget);
 
@@ -51,11 +47,11 @@ class WebGLCubeMaps {
   }
 
   onTextureDispose(event) {
-    var texture = event.target;
+    final texture = event.target;
 
     texture.removeEventListener('dispose', onTextureDispose);
 
-    var cubemap = cubemaps.get(texture);
+    final cubemap = cubemaps.get(texture);
 
     if (cubemap != null) {
       cubemaps.delete(texture);

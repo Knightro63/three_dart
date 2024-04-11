@@ -1,29 +1,28 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three_dart.dart';
+import 'package:three_dart/three3d/cameras/index.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'package:three_dart/three3d/materials/index.dart';
+import 'package:three_dart/three3d/math/index.dart';
+import 'package:three_dart/three3d/objects/index.dart';
 
-var _vector = /*@__PURE__*/ Vector3();
-var _camera = /*@__PURE__*/ Camera();
+final _vector = Vector3();
+final _camera = Camera();
 
 ///	- shows frustum, line of sight and up of the camera
 ///	- suitable for fast updates
 /// 	- based on frustum visualization in lightgl.js shadowmap example
 ///		http://evanw.github.com/lightgl.js/tests/shadowmap.html
-
 class CameraHelper extends LineSegments {
   late Camera camera;
   late Map<String, dynamic> pointMap;
 
-  CameraHelper.create(geometry, material) : super(geometry, material) {
+  CameraHelper.create(BufferGeometry? geometry, Material? material) : super(geometry, material){
     type = "CameraHelper";
   }
 
-  factory CameraHelper(camera) {
-    var geometry = BufferGeometry();
-    var material = LineBasicMaterial({
-      "color": 0xffffff,
-      "vertexColors": true,
-      "toneMapped": false,
-    });
+  factory CameraHelper(Camera camera) {
+    final geometry = BufferGeometry();
+    final material = LineBasicMaterial({"color": 0xffffff, "vertexColors": true, "toneMapped": false});
 
     List<double> vertices = [];
     List<double> colors = [];
@@ -32,13 +31,13 @@ class CameraHelper extends LineSegments {
 
     // colors
 
-    var colorFrustum = Color.fromHex(0xffaa00);
-    var colorCone = Color.fromHex(0xff0000);
-    var colorUp = Color.fromHex(0x00aaff);
-    var colorTarget = Color.fromHex(0xffffff);
-    var colorCross = Color.fromHex(0x333333);
+    final colorFrustum = Color.fromHex(0xffaa00);
+    final colorCone = Color.fromHex(0xff0000);
+    final colorUp = Color.fromHex(0x00aaff);
+    final colorTarget = Color.fromHex(0xffffff);
+    final colorCross = Color.fromHex(0x333333);
 
-    addPoint(id, color) {
+    void addPoint(String id, Color color) {
       vertices.addAll([0, 0, 0]);
       colors.addAll([color.r, color.g, color.b]);
 
@@ -49,7 +48,7 @@ class CameraHelper extends LineSegments {
       pointMap[id].add(vertices.length ~/ 3.0 - 1);
     }
 
-    addLine(a, b, color) {
+    void addLine(String a, String b, Color color) {
       addPoint(a, color);
       addPoint(b, color);
     }
@@ -101,8 +100,12 @@ class CameraHelper extends LineSegments {
     addLine('cf1', 'cf2', colorCross);
     addLine('cf3', 'cf4', colorCross);
 
-    geometry.setAttribute(AttributeTypes.position, Float32BufferAttribute(Float32Array.from(vertices), 3, false));
-    geometry.setAttribute(AttributeTypes.color, Float32BufferAttribute(Float32Array.from(colors), 3, false));
+    geometry.setAttribute(
+        'position',
+        Float32BufferAttribute(Float32Array.from(vertices), 3, false));
+    geometry.setAttribute(
+        'color',
+        Float32BufferAttribute(Float32Array.from(colors), 3, false));
 
     CameraHelper cameraHelper = CameraHelper.create(geometry, material);
     cameraHelper.camera = camera;
@@ -119,9 +122,9 @@ class CameraHelper extends LineSegments {
     return cameraHelper;
   }
 
-  update() {
-    var geometry = this.geometry;
-    var pointMap = this.pointMap;
+  void update() {
+    final geometry = this.geometry;
+    final pointMap = this.pointMap;
 
     double w = 1, h = 1;
 
@@ -167,25 +170,25 @@ class CameraHelper extends LineSegments {
     setPoint('cn3', pointMap, geometry, _camera, 0, -h, -1);
     setPoint('cn4', pointMap, geometry, _camera, 0, h, -1);
 
-    geometry!.attributes.positionBuffer!.needsUpdate = true;
+    geometry!.getAttribute('position').needsUpdate = true;
   }
 
   @override
-  dispose() {
+  void dispose() {
     geometry!.dispose();
     material?.dispose();
   }
 }
 
-setPoint(point, pointMap, geometry, camera, double x, double y, double z) {
+void setPoint(String point, Map<String, dynamic> pointMap, BufferGeometry? geometry, Camera camera, double x, double y, double z) {
   _vector.set(x, y, z).unproject(camera);
 
-  var points = pointMap[point];
+  final points = pointMap[point];
 
   if (points != null) {
-    var position = geometry.getAttribute('position');
+    final position = geometry?.getAttribute('position');
 
-    for (var i = 0, l = points.length; i < l; i++) {
+    for (int i = 0, l = points.length; i < l; i++) {
       position.setXYZ(points[i], _vector.x, _vector.y, _vector.z);
     }
   }

@@ -1,7 +1,40 @@
 import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
 
+class CameraView{
+  CameraView({
+    this.enabled = true,
+    this.fullWidth = 1,
+    this.fullHeight = 1,
+    this.offsetX = 0,
+    this.offsetY = 0,
+    this.width = 1,
+    this.height = 1,
+  });
+
+  bool enabled;
+  double fullWidth;
+  double fullHeight;
+  double offsetX;
+  double offsetY;
+  double width;
+  double height;
+
+  Map<String,dynamic> get toMap => {
+    'enabled': enabled,
+    'fullWidth': fullWidth,
+    'fullHeight': fullHeight,
+    'offsetX': offsetX,
+    'offsetY':offsetY,
+    'width':width,
+    'height':height
+  };
+}
+
 class Camera extends Object3D {
+  @override
+  String type = "Camera";
+
   Matrix4 matrixWorldInverse = Matrix4();
 
   Matrix4 projectionMatrix = Matrix4();
@@ -22,17 +55,13 @@ class Camera extends Object3D {
   late num top;
   late num bottom;
 
-  Map<String, dynamic>? view;
+  CameraView? view;//Map<String, dynamic>? view;
 
   late Vector4 viewport;
 
-  Camera() : super() {
-    type = "Camera";
-  }
+  Camera() : super();
 
-  Camera.fromJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON) : super.fromJSON(json, rootJSON) {
-    type = "Camera";
-  }
+  Camera.fromJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON):super.fromJSON(json, rootJSON);
 
   updateProjectionMatrix() {
     print(" Camera.updateProjectionMatrix ");
@@ -41,11 +70,9 @@ class Camera extends Object3D {
   @override
   Camera copy(Object3D source, [bool? recursive]) {
     super.copy(source, recursive);
-
     Camera source1 = source as Camera;
 
     matrixWorldInverse.copy(source1.matrixWorldInverse);
-
     projectionMatrix.copy(source1.projectionMatrix);
     projectionMatrixInverse.copy(source1.projectionMatrixInverse);
 
@@ -55,23 +82,19 @@ class Camera extends Object3D {
   @override
   Vector3 getWorldDirection(Vector3 target) {
     updateWorldMatrix(true, false);
-
-    var e = matrixWorld.elements;
-
+    final e = matrixWorld.elements;
     return target.set(-e[8], -e[9], -e[10]).normalize();
   }
 
   @override
   void updateMatrixWorld([bool force = false]) {
     super.updateMatrixWorld(force);
-
     matrixWorldInverse.copy(matrixWorld).invert();
   }
 
   @override
   void updateWorldMatrix(updateParents, updateChildren) {
     super.updateWorldMatrix(updateParents, updateChildren);
-
     matrixWorldInverse.copy(matrixWorld).invert();
   }
 

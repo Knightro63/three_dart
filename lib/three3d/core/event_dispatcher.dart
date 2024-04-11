@@ -1,20 +1,38 @@
-/// https://github.com/mrdoob/eventdispatcher.js/
+import 'object_3d.dart';
 
+/// https://github.com/mrdoob/eventdispatcher.js/
 class Event {
+  Event({
+    this.type,
+    this.target,
+    this.attachment,
+    this.action,
+    this.direction = 1,
+    this.mode,
+    this.loopDelta = 0,
+    this.object,
+    this.value
+  });
+
   late String? type;
   late dynamic target;
   late dynamic attachment;
   late dynamic action;
-  late dynamic direction;
+  late dynamic value;
+  late int direction;
+  late Object3D? object;
+  int loopDelta = 0;
   String? mode;
 
-  Event(Map<String, dynamic> json) {
+  Event.fromJson(Map<String, dynamic> json) {
     type = json["type"];
     target = json["target"];
     attachment = json["attachment"];
     action = json["action"];
     direction = json["direction"];
     mode = json["mode"];
+    object = json["object"];
+    value = json['value'];
   }
 }
 
@@ -37,20 +55,18 @@ mixin EventDispatcher {
 
   bool hasEventListener(String type, Function listener) {
     if (_listeners == null) return false;
-
-    Map<String, List<Function>> listeners = _listeners!;
-
+    final listeners = _listeners!;
     return listeners[type] != null && listeners[type]!.contains(listener);
   }
 
   void removeEventListener(String type, Function listener) {
     if (_listeners == null) return;
 
-    Map<String, List<Function>> listeners = _listeners!;
-    List<Function>? listenerArray = listeners[type];
+    final listeners = _listeners!;
+    final listenerArray = listeners[type];
 
     if (listenerArray != null) {
-      int index = listenerArray.indexOf(listener);
+      final index = listenerArray.indexOf(listener);
 
       if (index != -1) {
         listenerArray.removeRange(index, index + 1);
@@ -61,8 +77,8 @@ mixin EventDispatcher {
   void dispatchEvent(Event event) {
     if (_listeners == null || _listeners!.isEmpty) return;
 
-    Map<String, List<Function>> listeners = _listeners!;
-    List<Function>? listenerArray = listeners[event.type];
+    final listeners = _listeners!;
+    final listenerArray = listeners[event.type];
 
     // print("dispatchEvent event: ${event.type} ");
 
@@ -70,10 +86,10 @@ mixin EventDispatcher {
       event.target = this;
 
       // Make a copy, in case listeners are removed while iterating.
-      List<Function> array = listenerArray.sublist(0);
+      final array = listenerArray.sublist(0);
 
       for (int i = 0, l = array.length; i < l; i++) {
-        Function fn = array[i];
+        final Function fn = array[i];
         fn(event);
       }
 

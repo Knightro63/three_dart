@@ -1,6 +1,4 @@
-import 'package:three_dart/three3d/math/index.dart';
-
-/// Uniforms library for shared webgl shaders
+part of three_shaders;
 
 Map<String, dynamic> uniformsLib = {
   "common": {

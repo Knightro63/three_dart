@@ -9,8 +9,6 @@ class Math {
   static double maxValue = double.maxFinite;
   static double ln10 = math.ln10;
   static double sqrt1_2 = math.sqrt1_2;
-
-  // TODO
   static int maxSafeInteger = 9007199254740991;
 
   static T min<T extends num>(T x, T y) {
@@ -74,7 +72,7 @@ class Math {
   }
 
   static double randomFromA2B(num a, num b) {
-    var result = random() * (b - a) + a;
+    final result = random() * (b - a) + a;
     return result;
   }
 
@@ -85,7 +83,9 @@ class Math {
   static num log(num x) {
     return math.log(x);
   }
-
+  static num log10(num x) {
+    return math.log(x)/math.ln10;
+  }
   static double tan(num x) {
     return math.tan(x);
   }
@@ -116,6 +116,7 @@ class Math {
     return range * (0.5 - Math.random());
   }
 }
+
 
 bool isFinite(num v) {
   return v != Math.infinity || v != -Math.infinity;

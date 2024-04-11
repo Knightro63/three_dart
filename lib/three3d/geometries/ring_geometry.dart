@@ -1,20 +1,16 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import '../core/index.dart';
+import '../math/index.dart';
 
 class RingGeometry extends BufferGeometry {
-  NativeArray? verticesArray;
-  NativeArray? normalsArray;
-  NativeArray? uvsArray;
-
   RingGeometry([
-    innerRadius = 0.5,
-    outerRadius = 1,
-    thetaSegments = 8,
-    phiSegments = 1,
-    thetaStart = 0,
-    thetaLength = Math.pi * 2,
-  ]) : super() {
+    double innerRadius = 0.5,
+    double outerRadius = 1,
+    num thetaSegments = 8,
+    num phiSegments = 1,
+    num thetaStart = 0,
+    double thetaLength = Math.pi * 2
+  ]): super() {
     type = 'RingGeometry';
     parameters = {
       "innerRadius": innerRadius,
@@ -22,7 +18,7 @@ class RingGeometry extends BufferGeometry {
       "thetaSegments": thetaSegments,
       "phiSegments": phiSegments,
       "thetaStart": thetaStart,
-      "thetaLength": thetaLength,
+      "thetaLength": thetaLength
     };
 
     thetaSegments = Math.max<num>(3, thetaSegments);
@@ -37,25 +33,26 @@ class RingGeometry extends BufferGeometry {
 
     // some helper variables
 
-    var radius = innerRadius;
-    var radiusStep = ((outerRadius - innerRadius) / phiSegments);
-    var vertex = Vector3();
-    var uv = Vector2();
+    double radius = innerRadius;
+    final radiusStep = ((outerRadius - innerRadius) / phiSegments);
+    final vertex = Vector3();
+    final uv = Vector2();
 
     // generate vertices, normals and uvs
 
-    for (var j = 0; j <= phiSegments; j++) {
-      for (var i = 0; i <= thetaSegments; i++) {
+    for (int j = 0; j <= phiSegments; j++) {
+      for (int i = 0; i <= thetaSegments; i++) {
         // values are generate from the inside of the ring to the outside
 
-        var segment = thetaStart + i / thetaSegments * thetaLength;
+        final segment = thetaStart + i / thetaSegments * thetaLength;
 
         // vertex
 
         vertex.x = radius * Math.cos(segment);
         vertex.y = radius * Math.sin(segment);
 
-        vertices.addAll([vertex.x.toDouble(), vertex.y.toDouble(), vertex.z.toDouble()]);
+        vertices.addAll(
+            [vertex.x.toDouble(), vertex.y.toDouble(), vertex.z.toDouble()]);
 
         // normal
 
@@ -76,16 +73,15 @@ class RingGeometry extends BufferGeometry {
 
     // indices
 
-    for (var j = 0; j < phiSegments; j++) {
-      var thetaSegmentLevel = j * (thetaSegments + 1);
+    for (int j = 0; j < phiSegments; j++) {
+      final thetaSegmentLevel = j * (thetaSegments + 1);
+      for (int i = 0; i < thetaSegments; i++) {
+        final segment = i + thetaSegmentLevel;
 
-      for (var i = 0; i < thetaSegments; i++) {
-        var segment = i + thetaSegmentLevel;
-
-        var a = segment;
-        var b = segment + thetaSegments + 1;
-        var c = segment + thetaSegments + 2;
-        var d = segment + 1;
+        final a = segment;
+        final b = segment + thetaSegments + 1;
+        final c = segment + thetaSegments + 2;
+        final d = segment + 1;
 
         // faces
 
@@ -97,22 +93,20 @@ class RingGeometry extends BufferGeometry {
     // build geometry
 
     setIndex(indices);
-    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3));
-    setAttribute(AttributeTypes.normal, Float32BufferAttribute(normalsArray = Float32Array.from(normals), 3));
-    setAttribute(AttributeTypes.uv, Float32BufferAttribute(uvsArray = Float32Array.from(uvs), 2));
+    setAttribute(
+        'position', Float32BufferAttribute(Float32Array.from(vertices), 3));
+    setAttribute(
+        'normal', Float32BufferAttribute(Float32Array.from(normals), 3));
+    setAttribute('uv', Float32BufferAttribute(Float32Array.from(uvs), 2));
   }
 
   static fromJSON(data) {
     return RingGeometry(
-        data.innerRadius, data.outerRadius, data.thetaSegments, data.phiSegments, data.thetaStart, data.thetaLength);
-  }
-
-  @override
-  void dispose() {
-    verticesArray?.dispose();
-    normalsArray?.dispose();
-    uvsArray?.dispose();
-
-    super.dispose();
+        data.innerRadius,
+        data.outerRadius,
+        data.thetaSegments,
+        data.phiSegments,
+        data.thetaStart,
+        data.thetaLength);
   }
 }

@@ -1,15 +1,7 @@
-import 'package:three_dart/three3d/cameras/index.dart';
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/geometries/index.dart';
-import 'package:three_dart/three3d/materials/index.dart';
-import 'package:three_dart/three3d/objects/index.dart';
-import 'package:three_dart/three3d/renderers/shaders/index.dart';
-import 'package:three_dart/three3d/renderers/web_gl_render_target.dart';
-import 'package:three_dart/three3d/renderers/web_gl_renderer.dart';
-import 'package:three_dart/three3d/textures/index.dart';
+part of three_renderers;
 
 class WebGLCubeRenderTarget extends WebGLRenderTarget {
-  WebGLCubeRenderTarget(int size, options, dummy) : super(size, size, options) {
+  WebGLCubeRenderTarget(int size, [WebGLRenderTargetOptions? options]) : super(size, size, options) {
     isWebGLCubeRenderTarget = true;
     // By convention -- likely based on the RenderMan spec from the 1990's -- cube maps are specified by WebGL (and three.js)
     // in a coordinate system in which positive-x is to the right when looking up the positive-z axis -- in other words,
@@ -18,15 +10,15 @@ class WebGLCubeRenderTarget extends WebGLRenderTarget {
     // three.js uses a right-handed coordinate system. So environment maps used in three.js appear to have px and nx swapped
     // and the flag isRenderTargetTexture controls this conversion. The flip is not required when using WebGLCubeRenderTarget.texture
     // as a cube texture (this is detected when isRenderTargetTexture is set to true for cube textures).
-    var image = ImageElement(width: size, height: size, depth: 1);
-    var images = [image, image, image, image, image, image];
+    final image = ImageElement(width: size, height: size, depth: 1);
+    final images = [image, image, image, image, image, image];
 
     options = options ?? WebGLRenderTargetOptions({});
     texture = CubeTexture(images, options.mapping, options.wrapS, options.wrapT, options.magFilter, options.minFilter,
         options.format, options.type, options.anisotropy, options.encoding);
     texture.isRenderTargetTexture = true;
 
-    texture.generateMipmaps = options.generateMipmaps ?? false;
+    texture.generateMipmaps = options.generateMipmaps;
     texture.minFilter = options.minFilter ?? LinearFilter;
   }
 
@@ -38,7 +30,7 @@ class WebGLCubeRenderTarget extends WebGLRenderTarget {
     this.texture.minFilter = texture.minFilter;
     this.texture.magFilter = texture.magFilter;
 
-    var shader = {
+    final shader = {
       "uniforms": {
         "tEquirect": {},
       },
@@ -81,9 +73,9 @@ class WebGLCubeRenderTarget extends WebGLRenderTarget {
       """
     };
 
-    var geometry = BoxGeometry(5, 5, 5);
+    final geometry = BoxGeometry(5, 5, 5);
 
-    var material = ShaderMaterial({
+    final material = ShaderMaterial({
       "name": 'CubemapFromEquirect',
       "uniforms": cloneUniforms(shader["uniforms"] as Map<String, dynamic>),
       "vertexShader": shader["vertexShader"],
@@ -94,22 +86,22 @@ class WebGLCubeRenderTarget extends WebGLRenderTarget {
 
     material.uniforms["tEquirect"]["value"] = texture;
 
-    var mesh = Mesh(geometry, material);
+    final mesh = Mesh(geometry, material);
 
-    var currentMinFilter = texture.minFilter;
+    final currentMinFilter = texture.minFilter;
 
     // Avoid blurred poles
     if (texture.minFilter == LinearMipmapLinearFilter) {
       texture.minFilter = LinearFilter;
     }
 
-    var camera = CubeCamera(1, 10, this);
+    final camera = CubeCamera(1, 10, this);
     camera.update(renderer, mesh);
 
     texture.minFilter = currentMinFilter;
 
     mesh.geometry!.dispose();
-    mesh.material?.dispose();
+    mesh.material.dispose();
 
     return this;
   }

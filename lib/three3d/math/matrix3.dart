@@ -1,7 +1,7 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/math/math.dart';
-import 'package:three_dart/three3d/math/matrix4.dart';
-import 'package:three_dart/three3d/math/vector3.dart';
+import 'math.dart';
+import 'matrix4.dart';
+import 'vector3.dart';
 
 class Matrix3 {
   String type = "Matrix3";
@@ -12,9 +12,8 @@ class Matrix3 {
     elements = Float32Array.from([1, 0, 0, 0, 1, 0, 0, 0, 1]);
   }
 
-  Matrix3 set(
-      double n11, double n12, double n13, double n21, double n22, double n23, double n31, double n32, double n33) {
-    var te = elements;
+  Matrix3 set(double n11, double n12, double n13, double n21, double n22, double n23, double n31, double n32, double n33) {
+    final te = elements;
 
     te[0] = n11;
     te[1] = n21;
@@ -39,9 +38,9 @@ class Matrix3 {
     return Matrix3().fromArray(elements);
   }
 
-  Matrix3 copy(m) {
-    var te = elements;
-    var me = m.elements;
+  Matrix3 copy(Matrix3 m) {
+    final te = elements;
+    final me = m.elements;
 
     te[0] = me[0];
     te[1] = me[1];
@@ -65,7 +64,7 @@ class Matrix3 {
   }
 
   Matrix3 setFromMatrix4(Matrix4 m) {
-    var me = m.elements;
+    final me = m.elements;
 
     set(me[0], me[4], me[8], me[1], me[5], me[9], me[2], me[6], me[10]);
 
@@ -81,17 +80,17 @@ class Matrix3 {
   }
 
   Matrix3 multiplyMatrices(Matrix3 a, Matrix3 b) {
-    var ae = a.elements;
-    var be = b.elements;
-    var te = elements;
+    final ae = a.elements;
+    final be = b.elements;
+    final te = elements;
 
-    var a11 = ae[0], a12 = ae[3], a13 = ae[6];
-    var a21 = ae[1], a22 = ae[4], a23 = ae[7];
-    var a31 = ae[2], a32 = ae[5], a33 = ae[8];
+    final a11 = ae[0], a12 = ae[3], a13 = ae[6];
+    final a21 = ae[1], a22 = ae[4], a23 = ae[7];
+    final a31 = ae[2], a32 = ae[5], a33 = ae[8];
 
-    var b11 = be[0], b12 = be[3], b13 = be[6];
-    var b21 = be[1], b22 = be[4], b23 = be[7];
-    var b31 = be[2], b32 = be[5], b33 = be[8];
+    final b11 = be[0], b12 = be[3], b13 = be[6];
+    final b21 = be[1], b22 = be[4], b23 = be[7];
+    final b31 = be[2], b32 = be[5], b33 = be[8];
 
     te[0] = a11 * b11 + a12 * b21 + a13 * b31;
     te[3] = a11 * b12 + a12 * b22 + a13 * b32;
@@ -109,7 +108,7 @@ class Matrix3 {
   }
 
   Matrix3 multiplyScalar(num s) {
-    var te = elements;
+    final te = elements;
 
     te[0] *= s;
     te[3] *= s;
@@ -125,15 +124,28 @@ class Matrix3 {
   }
 
   num determinant() {
-    var te = elements;
+    final te = elements;
 
-    var a = te[0], b = te[1], c = te[2], d = te[3], e = te[4], f = te[5], g = te[6], h = te[7], i = te[8];
+    final a = te[0],
+        b = te[1],
+        c = te[2],
+        d = te[3],
+        e = te[4],
+        f = te[5],
+        g = te[6],
+        h = te[7],
+        i = te[8];
 
-    return a * e * i - a * f * h - b * d * i + b * f * g + c * d * h - c * e * g;
+    return a * e * i -
+        a * f * h -
+        b * d * i +
+        b * f * g +
+        c * d * h -
+        c * e * g;
   }
 
   Matrix3 invert() {
-    var te = elements,
+    final te = elements,
         n11 = te[0],
         n21 = te[1],
         n31 = te[2],
@@ -208,8 +220,8 @@ class Matrix3 {
     final c = Math.cos(rotation);
     final s = Math.sin(rotation);
 
-    set(sx * c, sx * s, -sx * (c * cx + s * cy) + cx + tx, -sy * s, sy * c, -sy * (-s * cx + c * cy) + cy + ty, 0, 0,
-        1);
+    set(sx * c, sx * s, -sx * (c * cx + s * cy) + cx + tx, -sy * s, sy * c,
+        -sy * (-s * cx + c * cy) + cy + ty, 0, 0, 1);
 
     return this;
   }
@@ -261,10 +273,10 @@ class Matrix3 {
   }
 
   bool equals(Matrix3 matrix) {
-    var te = elements;
-    var me = matrix.elements;
+    final te = elements;
+    final me = matrix.elements;
 
-    for (var i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
       if (te[i] != me[i]) return false;
     }
 
@@ -272,7 +284,7 @@ class Matrix3 {
   }
 
   Matrix3 fromArray(Float32Array array, {int offset = 0}) {
-    for (var i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
       elements[i] = array[i + offset];
     }
 
@@ -280,7 +292,7 @@ class Matrix3 {
   }
 
   List<num> toArray(List<num> array, {int offset = 0}) {
-    var te = elements;
+    final te = elements;
 
     array[offset] = te[0];
     array[offset + 1] = te[1];
@@ -297,7 +309,7 @@ class Matrix3 {
     return array;
   }
 
-  toJSON() {
+  List<num> toList() {
     return elements.sublist(0);
   }
 
@@ -305,11 +317,7 @@ class Matrix3 {
     elements = json['elements'];
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJSON() {
     return {'elements': elements};
-  }
-
-  void dispose() {
-    elements.dispose();
   }
 }

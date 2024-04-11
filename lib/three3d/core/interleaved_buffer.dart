@@ -1,24 +1,14 @@
 import 'package:flutter_gl/flutter_gl.dart';
 import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/math/index.dart';
-
-class UpdateRange{
-  UpdateRange({
-    this.offset = 0,
-    this.count = -1,
-  });
-
-  int offset;
-  int count;
-}
+import '../math/index.dart';
 
 class InterleavedBuffer {
   NativeArray array;
   int stride;
-
+  late int meshPerAttribute;
   late int count;
   late int usage;
-  late UpdateRange updateRange;
+  late Map<String, dynamic> updateRange;
   late int version;
   late String uuid;
   bool isInterleavedBuffer = true;
@@ -30,7 +20,7 @@ class InterleavedBuffer {
     count = array.length ~/ stride;
 
     usage = StaticDrawUsage;
-    updateRange = UpdateRange();//{"offset": 0, "count": -1};
+    updateRange = {"offset": 0, "count": -1};
 
     version = 0;
 
@@ -77,12 +67,10 @@ class InterleavedBuffer {
 
   // }
 
-  InterleavedBuffer clone(data) {
-    data.arrayBuffers ??= {};
+  InterleavedBuffer clone(InterleavedBuffer data) {
+    // data.arrayBuffers ??= {};
 
     print("InterleavedBuffer clone todo  ");
-
-    return this;
 
     // if ( this.array.buffer._uuid == null ) {
 
@@ -98,20 +86,19 @@ class InterleavedBuffer {
 
     // const array = new this.array.constructor( data.arrayBuffers[ this.array.buffer._uuid ] );
 
-    // const ib = new InterleavedBuffer( array, this.stride );
-    // ib.setUsage( this.usage );
+    final ib = InterleavedBuffer(array, stride);
+    ib.setUsage(usage);
 
-    // return ib;
+    return ib;
   }
 
   InterleavedBuffer onUpload(Function callback) {
     onUploadCallback = callback;
-
     return this;
   }
 
-  Map<String, dynamic> toJSON(data) {
-    data.arrayBuffers ??= {};
+  Map<String, dynamic> toJSON(InterleavedBuffer data) {
+    // data.arrayBuffers ??= {};
 
     // generate UUID for array buffer if necessary
 

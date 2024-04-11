@@ -1,19 +1,20 @@
-import 'package:three_dart/three3d/math/box3.dart';
-import 'package:three_dart/three3d/math/math.dart';
-import 'package:three_dart/three3d/math/matrix4.dart';
-import 'package:three_dart/three3d/math/plane.dart';
-import 'package:three_dart/three3d/math/sphere.dart';
-import 'package:three_dart/three3d/math/vector3.dart';
+import 'math.dart';
+import 'box3.dart';
+import 'matrix4.dart';
+import 'plane.dart';
+import 'sphere.dart';
+import 'vector.dart';
+import 'vector3.dart';
 
 class Ray {
-  final _vector = /*@__PURE__*/ Vector3();
-  final _segCenter = /*@__PURE__*/ Vector3();
-  final _segDir = /*@__PURE__*/ Vector3();
-  final _diff = /*@__PURE__*/ Vector3();
+  final _vector = Vector3();
+  final _segCenter = Vector3();
+  final _segDir = Vector3();
+  final _diff = Vector3();
 
-  final _edge1 = /*@__PURE__*/ Vector3();
-  final _edge2 = /*@__PURE__*/ Vector3();
-  final _normal = /*@__PURE__*/ Vector3();
+  final _edge1 = Vector3();
+  final _edge2 = Vector3();
+  final _normal = Vector3();
 
   late Vector3 origin;
   late Vector3 direction;
@@ -47,31 +48,26 @@ class Ray {
   // ssOrigin is Vector4
   // for three.js allow Vector4 copy from Vector3 ...
   // so the args target can be Vector4 | Vector3
-  at(num t, target) {
-    return target.copy(direction).multiplyScalar(t).add(origin);
+  T at<T extends Vector>(num t, T target) {
+    return target.copy(direction).multiplyScalar(t).add(origin) as T;
   }
 
   Ray lookAt(Vector3 v) {
     direction.copy(v).sub(origin).normalize();
-
     return this;
   }
 
   Ray recast(double t) {
     origin.copy(at(t, _vector));
-
     return this;
   }
 
   Vector3 closestPointToPoint(Vector3 point, Vector3 target) {
     target.subVectors(point, origin);
-
-    var directionDistance = target.dot(direction);
-
+    final directionDistance = target.dot(direction);
     if (directionDistance < 0) {
       return target.copy(origin);
     }
-
     return target.copy(direction).multiplyScalar(directionDistance).add(origin);
   }
 
@@ -80,20 +76,16 @@ class Ray {
   }
 
   num distanceSqToPoint(Vector3 point) {
-    var directionDistance = _vector.subVectors(point, origin).dot(direction);
-
-    // point behind the ray
-
+    final directionDistance = _vector.subVectors(point, origin).dot(direction);
     if (directionDistance < 0) {
       return origin.distanceToSquared(point);
     }
-
     _vector.copy(direction).multiplyScalar(directionDistance).add(origin);
-
     return _vector.distanceToSquared(point);
   }
 
-  num distanceSqToSegment(Vector3 v0, Vector3 v1, [Vector3? optionalPointOnRay, Vector3? optionalPointOnSegment]) {
+  num distanceSqToSegment(Vector3 v0, Vector3 v1,
+      [Vector3? optionalPointOnRay, Vector3? optionalPointOnSegment]) {
     // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteDistRaySegment.h
     // It returns the min distance between the ray and the segment
     // defined by v0 and v1
@@ -105,12 +97,12 @@ class Ray {
     _segDir.copy(v1).sub(v0).normalize();
     _diff.copy(origin).sub(_segCenter);
 
-    var segExtent = v0.distanceTo(v1) * 0.5;
+    final segExtent = v0.distanceTo(v1) * 0.5;
     num a01 = -direction.dot(_segDir);
-    var b0 = _diff.dot(direction);
-    var b1 = -_diff.dot(_segDir);
-    var c = _diff.lengthSq();
-    var det = Math.abs(1 - a01 * a01);
+    final b0 = _diff.dot(direction);
+    final b1 = -_diff.dot(_segDir);
+    final c = _diff.lengthSq();
+    final det = Math.abs(1 - a01 * a01);
     num s0, s1, sqrDist, extDet;
 
     if (det > 0) {
@@ -126,10 +118,12 @@ class Ray {
             // region 0
             // Minimum at interior points of ray and segment.
 
-            var invDet = 1 / det;
+            final invDet = 1 / det;
             s0 *= invDet;
             s1 *= invDet;
-            sqrDist = s0 * (s0 + a01 * s1 + 2 * b0) + s1 * (a01 * s0 + s1 + 2 * b1) + c;
+            sqrDist = s0 * (s0 + a01 * s1 + 2 * b0) +
+                s1 * (a01 * s0 + s1 + 2 * b1) +
+                c;
           } else {
             // region 1
 
@@ -149,7 +143,9 @@ class Ray {
           // region 4
 
           s0 = Math.max(0, -(-a01 * segExtent + b0));
-          s1 = (s0 > 0) ? -segExtent : Math.min(Math.max(-segExtent, -b1), segExtent);
+          s1 = (s0 > 0)
+              ? -segExtent
+              : Math.min(Math.max(-segExtent, -b1), segExtent);
           sqrDist = -s0 * s0 + s1 * (s1 + 2 * b1) + c;
         } else if (s1 <= extDet) {
           // region 3
@@ -161,7 +157,9 @@ class Ray {
           // region 2
 
           s0 = Math.max(0, -(a01 * segExtent + b0));
-          s1 = (s0 > 0) ? segExtent : Math.min(Math.max(-segExtent, -b1), segExtent);
+          s1 = (s0 > 0)
+              ? segExtent
+              : Math.min(Math.max(-segExtent, -b1), segExtent);
           sqrDist = -s0 * s0 + s1 * (s1 + 2 * b1) + c;
         }
       }
@@ -186,19 +184,19 @@ class Ray {
 
   Vector3? intersectSphere(Sphere sphere, Vector3 target) {
     _vector.subVectors(sphere.center, origin);
-    var tca = _vector.dot(direction);
-    var d2 = _vector.dot(_vector) - tca * tca;
-    var radius2 = sphere.radius * sphere.radius;
+    final tca = _vector.dot(direction);
+    final d2 = _vector.dot(_vector) - tca * tca;
+    final radius2 = sphere.radius * sphere.radius;
 
     if (d2 > radius2) return null;
 
-    var thc = Math.sqrt(radius2 - d2);
+    final thc = Math.sqrt(radius2 - d2);
 
     // t0 = first intersect point - entrance on front of sphere
-    var t0 = tca - thc;
+    final t0 = tca - thc;
 
     // t1 = second intersect point - exit point on back of sphere
-    var t1 = tca + thc;
+    final t1 = tca + thc;
 
     // test to see if both t0 and t1 are behind the ray - if so, return null
     if (t0 < 0 && t1 < 0) return null;
@@ -217,7 +215,7 @@ class Ray {
   }
 
   num? distanceToPlane(Plane plane) {
-    var denominator = plane.normal.dot(direction);
+    final denominator = plane.normal.dot(direction);
 
     if (denominator == 0) {
       // line is coplanar, return origin
@@ -230,14 +228,14 @@ class Ray {
       return null;
     }
 
-    var t = -(origin.dot(plane.normal) + plane.constant) / denominator;
+    final t = -(origin.dot(plane.normal) + plane.constant) / denominator;
 
     // Return if the ray never intersects the plane
 
     return t >= 0 ? t : null;
   }
 
-  intersectPlane(Plane plane, Vector3 target) {
+  T? intersectPlane<T extends Vector>(Plane plane, T target) {
     num? t = distanceToPlane(plane);
 
     return t == null ? null : at(t, target);
@@ -246,13 +244,13 @@ class Ray {
   bool intersectsPlane(Plane plane) {
     // check if the ray lies on the plane first
 
-    var distToPoint = plane.distanceToPoint(origin);
+    final distToPoint = plane.distanceToPoint(origin);
 
     if (distToPoint == 0) {
       return true;
     }
 
-    var denominator = plane.normal.dot(direction);
+    final denominator = plane.normal.dot(direction);
 
     if (denominator * distToPoint < 0) {
       return true;
@@ -264,11 +262,13 @@ class Ray {
   }
 
   Vector3? intersectBox(Box3 box, Vector3 target) {
-    var tmin, tmax, tymin, tymax, tzmin, tzmax;
+    double tmin, tmax, tymin, tymax, tzmin, tzmax;
 
-    var invdirx = 1 / direction.x, invdiry = 1 / direction.y, invdirz = 1 / direction.z;
+    final invdirx = 1 / direction.x,
+        invdiry = 1 / direction.y,
+        invdirz = 1 / direction.z;
 
-    var origin = this.origin;
+    final origin = this.origin;
 
     if (invdirx >= 0) {
       tmin = (box.min.x - origin.x) * invdirx;
@@ -334,49 +334,49 @@ class Ray {
     //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
     //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
     //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
-    var ddN = direction.dot(_normal);
+    double DdN = direction.dot(_normal);
     int sign;
 
-    if (ddN > 0) {
+    if (DdN > 0) {
       if (backfaceCulling) return null;
       sign = 1;
-    } else if (ddN < 0) {
+    } else if (DdN < 0) {
       sign = -1;
-      ddN = -ddN;
+      DdN = -DdN;
     } else {
       return null;
     }
 
     _diff.subVectors(origin, a);
-    var ddQxE2 = sign * direction.dot(_edge2.crossVectors(_diff, _edge2));
+    final DdQxE2 = sign * direction.dot(_edge2.crossVectors(_diff, _edge2));
 
     // b1 < 0, no intersection
-    if (ddQxE2 < 0) {
+    if (DdQxE2 < 0) {
       return null;
     }
 
-    var ddE1xQ = sign * direction.dot(_edge1.cross(_diff));
+    final DdE1xQ = sign * direction.dot(_edge1.cross(_diff));
 
     // b2 < 0, no intersection
-    if (ddE1xQ < 0) {
+    if (DdE1xQ < 0) {
       return null;
     }
 
     // b1+b2 > 1, no intersection
-    if (ddQxE2 + ddE1xQ > ddN) {
+    if (DdQxE2 + DdE1xQ > DdN) {
       return null;
     }
 
     // Line intersects triangle, check if ray does.
-    var qdN = -sign * _diff.dot(_normal);
+    final QdN = -sign * _diff.dot(_normal);
 
     // t < 0, no intersection
-    if (qdN < 0) {
+    if (QdN < 0) {
       return null;
     }
 
     // Ray intersects triangle.
-    return at(qdN / ddN, target);
+    return at(QdN / DdN, target);
   }
 
   Ray applyMatrix4(Matrix4 matrix4) {

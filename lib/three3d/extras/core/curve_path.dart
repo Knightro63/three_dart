@@ -1,4 +1,6 @@
-import 'package:three_dart/three_dart.dart';
+import '../../math/index.dart';
+import 'curve.dart';
+import '../curves/line_curve.dart';
 
 /// ************************************************************
 ///	Curved Path - a curve path is simply a array of connected
@@ -6,35 +8,31 @@ import 'package:three_dart/three_dart.dart';
 ///*************************************************************/
 
 class CurvePath extends Curve {
-  @override
   CurvePath() : super() {
-    type = 'CurvePath';
     curves = [];
     autoClose = false; // Automatically closes the path
-    type = 'CurvePath';
   }
 
   CurvePath.fromJSON(Map<String, dynamic> json) : super.fromJSON(json) {
     autoClose = json["autoClose"];
-    type = 'CurvePath';
     curves = [];
 
     for (int i = 0, l = json["curves"].length; i < l; i++) {
-      var curve = json["curves"][i];
+      final curve = json["curves"][i];
       curves.add(Curve.castJSON(curve));
     }
   }
 
-  void add(CurvePath curve) {
+  void add(Curve curve) {
     curves.add(curve);
   }
 
   void closePath() {
     // Add a line curve if start and end of lines are not connected
-    Vector2 startPoint = curves[0].getPoint(0)! as Vector2;
-    Vector2 endPoint = curves[curves.length - 1].getPoint(1)! as Vector2;
+    final startPoint = curves[0].getPoint(0);
+    final endPoint = curves[curves.length - 1].getPoint(1);
 
-    if (!startPoint.equals(endPoint)) {
+    if (startPoint != null && endPoint != null && !startPoint.equals(endPoint)) {
       curves.add(LineCurve(endPoint, startPoint));
     }
   }
@@ -50,19 +48,19 @@ class CurvePath extends Curve {
 
   @override
   Vector? getPoint(num t, [Vector? optionalTarget]) {
-    double d = t * getLength().toDouble();
-    List<num> curveLengths = getCurveLengths();
+    final d = t * getLength();
+    final curveLengths = getCurveLengths();
     int i = 0;
 
     // To think about boundaries points.
 
     while (i < curveLengths.length) {
       if (curveLengths[i] >= d) {
-        double diff = curveLengths[i] - d;
-        Curve curve = curves[i];
+        final diff = curveLengths[i] - d;
+        final curve = curves[i];
 
-        num segmentLength = curve.getLength();
-        int u = segmentLength == 0 ? 0 : 1 - diff ~/ segmentLength;
+        final segmentLength = curve.getLength();
+        final u = segmentLength == 0 ? 0 : 1 - diff / segmentLength;
 
         return curve.getPointAt(u, optionalTarget);
       }
@@ -75,13 +73,13 @@ class CurvePath extends Curve {
     // loop where sum != 0, sum > d , sum+1 <d
   }
 
-  // We cannot use the default three.Curve getPoint() with getLength() because in
-  // three.Curve, getLength() depends on getPoint() but in three.CurvePath
+  // We cannot use the default THREE.Curve getPoint() with getLength() because in
+  // THREE.Curve, getLength() depends on getPoint() but in THREE.CurvePath
   // getPoint() depends on getLength
 
   @override
   num getLength() {
-    List<num> lens = getCurveLengths();
+    final lens = getCurveLengths();
     return lens[lens.length - 1];
   }
 
@@ -95,6 +93,7 @@ class CurvePath extends Curve {
 
   // Compute lengths and cache them
   // We cannot overwrite getLengths() because UtoT mapping uses it.
+
   List<num> getCurveLengths() {
     // We use cache values if curves and cache array are same length
 
@@ -119,16 +118,16 @@ class CurvePath extends Curve {
   }
 
   @override
-  List<Vector> getSpacedPoints([int divisions = 40, num offset = 0.0]) {
-    List<Vector> points = [];
+  List<Vector?> getSpacedPoints([num divisions = 40, num offset = 0.0]) {
+    final List<Vector?> points = [];
 
     for (int i = 0; i <= divisions; i++) {
-      double _offset = offset + i / divisions;
-      if (_offset > 1.0) {
-        _offset = _offset - 1.0;
+      double offst = offset + i / divisions;
+      if (offst > 1.0) {
+        offst = offst - 1.0;
       }
 
-      points.add(getPoint(_offset)!);
+      points.add(getPoint(offst));
     }
 
     if (autoClose) {
@@ -139,28 +138,27 @@ class CurvePath extends Curve {
   }
 
   @override
-  List<Vector> getPoints([int divisions = 12]) {
-    List<Vector> points = [];
+  List<Vector?> getPoints([num divisions = 12]) {
+    final List<Vector?> points = [];
     Vector? last;
-
-    List<Curve> curves = this.curves;
+    final List<Curve> curves = this.curves;
 
     for (int i = 0; i < curves.length; i++) {
-      Curve curve = curves[i];
-      int resolution = (curve.isEllipseCurve)
+      final curve = curves[i];
+      final resolution = (curve.isEllipseCurve)
           ? divisions * 2
           : ((curve is LineCurve || curve is LineCurve3))
               ? 1
               : (curve.isSplineCurve)
-                  ? divisions * curve.points.length.toInt()
+                  ? divisions * curve.points.length
                   : divisions;
 
-      List<Vector> pts = curve.getPoints(resolution);
+      final pts = curve.getPoints(resolution);
 
       for (int j = 0; j < pts.length; j++) {
-        Vector point = pts[j];
+        final point = pts[j];
 
-        if (last != null && last.equals(point)) {
+        if (last != null && last.equals(point!)) {
           continue;
         } // ensures no consecutive points are duplicates
 
@@ -169,7 +167,11 @@ class CurvePath extends Curve {
       }
     }
 
-    if (autoClose && points.length > 1 && !points[points.length - 1].equals(points[0])) {
+    if (autoClose &&
+        points.length > 1 &&
+        points[points.length - 1] != null &&
+        points[0] != null && 
+        !points[points.length - 1]!.equals(points[0]!)) {
       points.add(points[0]);
     }
 
@@ -178,19 +180,17 @@ class CurvePath extends Curve {
 
   @override
   CurvePath copy(Curve source) {
-    if(source is! CurvePath) throw('source Curve must be CurvePath');
+    assert(source is CurvePath);
     super.copy(source);
 
     curves = [];
 
     for (int i = 0, l = source.curves.length; i < l; i++) {
-      Curve curve = source.curves[i];
-
+      final curve = source.curves[i];
       curves.add(curve.clone());
     }
 
     autoClose = source.autoClose;
-
     return this;
   }
 
@@ -202,7 +202,7 @@ class CurvePath extends Curve {
     data["curves"] = [];
 
     for (int i = 0, l = curves.length; i < l; i++) {
-      Curve curve = curves[i];
+      final curve = curves[i];
       data["curves"].add(curve.toJSON());
     }
 
@@ -210,18 +210,17 @@ class CurvePath extends Curve {
   }
 
   @override
-  CurvePath fromJSON(json) {
+  CurvePath fromJSON(Map<String,dynamic> json) {
     super.fromJSON(json);
 
-    autoClose = json.autoClose;
-    curves = [];
+    autoClose = json['autoClose'];
+    // curves = [];
 
-    for (int i = 0, l = json.curves.length; i < l; i++) {
-      var curve = json.curves[i];
-
-      throw (" CurvePath fromJSON todo ");
-      // this.curves.add( new Curves[ curve.type ]().fromJSON( curve ) );
-    }
+    // for (int i = 0, l = json['curves'].length; i < l; i++) {
+    //   final curve = json['curves'][i];
+    //   throw (" CurvePath fromJSON todo ");
+    //   // curves.add(Curves[ curve.type ]().fromJSON( curve ) );
+    // }
 
     return this;
   }

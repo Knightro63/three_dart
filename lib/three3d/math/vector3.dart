@@ -1,19 +1,26 @@
-import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three_dart.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'math_utils.dart';
+import 'math.dart';
+import 'euler.dart';
+import 'matrix3.dart';
+import 'matrix4.dart';
+import 'quaternion.dart';
+import 'vector.dart';
+import 'vector4.dart';
 
-var _vector3 = Vector3(0, 0, 0);
+final _vector3 = Vector3(0, 0, 0);
 
 class Vector3 extends Vector{
   final _quaternion = Quaternion();
+  double z = 0;
 
-  String type = "Vector3";
-  num z = 0;
-
-  Vector3([num? x, num? y, num? z]) {
+  Vector3([double? x, double? y, double? z]) {
     this.x = x ?? 0;
     this.y = y ?? 0;
     this.z = z ?? 0;
   }
+
+  //Vector3.init({this.x = 0, this.y = 0, this.z = 0});
 
   Vector3.fromJSON(List<double>? json) {
     if (json != null) {
@@ -26,9 +33,9 @@ class Vector3 extends Vector{
   Vector3 set(num x, num y, [num? z]) {
     z ??= this.z; // sprite.scale.set(x,y)
 
-    this.x = x;
-    this.y = y;
-    this.z = z;
+    this.x = x.toDouble();
+    this.y = y.toDouble();
+    this.z = z.toDouble();
 
     return this;
   }
@@ -92,11 +99,11 @@ class Vector3 extends Vector{
   double getComponent(int index) {
     switch (index) {
       case 0:
-        return x.toDouble();
+        return x;
       case 1:
-        return y.toDouble();
+        return y;
       case 2:
-        return z.toDouble();
+        return z;
       default:
         throw ('index is out of range: $index');
     }
@@ -105,30 +112,52 @@ class Vector3 extends Vector{
   Vector3 clone() {
     return Vector3(x, y, z);
   }
-
   @override
   Vector3 copy(Vector v) {
-    // TODO
-    if(v is! Vector3) throw('v needs to be Vector3');
     x = v.x;
     y = v.y;
-    z = v.z;
+    if (v is Vector3){ 
+      z = v.z;
+    }
+    else if (v is Vector4){ 
+      z = v.z;
+    }
 
     return this;
   }
   @override
-  Vector3 add(Vector a, {Vector? b}) {
-    if(a is! Vector3) throw('v needs to be Vector3');
-    if(b != null && b is! Vector3) throw('w needs to be Vector3 or null');
+  Vector3 add(Vector a, [Vector? b]) {
     if (b != null) {
       print(
-          'THREE.Vector3: .add() now only accepts one argument. Use .addVectors( a, b ) instead.');
-      return addVectors(a, b as Vector3);
+          'THREE.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.');
+      return addVectors(a, b);
     }
-
     x += a.x;
     y += a.y;
-    z += a.z;
+    if(a is Vector4){
+      z += a.z;
+    }
+    else if(a is Vector3){
+      z += a.z;
+    }
+
+    return this;
+  }
+  Vector3 addVectors(Vector a, Vector b) {
+    x = a.x + b.x;
+    y = a.y + b.y;
+    if((a is Vector3 && b is Vector3)){
+      z = a.z + b.z;
+    }
+    else if((a is Vector4 && b is Vector4)){
+      z = a.z + b.z;
+    }
+    else if((a is Vector3 && b is Vector4)){
+      z = a.z + b.z;
+    }
+    else if((a is Vector4 && b is Vector3)){
+      z = a.z + b.z;
+    }
 
     return this;
   }
@@ -140,35 +169,37 @@ class Vector3 extends Vector{
 
     return this;
   }
-
-  Vector3 addVectors(Vector3 a, Vector3 b) {
-    x = a.x + b.x;
-    y = a.y + b.y;
-    z = a.z + b.z;
-
-    return this;
-  }
-
-  Vector3 addScaledVector(Vector3 v, num s) {
+  @override
+  Vector3 addScaledVector(Vector v, num s) {
     x += v.x * s;
     y += v.y * s;
-    z += v.z * s;
+    if(v is Vector3){
+      z += v.z * s;
+    }
+    else if(v is Vector4){
+      z += v.z * s;
+    }
 
     return this;
   }
+
   @override
-  Vector3 sub(Vector v, {Vector? w}) {
-    if(v is! Vector3) throw('v needs to be Vector3');
-    if(w != null && w is! Vector3) throw('w needs to be Vector3 or null');
-    if (w != null) {
+  Vector3 sub(Vector a, [Vector? b]) {
+    if (b != null) {
       print(
           'THREE.Vector3: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.');
-      return subVectors(v, w as Vector3);
+      return subVectors(a, b);
     }
 
-    x -= v.x;
-    y -= v.y;
-    z -= v.z;
+    x -= a.x;
+    y -= a.y;
+
+    if (a is Vector3){ 
+      z -= a.z;
+    }
+    else if(a is Vector4){
+      z -= a.z;
+    }
 
     return this;
   }
@@ -181,11 +212,21 @@ class Vector3 extends Vector{
     return this;
   }
 
-  Vector3 subVectors(Vector3 a, Vector3 b) {
+  Vector3 subVectors(Vector a, Vector b) {
     x = a.x - b.x;
     y = a.y - b.y;
-    z = a.z - b.z;
-
+    if((a is Vector3 && b is Vector3)){
+      z = a.z - b.z;
+    }
+    else if((a is Vector4 && b is Vector4)){
+      z = a.z - b.z;
+    }
+    else if((a is Vector3 && b is Vector4)){
+      z = a.z - b.z;
+    }
+    else if((a is Vector4 && b is Vector3)){
+      z = a.z - b.z;
+    }
     return this;
   }
 
@@ -215,7 +256,8 @@ class Vector3 extends Vector{
 
   Vector3 applyEuler(Euler? euler) {
     if (!(euler != null && euler.type == "Euler")) {
-      print('three.Vector3: .applyEuler() now expects an Euler rotation rather than a Vector3 and order.');
+      print(
+          'THREE.Vector3: .applyEuler() now expects an Euler rotation rather than a Vector3 and order.');
     }
 
     return applyQuaternion(_quaternion.setFromEuler(euler!, false));
@@ -226,8 +268,8 @@ class Vector3 extends Vector{
   }
   @override
   Vector3 applyMatrix3(Matrix3 m) {
-    num x = this.x, y = this.y, z = this.z;
-    Float32Array e = m.elements;
+    final x = this.x, y = this.y, z = this.z;
+    final e = m.elements;
 
     this.x = e[0] * x + e[3] * y + e[6] * z;
     this.y = e[1] * x + e[4] * y + e[7] * z;
@@ -236,18 +278,18 @@ class Vector3 extends Vector{
     return this;
   }
 
-  applyNormalMatrix(Matrix3 m) {
+  Vector3 applyNormalMatrix(Matrix3 m) {
     return applyMatrix3(m).normalize();
   }
 
   Vector3 applyMatrix4(Matrix4 m) {
-    Float32Array e = m.elements;
+    final e = m.elements;
 
-    num x = this.x;
-    num y = this.y;
-    num z = this.z;
+    final x = this.x;
+    final y = this.y;
+    final z = this.z;
 
-    double w = 1 / (e[3] * x + e[7] * y + e[11] * z + e[15]);
+    final w = 1 / (e[3] * x + e[7] * y + e[11] * z + e[15]);
 
     this.x = (e[0] * x + e[4] * y + e[8] * z + e[12]) * w;
     this.y = (e[1] * x + e[5] * y + e[9] * z + e[13]) * w;
@@ -257,17 +299,17 @@ class Vector3 extends Vector{
   }
 
   Vector3 applyQuaternion(Quaternion q) {
-    num qx = q.x;
-    num qy = q.y;
-    num qz = q.z;
-    num qw = q.w;
+    final qx = q.x;
+    final qy = q.y;
+    final qz = q.z;
+    final qw = q.w;
 
     // calculate quat * vector
 
-    num ix = qw * x + qy * z - qz * y;
-    num iy = qw * y + qz * x - qx * z;
-    num iz = qw * z + qx * y - qy * x;
-    num iw = -qx * x - qy * y - qz * z;
+    final ix = qw * x + qy * z - qz * y;
+    final iy = qw * y + qz * x - qx * z;
+    final iz = qw * z + qx * y - qy * x;
+    final iw = -qx * x - qy * y - qz * z;
 
     // calculate result * inverse quat
 
@@ -278,23 +320,22 @@ class Vector3 extends Vector{
     return this;
   }
 
-
-  Vector3 project(Camera camera) {
+  Vector3 project(camera) {
     return applyMatrix4(camera.matrixWorldInverse)
         .applyMatrix4(camera.projectionMatrix);
   }
 
-  Vector3 unproject(Camera camera) {
+  Vector3 unproject(camera) {
     return applyMatrix4(camera.projectionMatrixInverse)
         .applyMatrix4(camera.matrixWorld);
   }
 
   Vector3 transformDirection(Matrix4 m) {
-    // input: three.Matrix4 affine matrix
+    // input: THREE.Matrix4 affine matrix
     // vector interpreted as a direction
 
-    num x = this.x, y = this.y, z = this.z;
-    Float32Array e = m.elements;
+    final x = this.x, y = this.y, z = this.z;
+    final e = m.elements;
 
     this.x = e[0] * x + e[4] * y + e[8] * z;
     this.y = e[1] * x + e[5] * y + e[9] * z;
@@ -341,7 +382,7 @@ class Vector3 extends Vector{
     return this;
   }
   @override
-  Vector3 clampScalar(double minVal,double maxVal) {
+  Vector3 clampScalar(minVal, maxVal) {
     x = Math.max(minVal, Math.min(maxVal, x));
     y = Math.max(minVal, Math.min(maxVal, y));
     z = Math.max(minVal, Math.min(maxVal, z));
@@ -349,10 +390,11 @@ class Vector3 extends Vector{
     return this;
   }
   @override
-  Vector3 clampLength(double min, double max) {
-    double length = this.length();
+  Vector3 clampLength<T extends num>(T min, T max) {
+    final length = this.length();
 
-    return divideScalar(length).multiplyScalar(Math.max(min, Math.min(max, length)));
+    return divideScalar(length)
+        .multiplyScalar(Math.max(min, Math.min(max, length)));
   }
   @override
   Vector3 floor() {
@@ -394,14 +436,20 @@ class Vector3 extends Vector{
 
     return this;
   }
-
-  num dot(Vector3 v) {
-    return x * v.x + y * v.y + z * v.z;
+  @override
+  double dot(Vector v) {
+    double temp = x * v.x + y * v.y;
+    if(v is Vector3){
+      temp += z * v.z;
+    }
+    if(v is Vector4){
+      temp += z * v.z;
+    }
+    return temp;
   }
 
-  // TODO lengthSquared?
   @override
-  num lengthSq() {
+  double lengthSq() {
     return x * x + y * y + z * z;
   }
   @override
@@ -417,7 +465,7 @@ class Vector3 extends Vector{
     return divideScalar(length());
   }
   @override
-  Vector3 setLength(num length) {
+  Vector3 setLength(double length) {
     return normalize().multiplyScalar(length);
   }
 
@@ -439,7 +487,8 @@ class Vector3 extends Vector{
 
   Vector3 cross(Vector3 v, {Vector3? w}) {
     if (w != null) {
-      print('three.Vector3: .cross() now only accepts one argument. Use .crossVectors( a, b ) instead.');
+      print(
+          'THREE.Vector3: .cross() now only accepts one argument. Use .crossVectors( a, b ) instead.');
       return crossVectors(v, w);
     }
 
@@ -447,8 +496,8 @@ class Vector3 extends Vector{
   }
 
   Vector3 crossVectors(Vector3 a, Vector3 b) {
-    num ax = a.x, ay = a.y, az = a.z;
-    num bx = b.x, by = b.y, bz = b.z;
+    final ax = a.x, ay = a.y, az = a.z;
+    final bx = b.x, by = b.y, bz = b.z;
 
     x = ay * bz - az * by;
     y = az * bx - ax * bz;
@@ -458,11 +507,11 @@ class Vector3 extends Vector{
   }
 
   Vector3 projectOnVector(Vector3 v) {
-    double denominator = v.lengthSq().toDouble();
+    final denominator = v.lengthSq();
 
     if (denominator == 0) return set(0, 0, 0);
 
-    double scalar = v.dot(this) / denominator;
+    final scalar = v.dot(this) / denominator;
 
     return copy(v).multiplyScalar(scalar);
   }
@@ -480,30 +529,39 @@ class Vector3 extends Vector{
     return sub(_vector3.copy(normal).multiplyScalar(2 * dot(normal)));
   }
 
-  double angleTo(Vector3 v) {
-    double denominator = Math.sqrt(lengthSq() * v.lengthSq());
+  double angleTo(v) {
+    final denominator = Math.sqrt(lengthSq() * v.lengthSq());
 
     if (denominator == 0) return Math.pi / 2;
 
-    double theta = dot(v) / denominator;
+    final theta = dot(v) / denominator;
 
-    // clamp, to handle numerical problems
+    // clamp, to handle doubleerical problems
 
     return Math.acos(MathUtils.clamp(theta, -1, 1));
   }
 
-  double distanceTo(Vector3 v) {
+  @override
+  double distanceTo(Vector v) {
     return Math.sqrt(distanceToSquared(v));
   }
-
-  num distanceToSquared(Vector3 v) {
-    final dx = x - v.x, dy = y - v.y, dz = z - v.z;
+  @override
+  double distanceToSquared(Vector v) {
+    final dx = x - v.x; 
+    final dy = y - v.y;
+    double dz = z;
+    if(v is Vector3){
+      dz-= v.z;
+    }
+    else if(v is Vector4){
+      dz-= v.z;
+    }
     final distance = dx * dx + dy * dy + dz * dz;
     return distance;
   }
 
-  double manhattanDistanceTo(Vector3 v) {
-    return Math.abs(x - v.x) + Math.abs(y - v.y) + Math.abs(z - v.z).toDouble();
+  manhattanDistanceTo(Vector3 v) {
+    return Math.abs(x - v.x) + Math.abs(y - v.y) + Math.abs(z - v.z);
   }
 
   Vector3 setFromSpherical(s) {
@@ -511,7 +569,7 @@ class Vector3 extends Vector{
   }
 
   Vector3 setFromSphericalCoords(num radius, num phi, num theta) {
-    double sinPhiRadius = Math.sin(phi) * radius;
+    final sinPhiRadius = Math.sin(phi) * radius;
 
     x = sinPhiRadius * Math.sin(theta);
     y = Math.cos(phi) * radius;
@@ -532,8 +590,8 @@ class Vector3 extends Vector{
     return this;
   }
 
-  Vector3 setFromMatrixPosition(Matrix4 m) {
-    Float32Array e = m.elements;
+  Vector3 setFromMatrixPosition(m) {
+    final e = m.elements;
 
     x = e[12];
     y = e[13];
@@ -542,10 +600,10 @@ class Vector3 extends Vector{
     return this;
   }
 
-  Vector3 setFromMatrixScale(Matrix4 m) {
-    double sx = setFromMatrixColumn(m, 0).length();
-    double sy = setFromMatrixColumn(m, 1).length();
-    double sz = setFromMatrixColumn(m, 2).length();
+  Vector3 setFromMatrixScale(m) {
+    final sx = setFromMatrixColumn(m, 0).length();
+    final sy = setFromMatrixColumn(m, 1).length();
+    final sz = setFromMatrixColumn(m, 2).length();
 
     x = sx;
     y = sy;
@@ -555,11 +613,11 @@ class Vector3 extends Vector{
   }
 
   Vector3 setFromMatrixColumn(Matrix4 m, int index) {
-    return fromArray(m.elements.toDartList(), index * 4);
+    return fromArray(m.elements, index * 4);
   }
 
   Vector3 setFromMatrix3Column(Matrix3 m, int index) {
-    return fromArray(m.elements.toDartList(), index * 3);
+    return fromArray(m.elements, index * 3);
   }
 
   Vector3 setFromEuler(Euler e) {
@@ -570,13 +628,20 @@ class Vector3 extends Vector{
     return this;
   }
   @override
-  bool equals(Vector v) {
-    if(v is! Vector3) throw('v needs to be Vector3');
-    return ((v.x == x) && (v.y == y) && (v.z == z));
+  bool equals(v) {
+    if(v is Vector3){
+      return (v.x == x) && (v.y == y) && (v.z == z);
+    }
+    else if(v is Vector4){
+      return (v.x == x) && (v.y == y) && (v.z == z);
+    }
+
+    return (v.x == x) && (v.y == y);
   }
-  @override
+
   // array  list | native array
-  Vector3 fromArray(List<num> array, [int offset = 0]) {
+  @override
+  Vector3 fromArray(array, [int offset = 0]) {
     x = array[offset].toDouble();
     y = array[offset + 1].toDouble();
     z = array[offset + 2].toDouble();
@@ -618,9 +683,10 @@ class Vector3 extends Vector{
 
   Vector3 randomDirection() {
     // Derived from https://mathworld.wolfram.com/SpherePointPicking.html
-    double u = (Math.random() - 0.5) * 2;
-    double t = Math.random() * Math.pi * 2;
-    double f = Math.sqrt(1 - u * u);
+
+    final u = (Math.random() - 0.5) * 2;
+    final t = Math.random() * Math.pi * 2;
+    final f = Math.sqrt(1 - u * u);
 
     x = f * Math.cos(t);
     y = f * Math.sin(t);
@@ -629,7 +695,11 @@ class Vector3 extends Vector{
     return this;
   }
   @override
-  List<num> toJSON() {
-    return [x, y, z];
+  Map<String, dynamic> toJSON() {
+    return {'x': x, 'y': y, 'z': z};
+  }
+  @override
+  List<double> toList() {
+    return [x, y];
   }
 }

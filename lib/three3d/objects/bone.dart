@@ -1,4 +1,4 @@
-import 'package:three_dart/three3d/core/object_3d.dart';
+import 'package:three_dart/three3d/core/index.dart';
 
 class Bone extends Object3D {
   Bone() : super() {

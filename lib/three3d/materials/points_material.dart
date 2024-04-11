@@ -1,5 +1,5 @@
-import 'package:three_dart/three3d/materials/material.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import './material.dart';
+import '../math/index.dart';
 
 class PointsMaterial extends Material {
   PointsMaterial([Map<String, dynamic>? parameters]) {

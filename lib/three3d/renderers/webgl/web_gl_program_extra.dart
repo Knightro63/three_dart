@@ -1,29 +1,25 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/math/math.dart';
-import 'package:three_dart/three3d/renderers/shaders/index.dart';
-import 'package:three_dart/three3d/renderers/webgl/web_gl_parameters.dart';
-import 'package:three_dart/three3d/renderers/webgl/web_gl_shader.dart';
+part of three_webgl;
 
 class WebGLProgramExtra {
-  handleSource(String string, int errorLine) {
-    var lines = string.split('\n');
-    var lines2 = [];
+  String handleSource(String string, int errorLine) {
+    final lines = string.split('\n');
+    final lines2 = [];
 
     int from = Math.max(errorLine - 6, 0);
     int to = Math.min(errorLine + 6, lines.length);
 
-    for (var i = 0; i < lines.length; i++) {
+    for (int i = 0; i < lines.length; i++) {
       lines[i] = "${(i + 1)}: ${lines[i]}";
     }
 
-    for (var i = from; i < to; i++) {
+    for (int i = from; i < to; i++) {
       lines2.add("${(i + 1)}: ${lines[i]}");
     }
 
     return lines2.join('\n');
   }
 
-  getEncodingComponents(encoding) {
+  List<String> getEncodingComponents(encoding) {
     switch (encoding) {
       case LinearEncoding:
         return ['Linear', '( value )'];
@@ -45,31 +41,31 @@ class WebGLProgramExtra {
     }
   }
 
-  getShaderErrors(dynamic gl, WebGLShader shader, type) {
-    var status = gl.getShaderParameter(shader.shader, gl.COMPILE_STATUS);
-    var errors = gl.getShaderInfoLog(shader.shader).trim();
+  String getShaderErrors(dynamic gl, WebGLShader shader, type) {
+    final status = gl.getShaderParameter(shader.shader, gl.COMPILE_STATUS);
+    final errors = gl.getShaderInfoLog(shader.shader).trim();
 
     if (status && errors == '') return '';
 
-    var regExp = RegExp(r"ERROR: 0:(\d+)");
-    var match = regExp.firstMatch(errors);
+    final regExp = RegExp(r"ERROR: 0:(\d+)");
+    final match = regExp.firstMatch(errors);
 
     int errorLine = int.parse(match!.group(1)!);
 
     // --enable-privileged-webgl-extension
     // console.log( '**' + type + '**', gl.getExtension( 'WEBGL_debug_shaders' ).getTranslatedShaderSource( shader ) );
 
-    var source = gl.getShaderSource(shader.shader);
+    final source = gl.getShaderSource(shader.shader);
 
     return 'three.WebGLShader: gl.getShaderInfoLog() $type\n$errors\n${handleSource(source, errorLine)}';
   }
 
-  getTexelEncodingFunction(functionName, encoding) {
-    var components = getEncodingComponents(encoding);
+  String getTexelEncodingFunction(functionName, encoding) {
+    final components = getEncodingComponents(encoding);
     return 'vec4 $functionName ( vec4 value ) { return LinearTo${components[0] + components[1]}; }';
   }
 
-  getToneMappingFunction(functionName, toneMapping) {
+  String getToneMappingFunction(functionName, toneMapping) {
     String toneMappingName;
 
     switch (toneMapping) {
@@ -101,8 +97,8 @@ class WebGLProgramExtra {
     return 'vec3 $functionName}( vec3 color ) { return ${toneMappingName}ToneMapping( color ); }';
   }
 
-  generateExtensions(parameters) {
-    var chunks = [
+  String generateExtensions(parameters) {
+    final chunks = [
       (parameters.extensionDerivatives ||
               parameters.cubeUVHeight ||
               parameters.bumpMap ||
@@ -126,12 +122,12 @@ class WebGLProgramExtra {
     return chunks.where((s) => filterEmptyLine(s)).join('\n');
   }
 
-  generateDefines(defines) {
-    var chunks = [];
+  String generateDefines(defines) {
+    final chunks = [];
 
     if (defines != null) {
-      for (var name in defines.keys) {
-        var value = defines[name];
+      for (final name in defines.keys) {
+        final value = defines[name];
 
         if (value == false) continue;
 
@@ -146,17 +142,17 @@ class WebGLProgramExtra {
   Map<String, dynamic> fetchAttributeLocations(gl, program) {
     Map<String, dynamic> attributes = {};
 
-    var n = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+    final n = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
 
-    for (var i = 0; i < n; i++) {
-      var info = gl.getActiveAttrib(program, i);
-      var name = info.name;
+    for (int i = 0; i < n; i++) {
+      final info = gl.getActiveAttrib(program, i);
+      final name = info.name;
 
       // print( "three.WebGLProgram: ACTIVE VERTEX ATTRIBUTE: name: ${name} i: ${i}");
 
       // attributes[name] = gl.getAttribLocation(program, name);
 
-      var locationSize = 1;
+      int locationSize = 1;
       if (info.type == gl.FLOAT_MAT2) locationSize = 2;
       if (info.type == gl.FLOAT_MAT3) locationSize = 3;
       if (info.type == gl.FLOAT_MAT4) locationSize = 4;
@@ -200,13 +196,13 @@ class WebGLProgramExtra {
 
   // Resolve Includes
 
-  var includePattern = RegExp(r"[ \t]*#include +<([\w\d./]+)>"); //gm;
+  final includePattern = RegExp(r"[ \t]*#include +<([\w\d./]+)>"); //gm;
 
   String resolveIncludes(String string) {
     // return string.replaceAll(includePattern, includeReplacer);
 
     // Loop through all matches.
-    for (var match in includePattern.allMatches(string)) {
+    for (final match in includePattern.allMatches(string)) {
       /// Returns the string matched by the given [group].
       ///
       /// If [group] is 0, returns the match of the pattern.
@@ -232,8 +228,8 @@ class WebGLProgramExtra {
     return string;
   }
 
-  includeReplacer(match, include) {
-    var string = shaderChunk[include];
+  String includeReplacer(match, include) {
+    final string = shaderChunk[include];
 
     if (string == null) {
       throw ('Can not resolve #include <$include>');
@@ -244,12 +240,12 @@ class WebGLProgramExtra {
 
 // Unroll Loops
 
-  var deprecatedUnrollLoopPattern =
+  final deprecatedUnrollLoopPattern =
       RegExp(r"#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}"); //g;
-  var unrollLoopPattern = RegExp(
+  final unrollLoopPattern = RegExp(
       r"#pragma unroll_loop_start\s+for\s*\(\s*int\s+i\s*=\s*(\d+)\s*;\s*i\s*<\s*(\d+)\s*;\s*i\s*\+\+\s*\)\s*{([\s\S]+?)}\s+#pragma unroll_loop_end");
 
-  unrollLoops(String string) {
+  String unrollLoops(String string) {
     string = unrollLoopPatternReplace(string);
     string = deprecatedUnrollLoopPatternReplace(string);
 
@@ -264,17 +260,17 @@ class WebGLProgramExtra {
   }
 
   String unrollLoopPatternReplace(String string) {
-    var matches = unrollLoopPattern.allMatches(string);
+    final matches = unrollLoopPattern.allMatches(string);
 
-    for (var match in matches) {
-      var stringResult = '';
+    for (final match in matches) {
+      String stringResult = '';
 
       int start = int.parse(match.group(1)!);
       int end = int.parse(match.group(2)!);
-      var snippet = match.group(3)!;
+      final snippet = match.group(3)!;
 
-      for (var i = start; i < end; i++) {
-        var snippet2 = snippet.replaceAll(RegExp(r"\[\s*i\s*\]"), "[$i]");
+      for (int i = start; i < end; i++) {
+        String snippet2 = snippet.replaceAll(RegExp(r"\[\s*i\s*\]"), "[$i]");
         snippet2 = snippet2.replaceAll(RegExp(r"UNROLLED_LOOP_INDEX"), i.toString());
         // string += snippet
         //   .replace( /\[\s*i\s*\]/g, '[ ' + i + ' ]' )
@@ -302,19 +298,19 @@ class WebGLProgramExtra {
     return string;
   }
 
-  deprecatedLoopReplacer(match, start, end, snippet) {
+  String deprecatedLoopReplacer(match, start, end, snippet) {
     print(
         'WebGLProgram: #pragma unroll_loop shader syntax is deprecated. Please use #pragma unroll_loop_start syntax instead.');
     return loopReplacer(match, start, end, snippet);
   }
 
-  loopReplacer(match, s, e, snippet) {
-    var string = '';
+  String loopReplacer(match, s, e, snippet) {
+    String string = '';
 
     int start = int.parse(s);
     int end = int.parse(e);
 
-    for (var i = start; i < end; i++) {
+    for (int i = start; i < end; i++) {
       snippet = snippet
         ..replaceAll(RegExp(r"\[\s*i\s*\]"), '[ $i ]')
         ..replaceAll(RegExp(r"UNROLLED_LOOP_INDEX"), i);
@@ -327,8 +323,8 @@ class WebGLProgramExtra {
 
 //
 
-  generatePrecision(parameters) {
-    var precisionstring = 'precision ${parameters.precision} float;\nprecision ${parameters.precision} int;';
+  String generatePrecision(parameters) {
+    String precisionstring = 'precision ${parameters.precision} float;\nprecision ${parameters.precision} int;';
 
     if (parameters.precision == 'highp') {
       precisionstring += '\n#define HIGH_PRECISION';
@@ -341,8 +337,8 @@ class WebGLProgramExtra {
     return precisionstring;
   }
 
-  generateShadowMapTypeDefine(parameters) {
-    var shadowMapTypeDefine = 'SHADOWMAP_TYPE_BASIC';
+  String generateShadowMapTypeDefine(parameters) {
+    String shadowMapTypeDefine = 'SHADOWMAP_TYPE_BASIC';
 
     if (parameters.shadowMapType == PCFShadowMap) {
       shadowMapTypeDefine = 'SHADOWMAP_TYPE_PCF';
@@ -355,8 +351,8 @@ class WebGLProgramExtra {
     return shadowMapTypeDefine;
   }
 
-  generateEnvMapTypeDefine(parameters) {
-    var envMapTypeDefine = 'ENVMAP_TYPE_CUBE';
+  String generateEnvMapTypeDefine(parameters) {
+    String envMapTypeDefine = 'ENVMAP_TYPE_CUBE';
 
     if (parameters.envMap) {
       switch (parameters.envMapMode) {
@@ -374,8 +370,8 @@ class WebGLProgramExtra {
     return envMapTypeDefine;
   }
 
-  generateEnvMapModeDefine(parameters) {
-    var envMapModeDefine = 'ENVMAP_MODE_REFLECTION';
+   String generateEnvMapModeDefine(parameters) {
+    String envMapModeDefine = 'ENVMAP_MODE_REFLECTION';
 
     if (parameters.envMap) {
       switch (parameters.envMapMode) {
@@ -388,8 +384,8 @@ class WebGLProgramExtra {
     return envMapModeDefine;
   }
 
-  generateEnvMapBlendingDefine(parameters) {
-    var envMapBlendingDefine = 'ENVMAP_BLENDING_NONE';
+   String generateEnvMapBlendingDefine(parameters) {
+     String envMapBlendingDefine = 'ENVMAP_BLENDING_NONE';
 
     if (parameters.envMap) {
       switch (parameters.combine) {
@@ -410,16 +406,16 @@ class WebGLProgramExtra {
     return envMapBlendingDefine;
   }
 
-  generateCubeUVSize(parameters) {
-    var imageHeight = parameters.cubeUVHeight;
+  Map<String,dynamic>? generateCubeUVSize(parameters) {
+    final imageHeight = parameters.cubeUVHeight;
 
     if (imageHeight == null) return null;
 
     int maxMip = Math.log2(imageHeight).toInt() - 2;
 
-    var texelHeight = 1.0 / imageHeight;
+    final texelHeight = 1.0 / imageHeight;
 
-    var texelWidth = 1.0 / (3 * Math.max(Math.pow(2, maxMip), 7 * 16));
+    final texelWidth = 1.0 / (3 * Math.max(Math.pow(2, maxMip), 7 * 16));
 
     return {"texelWidth": texelWidth, "texelHeight": texelHeight, "maxMip": maxMip};
   }

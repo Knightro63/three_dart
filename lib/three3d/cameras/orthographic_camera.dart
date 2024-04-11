@@ -1,10 +1,15 @@
 import 'dart:convert';
-
-import 'package:three_dart/three3d/cameras/camera.dart';
 import 'package:three_dart/three3d/core/index.dart';
+import 'camera.dart';
 
 class OrthographicCamera extends Camera {
-  OrthographicCamera([num left = -1, num right = 1, num top = 1, num bottom = -1, num near = 0.1, num far = 2000])
+  OrthographicCamera(
+      [num left = -1,
+      num right = 1,
+      num top = 1,
+      num bottom = -1,
+      num near = 0.1,
+      num far = 2000])
       : super() {
     type = 'OrthographicCamera';
     zoom = 1;
@@ -39,23 +44,23 @@ class OrthographicCamera extends Camera {
     return this;
   }
 
-  setViewOffset(fullWidth, fullHeight, x, y, width, height) {
-    view ??= {"enabled": true, "fullWidth": 1, "fullHeight": 1, "offsetX": 0, "offsetY": 0, "width": 1, "height": 1};
+  void setViewOffset(double fullWidth, double fullHeight, double x, double y, double width, double height) {
+    view ??= CameraView();
 
-    view!["enabled"] = true;
-    view!["fullWidth"] = fullWidth;
-    view!["fullHeight"] = fullHeight;
-    view!["offsetX"] = x;
-    view!["offsetY"] = y;
-    view!["width"] = width;
-    view!["height"] = height;
+    view!.enabled = true;
+    view!.fullWidth = fullWidth;
+    view!.fullHeight = fullHeight;
+    view!.offsetX = x;
+    view!.offsetY = y;
+    view!.width = width;
+    view!.height = height;
 
     updateProjectionMatrix();
   }
 
   void clearViewOffset() {
     if (view != null) {
-      view!["enabled"] = false;
+      view!.enabled = false;
     }
 
     updateProjectionMatrix();
@@ -63,24 +68,24 @@ class OrthographicCamera extends Camera {
 
   @override
   void updateProjectionMatrix() {
-    var dx = (this.right - this.left) / (2 * zoom);
-    var dy = (this.top - this.bottom) / (2 * zoom);
-    var cx = (this.right + this.left) / 2;
-    var cy = (this.top + this.bottom) / 2;
+    final dx = (this.right - this.left) / (2 * zoom);
+    final dy = (this.top - this.bottom) / (2 * zoom);
+    final cx = (this.right + this.left) / 2;
+    final cy = (this.top + this.bottom) / 2;
 
-    var left = cx - dx;
-    var right = cx + dx;
-    var top = cy + dy;
-    var bottom = cy - dy;
+    double left = cx - dx;
+    double right = cx + dx;
+    double top = cy + dy;
+    double bottom = cy - dy;
 
-    if (view != null && view!["enabled"]) {
-      var scaleW = (this.right - this.left) / view!["fullWidth"] / zoom;
-      var scaleH = (this.top - this.bottom) / view!["fullHeight"] / zoom;
+    if (view != null && view!.enabled) {
+      final scaleW = (this.right - this.left) / view!.fullWidth / zoom;
+      final scaleH = (this.top - this.bottom) / view!.fullHeight / zoom;
 
-      left += scaleW * view!["offsetX"];
-      right = left + scaleW * view!["width"];
-      top -= scaleH * view!["offsetY"];
-      bottom = top - scaleH * view!["height"];
+      left += scaleW * view!.offsetX;
+      right = left + scaleW * view!.width;
+      top -= scaleH * view!.offsetY;
+      bottom = top - scaleH * view!.height;
     }
 
     projectionMatrix.makeOrthographic(left, right, top, bottom, near, far);
@@ -90,7 +95,7 @@ class OrthographicCamera extends Camera {
 
   @override
   Map<String, dynamic> toJSON({Object3dMeta? meta}) {
-    var data = super.toJSON(meta: meta);
+    final data = super.toJSON(meta: meta);
 
     data["object"]["zoom"] = zoom;
     data["object"]["left"] = left;
@@ -101,7 +106,7 @@ class OrthographicCamera extends Camera {
     data["object"]["far"] = far;
 
     if (view != null) {
-      data["object"]["view"] = json.decode(json.encode(view));
+      data["object"]["view"] = json.decode(json.encode(view!.toMap));
     }
 
     return data;

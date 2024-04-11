@@ -1,132 +1,50 @@
-import 'package:three_dart/three_dart.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'matrix3.dart';
 
-class Vector {
-  String type = "Vector";
-  num x;
-  num y;
+abstract class Vector {
+  double x;
+  double y;
   Vector([this.x = 0,this.y = 0]);
 
-  Vector set(num x, num y) {
-    throw('Not implimented in Vector type yet');
-  }
-  bool equals(Vector v) {
-    throw('Not implimented in Vector type yet');
-  }
-  Vector copy(Vector v){
-    throw('Not implimented in Vector type yet');
-  }
-  Vector sub(Vector v, {Vector? w}){
-    throw('Not implimented in Vector type yet');
-  }
-  Vector add(Vector a, {Vector? b}){
-    throw('Not implimented in Vector type yet');
-  }
-  Vector setScalar(double scalar) {
-    throw('Not implimented in Vector type yet');
-  }
+  Vector set(num x, num y);
+  bool equals(Vector v);
+  Vector copy(Vector v);
+  Vector sub(Vector a, [Vector? b]);
+  Vector add(Vector a, [Vector? b]);
+  Vector setScalar(double scalar);
 
-  num getComponent(int index) {
-    throw('Not implimented in Vector type yet');
-  }
+  num getComponent(int index);
+  Vector clone();
+  Vector addScaledVector(Vector v, double s);
+  Vector addScalar(num s);
+  Vector subScalar(num s);
+  num dot(Vector v);
+  Vector multiplyScalar(num scalar);
+  Vector divideScalar(double scalar);
+  Vector applyMatrix3(Matrix3 m);
+  Vector clampScalar(double minVal, double maxVal);
 
-  Vector clone() {
-    throw('Not implimented in Vector type yet');
-  }
+  Vector clampLength<T extends num>(T min, T max);
+  Vector floor();
+  Vector ceil();
+  Vector round();
+  num distanceToSquared(Vector v);
 
-  Vector addScalar(num s) {
-    throw('Not implimented in Vector type yet');
-  }
+  Vector roundToZero();
+  Vector negate();
+  num lengthSq();
+  double length();
+  num distanceTo(Vector v);
 
-  Vector subScalar(num s) {
-    throw('Not implimented in Vector type yet');
-  }
+  num manhattanLength();
+  Vector normalize();
+  //double angle();
+  Vector setLength(double length);
+  Vector fromArray(dynamic array, [int offset = 0]);
+  List<num> toArray([List<num> array, int offset = 0]);
 
-  Vector multiplyScalar(num scalar) {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector divideScalar(double scalar) {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector applyMatrix3(Matrix3 m) {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector clampScalar(double minVal, double maxVal) {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector clampLength(double min, double max) {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector floor() {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector ceil() {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector round() {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector roundToZero() {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector negate() {
-    throw('Not implimented in Vector type yet');
-  }
-
-  num lengthSq() {
-    throw('Not implimented in Vector type yet');
-  }
-
-  double length() {
-    throw('Not implimented in Vector type yet');
-  }
-
-  num manhattanLength() {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector normalize() {
-    throw('Not implimented in Vector type yet');
-  }
-
-  double angle() {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector setLength(double length) {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector fromArray(List<num> array, [int offset = 0]) {
-    throw('Not implimented in Vector type yet');
-  }
-
-  List<num> toArray([List<num>? array, int offset = 0]) {
-    throw('Not implimented in Vector type yet');
-  }
-
-  List<num> toJSON() {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector fromBufferAttribute(BufferAttribute attribute,int index) {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Vector random() {
-    throw('Not implimented in Vector type yet');
-  }
-
-  Map<String, dynamic> toJson() {
-    throw('Not implimented in Vector type yet');
-  }
-
+  List<num> toList();
+  Vector fromBufferAttribute(BufferAttribute attribute,int index);
+  Vector random();
+  Map<String, dynamic> toJSON();
 }

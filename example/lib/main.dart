@@ -1,10 +1,10 @@
-// import 'package:example/multi_views.dart';
+// import 'package:example/others/multi_views.dart';
 import 'package:flutter/material.dart';
-import 'example_app.dart';
+import 'package:three_dart/three_dart.dart';
+import 'app/example_app.dart';
 
 void main() {
-  runApp(const ExampleApp());
+  Cache.enabled = true;
+  runApp( const ExampleApp() );
   // runApp(MaterialApp(home: multi_views(fileName: 'multi_views'),));
-  // runApp(MaterialApp(home: misc_controls_arcball(fileName: 'misc_controls_arcball'),));
-  // runApp(MaterialApp(home: webgl_loader_gltf_test(fileName: 'webgl_loader_gltf_test'),));
 }

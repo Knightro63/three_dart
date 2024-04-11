@@ -1,10 +1,15 @@
-import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three_dart.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'math.dart';
+import 'line3.dart';
+import 'plane.dart';
+import 'ray.dart';
+import 'triangle.dart';
+import 'vector3.dart';
 
 /// Ported from: https://github.com/maurizzzio/quickhull3d/ by Mauricio Poppe (https://github.com/maurizzzio)
 
-var visible = 0;
-var deleted = 1;
+const visible = 0;
+const deleted = 1;
 
 class ConvexHull {
   Vector3 v1 = Vector3();
@@ -35,17 +40,13 @@ class ConvexHull {
 
   ConvexHull setFromPoints(List<Vector3> points) {
     // The algorithm needs at least four points.
-
     if (points.length >= 4) {
       makeEmpty();
-
-      for (var i = 0, l = points.length; i < l; i++) {
+      for (int i = 0, l = points.length; i < l; i++) {
         vertices.add(VertexNode(points[i]));
       }
-
       compute();
     }
-
     return this;
   }
 
@@ -57,32 +58,31 @@ class ConvexHull {
     object.traverse((node) {
       Vector3 point;
 
-      var geometry = node.geometry;
+      final geometry = node.geometry;
 
       if (geometry != null) {
         // if (geometry.isGeometry) {
-        //   var vertices = geometry.vertices;
+        //   final vertices = geometry.vertices;
 
-        //   for (var i = 0, l = vertices.length; i < l; i++) {
+        //   for (final i = 0, l = vertices.length; i < l; i++) {
         //     point = vertices[i].clone();
         //     point.applyMatrix4(node.matrixWorld);
 
         //     points.add(point);
         //   }
         // } else
-        if (geometry is BufferGeometry) {
-          BufferAttribute<NativeArray<num>>? attribute = geometry.attributes.positionBuffer;
 
-          if (attribute != null) {
-            for (var i = 0, l = attribute.count; i < l; i++) {
-              point = Vector3();
+        final attribute = geometry.attributes['position'];
 
-              point
-                  .fromBufferAttribute(attribute, i)
-                  .applyMatrix4(node.matrixWorld);
+        if (attribute != null) {
+          for (int i = 0, l = attribute.count; i < l; i++) {
+            point = Vector3();
 
-              points.add(point);
-            }
+            point
+                .fromBufferAttribute(attribute, i)
+                .applyMatrix4(node.matrixWorld);
+
+            points.add(point);
           }
         }
       }
@@ -92,13 +92,11 @@ class ConvexHull {
   }
 
   bool containsPoint(Vector3 point) {
-    var faces = this.faces;
+    final faces = this.faces;
 
-    for (var i = 0, l = faces.length; i < l; i++) {
-      var face = faces[i];
-
+    for (int i = 0, l = faces.length; i < l; i++) {
+      final face = faces[i];
       // compute signed distance and check on what half space the point lies
-
       if (face.distanceToPoint(point) > tolerance) return false;
     }
 
@@ -108,18 +106,18 @@ class ConvexHull {
   Vector3? intersectRay(Ray ray, Vector3 target) {
     // based on "Fast Ray-Convex Polyhedron Intersection"  by Eric Haines, GRAPHICS GEMS II
 
-    var faces = this.faces;
+    final faces = this.faces;
 
-    var tNear = -Math.infinity;
-    var tFar = Math.infinity;
+    double tNear = -Math.infinity;
+    double tFar = Math.infinity;
 
-    for (var i = 0, l = faces.length; i < l; i++) {
-      var face = faces[i];
+    for (int i = 0, l = faces.length; i < l; i++) {
+      final face = faces[i];
 
       // interpret faces as planes for the further computation
 
-      var vN = face.distanceToPoint(ray.origin);
-      var vD = face.normal.dot(ray.direction);
+      final vN = face.distanceToPoint(ray.origin);
+      final vD = face.normal.dot(ray.direction);
 
       // if the origin is on the positive side of a plane (so the plane can "see" the origin) and
       // the ray is turned away or parallel to the plane, there is no intersection
@@ -223,7 +221,7 @@ class ConvexHull {
       // reference to the first and last vertex of this face
 
       final start = face.outside!;
-      var end = face.outside!;
+      VertexNode end = face.outside!;
 
       while (end.next != null && end.next!.face == face) {
         end = end.next!;
@@ -244,7 +242,7 @@ class ConvexHull {
   // Removes all the visible vertices that 'face' is able to see
 
   ConvexHull deleteFace2Vertices(Face2 face, [Face2? absorbingFace2]) {
-    var faceVertices = removeAllVerticesFromFace2(face);
+    VertexNode? faceVertices = removeAllVerticesFromFace2(face);
 
     if (faceVertices != null) {
       if (absorbingFace2 == null) {
@@ -260,9 +258,9 @@ class ConvexHull {
           // we need to buffer the subsequent vertex at this point because the 'vertex.next' reference
           // will be changed by upcoming method calls
 
-          var nextVertex = vertex!.next;
+          final nextVertex = vertex!.next;
 
-          var distance = absorbingFace2.distanceToPoint(vertex.point);
+          final distance = absorbingFace2.distanceToPoint(vertex.point);
 
           // check if 'vertex' is able to see 'absorbingFace2'
 
@@ -290,18 +288,15 @@ class ConvexHull {
 
       do {
         // buffer 'next' reference, see .deleteFace2Vertices()
-
-        var nextVertex = vertex!.next;
-
-        var maxDistance = tolerance;
-
+        final nextVertex = vertex!.next;
+        num maxDistance = tolerance;
         Face2? maxFace2;
 
-        for (var i = 0; i < newFace2s.length; i++) {
-          var face = newFace2s[i];
+        for (int i = 0; i < newFace2s.length; i++) {
+          final face = newFace2s[i];
 
           if (face.mark == visible) {
-            var distance = face.distanceToPoint(vertex.point);
+            final distance = face.distanceToPoint(vertex.point);
 
             if (distance > maxDistance) {
               maxDistance = distance;
@@ -328,13 +323,13 @@ class ConvexHull {
   // Computes the extremes of a simplex which will be the initial hull
 
   Map<String, List<VertexNode>> computeExtremes() {
-    var min = Vector3();
-    var max = Vector3();
+    final min = Vector3();
+    final max = Vector3();
 
     List<VertexNode> minVertices = [];
     List<VertexNode> maxVertices = [];
 
-    var i, j;
+    int i, j;
 
     // initially assume that the first vertex is the min/max
 
@@ -349,9 +344,9 @@ class ConvexHull {
 
     // compute the min/max vertex on all six directions
 
-    for (var i = 0, l = vertices.length; i < l; i++) {
-      var vertex = vertices[i];
-      var point = vertex.point;
+    for (int i = 0, l = vertices.length; i < l; i++) {
+      final vertex = vertices[i];
+      final point = vertex.point;
 
       // update the min coordinates
 
@@ -387,21 +382,22 @@ class ConvexHull {
   // that are candidates to form part of the hull
 
   ConvexHull computeInitialHull() {
-    //var line3, plane, closestPoint;
+    //final line3, plane, closestPoint;
 
     //if (line3 == null) {
-    var line3 = Line3(null, null);
-    var plane = Plane(null, null);
-    var closestPoint = Vector3();
+    final line3 = Line3(null, null);
+    final plane = Plane(null, null);
+    final closestPoint = Vector3();
     //}
 
-    var vertex, vertices = this.vertices;
-    var extremes = computeExtremes();
-    var min = extremes["min"]!;
-    var max = extremes["max"]!;
+    VertexNode? vertex;
+    final vertices = this.vertices;
+    final extremes = computeExtremes();
+    final min = extremes["min"]!;
+    final max = extremes["max"]!;
 
-    var v0, v1, v2, v3;
-    var i, j;
+    late VertexNode v0, v1, v2, v3;
+    int i, j;
 
     // 1. Find the two vertices 'v0' and 'v1' with the greatest 1d separation
     // (max.x - min.x)
@@ -410,7 +406,7 @@ class ConvexHull {
 
     num distance;
     num maxDistance = 0;
-    var index = 0;
+    int index = 0;
 
     for (i = 0; i < 3; i++) {
       distance = max[i].point.getComponent(i) - min[i].point.getComponent(i);
@@ -429,7 +425,7 @@ class ConvexHull {
     maxDistance = 0;
     line3.set(v0.point, v1.point);
 
-    for (var i = 0, l = this.vertices.length; i < l; i++) {
+    for (int i = 0, l = this.vertices.length; i < l; i++) {
       vertex = vertices[i];
 
       if (vertex != v0 && vertex != v1) {
@@ -449,7 +445,7 @@ class ConvexHull {
     maxDistance = -1;
     plane.setFromCoplanarPoints(v0.point, v1.point, v2.point);
 
-    for (var i = 0, l = this.vertices.length; i < l; i++) {
+    for (int i = 0, l = this.vertices.length; i < l; i++) {
       vertex = vertices[i];
 
       if (vertex != v0 && vertex != v1 && vertex != v2) {
@@ -471,7 +467,7 @@ class ConvexHull {
         Face2.create(v0, v1, v2),
         Face2.create(v3, v1, v0),
         Face2.create(v3, v2, v1),
-        Face2.create(v3, v0, v2),
+        Face2.create(v3, v0, v2)
       ]);
 
       // set the twin edge
@@ -501,13 +497,7 @@ class ConvexHull {
 
       for (i = 0; i < 3; i++) {
         j = (i + 1) % 3;
-
-        // join face[ i ] i > 0, with the first face
-
         faces[i + 1].getEdge(2)!.setTwin(faces[0].getEdge((3 - i) % 3));
-
-        // join face[ i ] with face[ i + 1 ]
-
         faces[i + 1].getEdge(0)!.setTwin(faces[j + 1].getEdge(1));
       }
     }
@@ -520,7 +510,7 @@ class ConvexHull {
 
     // initial assignment of vertices to the faces of the tetrahedron
 
-    for (var i = 0, l = vertices.length; i < l; i++) {
+    for (int i = 0, l = vertices.length; i < l; i++) {
       vertex = vertices[i];
 
       if (vertex != v0 && vertex != v1 && vertex != v2 && vertex != v3) {
@@ -550,8 +540,8 @@ class ConvexHull {
   ConvexHull reindexFace2s() {
     List<Face2> activeFace2s = [];
 
-    for (var i = 0; i < faces.length; i++) {
-      var face = faces[i];
+    for (int i = 0; i < faces.length; i++) {
+      final face = faces[i];
 
       if (face.mark == visible) {
         activeFace2s.add(face);
@@ -579,7 +569,7 @@ class ConvexHull {
       // now calculate the farthest vertex that face can see
 
       do {
-        var distance = eyeFace2.distanceToPoint(vertex!.point);
+        final distance = eyeFace2.distanceToPoint(vertex!.point);
 
         if (distance > maxDistance) {
           maxDistance = distance;
@@ -603,7 +593,7 @@ class ConvexHull {
 
     face.mark = deleted;
 
-    var edge;
+    HalfEdge? edge;
 
     if (crossEdge == null) {
       edge = crossEdge = face.getEdge(0);
@@ -615,8 +605,8 @@ class ConvexHull {
     }
 
     do {
-      var twinEdge = edge.twin;
-      var oppositeFace2 = twinEdge.face;
+      final twinEdge = edge?.twin;
+      final oppositeFace2 = twinEdge!.face;
 
       if (oppositeFace2.mark == visible) {
         if (oppositeFace2.distanceToPoint(eyePoint) > tolerance) {
@@ -630,7 +620,7 @@ class ConvexHull {
         }
       }
 
-      edge = edge.next;
+      edge = edge?.next;
     } while (edge != crossEdge);
 
     return this;
@@ -641,7 +631,7 @@ class ConvexHull {
   addAdjoiningFace2(eyeVertex, horizonEdge) {
     // all the half edges are created in ccw order thus the face is always pointing outside the hull
 
-    var face = Face2.create(eyeVertex, horizonEdge.tail(), horizonEdge.head());
+    final face = Face2.create(eyeVertex, horizonEdge.tail(), horizonEdge.head());
 
     faces.add(face);
 
@@ -658,15 +648,15 @@ class ConvexHull {
   ConvexHull addNewFace2s(eyeVertex, horizon) {
     newFace2s = [];
 
-    var firstSideEdge;
-    var previousSideEdge;
+    HalfEdge? firstSideEdge;
+    HalfEdge? previousSideEdge;
 
-    for (var i = 0; i < horizon.length; i++) {
-      var horizonEdge = horizon[i];
+    for (int i = 0; i < horizon.length; i++) {
+      final horizonEdge = horizon[i];
 
       // returns the right side edge
 
-      var sideEdge = addAdjoiningFace2(eyeVertex, horizonEdge);
+      final sideEdge = addAdjoiningFace2(eyeVertex, horizonEdge);
 
       if (firstSideEdge == null) {
         firstSideEdge = sideEdge;
@@ -682,7 +672,7 @@ class ConvexHull {
 
     // perform final join of new faces
 
-    firstSideEdge.next.setTwin(previousSideEdge);
+    firstSideEdge?.next?.setTwin(previousSideEdge);
 
     return this;
   }
@@ -690,7 +680,7 @@ class ConvexHull {
   // Adds a vertex to the hull
 
   ConvexHull addVertexToHull(VertexNode eyeVertex) {
-    var horizon = [];
+    final horizon = [];
 
     unassigned.clear();
 
@@ -748,11 +738,11 @@ class Face2 {
   HalfEdge? edge;
 
   static Face2 create(VertexNode a, VertexNode b, VertexNode c) {
-    var face = Face2();
+    final face = Face2();
 
-    var e0 = HalfEdge(a, face);
-    var e1 = HalfEdge(b, face);
-    var e2 = HalfEdge(c, face);
+    final e0 = HalfEdge(a, face);
+    final e1 = HalfEdge(b, face);
+    final e2 = HalfEdge(c, face);
 
     // join edges
 
@@ -768,7 +758,7 @@ class Face2 {
   }
 
   HalfEdge? getEdge(num i) {
-    var edge = this.edge;
+    HalfEdge? edge = this.edge;
 
     while (i > 0) {
       edge = edge!.next;
@@ -786,11 +776,11 @@ class Face2 {
   Face2 compute() {
     // todo test ???
 
-    var triangle = Triangle(null, null, null);
+    final triangle = Triangle(null, null, null);
 
-    var a = edge!.tail()!;
-    var b = edge!.head();
-    var c = edge!.next!.head();
+    final a = edge!.tail()!;
+    final b = edge!.head();
+    final c = edge!.next!.head();
 
     triangle.set(a.point, b.point, c.point);
 
@@ -825,8 +815,8 @@ class HalfEdge {
   VertexNode? tail() => prev != null ? prev!.vertex : null;
 
   num length() {
-    var head = this.head();
-    var tail = this.tail();
+    final head = this.head();
+    final tail = this.tail();
 
     if (tail != null) {
       return tail.point.distanceTo(head.point);
@@ -836,8 +826,8 @@ class HalfEdge {
   }
 
   num lengthSquared() {
-    var head = this.head();
-    var tail = this.tail();
+    final head = this.head();
+    final tail = this.tail();
 
     if (tail != null) {
       return tail.point.distanceToSquared(head.point);

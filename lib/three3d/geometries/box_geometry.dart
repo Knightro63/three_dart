@@ -1,24 +1,21 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import '../core/index.dart';
+import '../math/index.dart';
 
 class BoxGeometry extends BufferGeometry {
   late int groupStart;
   late int numberOfVertices;
 
-  NativeArray? positionsArray;
-  NativeArray? normalsArray;
-  NativeArray? uvsArray;
-
   BoxGeometry([
-    width = 1,
-    height = 1,
-    depth = 1,
-    widthSegments = 1,
-    heightSegments = 1,
-    depthSegments = 1,
-  ]) : super() {
+    double width = 1,
+    double height = 1,
+    double depth = 1,
+    int widthSegments = 1,
+    int heightSegments = 1,
+    int depthSegments = 1
+  ]):super() {
     type = "BoxGeometry";
+
     parameters = {
       "width": width,
       "height": height,
@@ -30,9 +27,9 @@ class BoxGeometry extends BufferGeometry {
 
     // segments
 
-    int wSeg = Math.floor(widthSegments);
-    int hSeg = Math.floor(heightSegments);
-    int dSeg = Math.floor(depthSegments);
+    // int _widthSegments = Math.floor(widthSegments);
+    // int _heightSegments = Math.floor(heightSegments);
+    // int _depthSegments = Math.floor(depthSegments);
 
     // buffers
 
@@ -46,32 +43,31 @@ class BoxGeometry extends BufferGeometry {
     numberOfVertices = 0;
     groupStart = 0;
 
-    void buildPlane(String u, String v, String w, double udir, double vdir,
-        width, height, depth, gridX, gridY, materialIndex) {
-      double segmentWidth = width / gridX;
-      double segmentHeight = height / gridY;
+    void buildPlane(String u, String v, String w, double udir, double vdir, num width, num height, num depth, num gridX, num gridY, int materialIndex) {
+      final segmentWidth = width / gridX;
+      final segmentHeight = height / gridY;
 
-      double widthHalf = width / 2;
-      double heightHalf = height / 2;
-      double depthHalf = depth / 2;
+      final widthHalf = width / 2;
+      final heightHalf = height / 2;
+      final depthHalf = depth / 2;
 
-      double gridX1 = gridX + 1;
-      double gridY1 = gridY + 1;
+      final gridX1 = gridX + 1;
+      final gridY1 = gridY + 1;
 
       int vertexCounter = 0;
       int groupCount = 0;
 
-      Vector3 vector = Vector3();
+      final vector = Vector3();
 
       // generate vertices, normals and uvs
 
       // print("buildPlane: u: ${u} v: ${v} w: ${w} udir: ${udir} vdir: ${vdir} width: ${width} height: ${height} depth: ${depth} gridX: ${gridX} gridY: ${gridY} materialIndex: ${materialIndex} ");
 
       for (int iy = 0; iy < gridY1; iy++) {
-        double y = iy * segmentHeight - heightHalf;
+        final y = iy * segmentHeight - heightHalf;
 
         for (int ix = 0; ix < gridX1; ix++) {
-          double x = ix * segmentWidth - widthHalf;
+          final x = ix * segmentWidth - widthHalf;
 
           // print("iy: ${iy} ix: ${ix} y: ${y} x: ${x} depthHalf: ${depthHalf} ");
 
@@ -87,7 +83,8 @@ class BoxGeometry extends BufferGeometry {
 
           // now apply vector to vertex buffer
 
-          vertices.addAll([vector.x.toDouble(), vector.y.toDouble(), vector.z.toDouble()]);
+          vertices.addAll(
+              [vector.x.toDouble(), vector.y.toDouble(), vector.z.toDouble()]);
 
           // set values to correct vector component
 
@@ -101,7 +98,8 @@ class BoxGeometry extends BufferGeometry {
 
           // now apply vector to normal buffer
 
-          normals.addAll([vector.x.toDouble(), vector.y.toDouble(), vector.z.toDouble()]);
+          normals.addAll(
+              [vector.x.toDouble(), vector.y.toDouble(), vector.z.toDouble()]);
 
           // uvs
 
@@ -122,10 +120,10 @@ class BoxGeometry extends BufferGeometry {
 
       for (int iy = 0; iy < gridY; iy++) {
         for (int ix = 0; ix < gridX; ix++) {
-          double a = numberOfVertices + ix + gridX1 * iy;
-          double b = numberOfVertices + ix + gridX1 * (iy + 1);
-          double c = numberOfVertices + (ix + 1) + gridX1 * (iy + 1);
-          double d = numberOfVertices + (ix + 1) + gridX1 * iy;
+          final a = numberOfVertices + ix + gridX1 * iy;
+          final b = numberOfVertices + ix + gridX1 * (iy + 1);
+          final c = numberOfVertices + (ix + 1) + gridX1 * (iy + 1);
+          final d = numberOfVertices + (ix + 1) + gridX1 * iy;
 
           // faces
 
@@ -153,38 +151,32 @@ class BoxGeometry extends BufferGeometry {
 
     // build each side of the box geometry
 
-    buildPlane('z', 'y', 'x', -1, -1, depth, height, width, dSeg, hSeg, 0); // px
-    buildPlane('z', 'y', 'x', 1, -1, depth, height, -width, dSeg, hSeg, 1); // nx
-    buildPlane('x', 'z', 'y', 1, 1, width, depth, height, wSeg, dSeg, 2); // py
-    buildPlane('x', 'z', 'y', 1, -1, width, depth, -height, wSeg, dSeg, 3); // ny
-    buildPlane('x', 'y', 'z', 1, -1, width, height, depth, wSeg, hSeg, 4); // pz
-    buildPlane('x', 'y', 'z', -1, -1, width, height, -depth, wSeg, hSeg, 5); // nz
+    buildPlane('z', 'y', 'x', -1, -1, depth, height, width, depthSegments,
+        heightSegments, 0); // px
+    buildPlane('z', 'y', 'x', 1, -1, depth, height, -width, depthSegments,
+        heightSegments, 1); // nx
+    buildPlane('x', 'z', 'y', 1, 1, width, depth, height, widthSegments,
+        depthSegments, 2); // py
+    buildPlane('x', 'z', 'y', 1, -1, width, depth, -height, widthSegments,
+        depthSegments, 3); // ny
+    buildPlane('x', 'y', 'z', 1, -1, width, height, depth, widthSegments,
+        heightSegments, 4); // pz
+    buildPlane('x', 'y', 'z', -1, -1, width, height, -depth, widthSegments,
+        heightSegments, 5); // nz
 
     // build geometry
 
     setIndex(indices);
-    setAttribute(AttributeTypes.position,Float32BufferAttribute(Float32Array.from(vertices), 3, false));
-    setAttribute(AttributeTypes.normal, Float32BufferAttribute(Float32Array.from(normals), 3, false));
-    setAttribute(AttributeTypes.uv, Float32BufferAttribute(Float32Array.from(uvs), 2, false));
+    setAttribute('position',
+        Float32BufferAttribute(Float32Array.from(vertices), 3, false));
+    setAttribute('normal',
+        Float32BufferAttribute(Float32Array.from(normals), 3, false));
+    setAttribute(
+        'uv', Float32BufferAttribute(Float32Array.from(uvs), 2, false));
   }
 
-  static fromJSON(data) {
-    return BoxGeometry(
-      data["width"],
-      data["height"],
-      data["depth"],
-      data["widthSegments"],
-      data["heightSegments"],
-      data["depthSegments"],
-    );
-  }
-
-  @override
-  void dispose() {
-    positionsArray?.dispose();
-    normalsArray?.dispose();
-    uvsArray?.dispose();
-
-    super.dispose();
+  static BoxGeometry fromJSON(Map<String,dynamic> data) {
+    return BoxGeometry(data["width"], data["height"], data["depth"],
+        data["widthSegments"], data["heightSegments"], data["depthSegments"]);
   }
 }

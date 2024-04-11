@@ -1,4 +1,4 @@
-library helpers;
+library three_helpers;
 
 export 'arrow_helper.dart';
 export 'axes_helper.dart';

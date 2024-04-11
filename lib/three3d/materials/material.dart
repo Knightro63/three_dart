@@ -1,10 +1,9 @@
 import 'dart:convert';
-
-import 'package:three_dart/three3d/constants.dart';
 import 'package:three_dart/three3d/core/event_dispatcher.dart';
 import 'package:three_dart/three3d/core/object_3d.dart';
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/textures/index.dart';
+import '../math/index.dart';
+import '../textures/index.dart';
+import '../constants.dart';
 
 int materialId = 0;
 
@@ -161,7 +160,8 @@ class Material with EventDispatcher {
 
   Texture? normalMap;
   Texture? bumpMap;
-  Texture? get envMap => (uniforms["envMap"] == null ? null : uniforms["envMap"]["value"]);
+  Texture? get envMap =>
+      (uniforms["envMap"] == null ? null : uniforms["envMap"]["value"]);
   set envMap(value) {
     uniforms["envMap"] = {"value": value};
   }
@@ -209,7 +209,7 @@ class Material with EventDispatcher {
 
   num? _reflectivity;
   num? get reflectivity => _reflectivity;
-  set reflectivity(value) {
+  set reflectivity(num? value) {
     _reflectivity = value;
   }
 
@@ -249,11 +249,11 @@ class Material with EventDispatcher {
   void setValues(Map<String, dynamic>? values) {
     if (values == null) return;
 
-    for (var key in values.keys) {
-      var newValue = values[key];
+    for (final key in values.keys) {
+      final newValue = values[key];
 
       if (newValue == null) {
-        print('three.Material setValues: $key parameter is null.');
+        print('THREE.Material setValues: $key parameter is null.');
         continue;
       }
 
@@ -264,6 +264,8 @@ class Material with EventDispatcher {
   void setValue(String key, dynamic newValue) {
     if (key == "alphaTest") {
       alphaTest = newValue;
+    } else if (key == "bumpScale") {
+      bumpScale = newValue;
     } else if (key == "alphaMap") {
       alphaMap = newValue;
     } else if (key == "aoMap") {
@@ -295,7 +297,7 @@ class Material with EventDispatcher {
     } else if (key == "clipShadows") {
       clipShadows = newValue;
     } else if (key == "color") {
-      if (newValue is Color) {
+      if (newValue.runtimeType == Color) {
         color = newValue;
       } else {
         color = Color(0, 0, 0).setHex(newValue);
@@ -313,7 +315,7 @@ class Material with EventDispatcher {
     } else if (key == "dithering") {
       dithering = newValue;
     } else if (key == "emissive") {
-      if (newValue is Color) {
+      if (newValue.runtimeType == Color) {
         emissive = newValue;
       } else {
         emissive = Color(0, 0, 0).setHex(newValue);
@@ -363,13 +365,14 @@ class Material with EventDispatcher {
     } else if (key == "reflectivity") {
       reflectivity = newValue;
     } else if (key == "roughness") {
-      print(" set values roughness: $newValue ");
       roughness = newValue;
-    } else if (key == "roughnessMap") {
+    }else if (key == "refractionRatio") {
+      refractionRatio = newValue;
+    }else if (key == "roughnessMap") {
       roughnessMap = newValue;
     } else if (key == "shading") {
       //   // for backward compatability if shading is set in the constructor
-      throw ('three.$type: .shading has been removed. Use the boolean .flatShading instead.');
+      throw ('THREE.$type: .shading has been removed. Use the boolean .flatShading instead.');
       //   this.flatShading = ( newValue == FlatShading ) ? true : false;
 
     } else if (key == "shininess") {
@@ -409,7 +412,6 @@ class Material with EventDispatcher {
     } else if (key == "visible") {
       visible = newValue;
     } else if (key == "vertexColors") {
-      print("set vertexColors: $newValue ");
       vertexColors = newValue;
     } else if (key == "wireframe") {
       wireframe = newValue;
@@ -418,7 +420,7 @@ class Material with EventDispatcher {
     } else if (key == "shadowSide") {
       shadowSide = newValue;
     } else if (key == "specular") {
-      if (newValue is Color) {
+      if (newValue.runtimeType == Color) {
         specular = newValue;
       } else {
         specular = Color(0, 0, 0).setHex(newValue);
@@ -429,14 +431,18 @@ class Material with EventDispatcher {
   }
 
   Map<String, dynamic> toJSON({Object3dMeta? meta}) {
-    var isRoot = (meta == null || meta is String);
+    final isRoot = (meta == null || meta is String);
 
     if (isRoot) {
       meta = Object3dMeta();
     }
 
     Map<String, dynamic> data = {
-      "metadata": {"version": 4.5, "type": 'Material', "generator": 'Material.toJSON'}
+      "metadata": {
+        "version": 4.5,
+        "type": 'Material',
+        "generator": 'Material.toJSON'
+      }
     };
 
     // standard Material serialization
@@ -445,7 +451,10 @@ class Material with EventDispatcher {
 
     if (name != '') data["name"] = name;
 
-    data["color"] = color.getHex();
+    if (color is Color) {
+      data["color"] = color.getHex();
+    }
+
     data["roughness"] = roughness;
     data["metalness"] = metalness;
 
@@ -482,7 +491,8 @@ class Material with EventDispatcher {
     }
 
     if (clearcoatRoughnessMap != null && clearcoatRoughnessMap is Texture) {
-      data["clearcoatRoughnessMap"] = clearcoatRoughnessMap!.toJSON(meta)['uuid'];
+      data["clearcoatRoughnessMap"] =
+          clearcoatRoughnessMap!.toJSON(meta)['uuid'];
     }
 
     if (clearcoatNormalMap != null && clearcoatNormalMap is Texture) {
@@ -653,13 +663,11 @@ class Material with EventDispatcher {
 
     if (jsonEncode(userData) != '{}') data["userData"] = userData;
 
-    // TODO: Copied from Object3D.toJSON
-
     extractFromCache(cache) {
-      var values = [];
+      final values = [];
 
       cache.keys.forEach((key) {
-        var data = cache[key];
+        final data = cache[key];
         data.remove("metadata");
         values.add(data);
       });
@@ -668,8 +676,8 @@ class Material with EventDispatcher {
     }
 
     if (isRoot) {
-      var textures = extractFromCache(meta!.textures);
-      var images = extractFromCache(meta.images);
+      final textures = extractFromCache(meta.textures);
+      final images = extractFromCache(meta.images);
 
       if (textures.isNotEmpty) data["textures"] = textures;
       if (images.isNotEmpty) data["images"] = images;
@@ -712,14 +720,14 @@ class Material with EventDispatcher {
     stencilZPass = source.stencilZPass;
     stencilWrite = source.stencilWrite;
 
-    var srcPlanes = source.clippingPlanes;
+    final srcPlanes = source.clippingPlanes;
     List<Plane>? dstPlanes;
 
     if (srcPlanes != null) {
-      var n = srcPlanes.length;
+      final n = srcPlanes.length;
       dstPlanes = List<Plane>.filled(n, Plane(null, null));
 
-      for (var i = 0; i != n; ++i) {
+      for (int i = 0; i != n; ++i) {
         dstPlanes[i] = srcPlanes[i].clone();
       }
     }
@@ -754,7 +762,7 @@ class Material with EventDispatcher {
   }
 
   void dispose() {
-    dispatchEvent(Event({"type": "dispose"}));
+    dispatchEvent(Event(type: "dispose"));
   }
 
   Object? getProperty(String propertyName) {

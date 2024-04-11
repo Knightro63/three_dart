@@ -1,20 +1,22 @@
-import 'package:three_dart/three3d/math/box3.dart';
-import 'package:three_dart/three3d/math/math.dart';
-import 'package:three_dart/three3d/math/plane.dart';
-import 'package:three_dart/three3d/math/vector3.dart';
+import 'math.dart';
+import 'box3.dart';
+import 'plane.dart';
+import 'vector.dart';
+import 'vector2.dart';
+import 'vector3.dart';
 
 class Triangle {
-  static final _v0 = /*@__PURE__*/ Vector3();
-  static final _v1 = /*@__PURE__*/ Vector3();
-  static final _v2 = /*@__PURE__*/ Vector3();
-  static final _v3 = /*@__PURE__*/ Vector3();
+  static final _v0 = Vector3();
+  static final _v1 = Vector3();
+  static final _v2 = Vector3();
+  static final _v3 = Vector3();
 
-  static final _vab = /*@__PURE__*/ Vector3();
-  static final _vac = /*@__PURE__*/ Vector3();
-  static final _vbc = /*@__PURE__*/ Vector3();
-  static final _vap = /*@__PURE__*/ Vector3();
-  static final _vbp = /*@__PURE__*/ Vector3();
-  static final _vcp = /*@__PURE__*/ Vector3();
+  static final _vab = Vector3();
+  static final _vac = Vector3();
+  static final _vbc = Vector3();
+  static final _vap = Vector3();
+  static final _vbp = Vector3();
+  static final _vcp = Vector3();
 
   String type = "Triangle";
 
@@ -67,7 +69,7 @@ class Triangle {
 
   // static/instance method to calculate barycentric coordinates
   // based on: http://www.blackpawn.com/texts/pointinpoly/default.html
-  static Vector3 staticGetBarycoord(point, Vector3 a, Vector3 b, Vector3 c, Vector3 target) {
+  static Vector3 staticGetBarycoord(Vector3 point, Vector3 a, Vector3 b, Vector3 c, Vector3 target) {
     _v0.subVectors(c, a);
     _v1.subVectors(b, a);
     _v2.subVectors(point, a);
@@ -95,13 +97,12 @@ class Triangle {
     return target.set(1 - u - v, v, u);
   }
 
-  static bool staticContainsPoint(point, Vector3 a, Vector3 b, Vector3 c) {
+  static bool staticContainsPoint(Vector3 point, Vector3 a, Vector3 b, Vector3 c) {
     staticGetBarycoord(point, a, b, c, _v3);
-
     return (_v3.x >= 0) && (_v3.y >= 0) && ((_v3.x + _v3.y) <= 1);
   }
 
-  static staticGetUV(point, Vector3 p1, Vector3 p2, Vector3 p3, uv1, uv2, uv3, target) {
+  static staticGetUV(Vector3 point, Vector3 p1, Vector3 p2, Vector3 p3, Vector2 uv1, Vector2 uv2, Vector2 uv3, Vector target) {
     staticGetBarycoord(point, p1, p2, p3, _v3);
 
     target.set(0.0, 0.0);
@@ -128,7 +129,7 @@ class Triangle {
     return this;
   }
 
-  Triangle setFromPointsAndIndices(points, int i0, int i1, int i2) {
+  Triangle setFromPointsAndIndices(List<Vector3> points, int i0, int i1, int i2) {
     a.copy(points[i0]);
     b.copy(points[i1]);
     c.copy(points[i2]);
@@ -167,15 +168,15 @@ class Triangle {
     return target.setFromCoplanarPoints(a, b, c);
   }
 
-  Vector3 getBarycoord(point, Vector3 target) {
+  Vector3 getBarycoord(Vector3 point, Vector3 target) {
     return Triangle.staticGetBarycoord(point, a, b, c, target);
   }
 
-  dynamic getUV(point, uv1, uv2, uv3, target) {
+  dynamic getUV(Vector3 point, Vector2 uv1, Vector2 uv2, Vector2 uv3, Vector target) {
     return Triangle.staticGetUV(point, a, b, c, uv1, uv2, uv3, target);
   }
 
-  bool containsPoint(point) {
+  bool containsPoint(Vector3 point) {
     return Triangle.staticContainsPoint(point, a, b, c);
   }
 
@@ -183,7 +184,7 @@ class Triangle {
     return Triangle.staticIsFrontFacing(a, b, c, direction);
   }
 
-  intersectsBox(Box3 box) {
+  bool intersectsBox(Box3 box) {
     return box.intersectsTriangle(this);
   }
 

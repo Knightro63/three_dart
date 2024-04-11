@@ -1,14 +1,7 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/core/layers.dart';
-import 'package:three_dart/three3d/materials/index.dart';
-import 'package:three_dart/three3d/objects/index.dart';
-import 'package:three_dart/three3d/renderers/shaders/index.dart';
-import 'package:three_dart/three3d/renderers/web_gl_renderer.dart';
-import 'package:three_dart/three3d/renderers/webgl/index.dart';
-import 'package:three_dart/three3d/textures/index.dart';
+part of three_webgl;
 
 class WebGLPrograms {
-  var shaderIDs = {
+  final shaderIDs = {
     "MeshDepthMaterial": 'depth',
     "MeshDistanceMaterial": 'distanceRGBA',
     "MeshNormalMaterial": 'normal',
@@ -53,10 +46,10 @@ class WebGLPrograms {
     precision = capabilities.precision;
   }
 
-  WebGLParameters getParameters(Material material, LightState lights, shadows, scene, object) {
-    var fog = scene.fog;
-    var geometry = object.geometry;
-    var environment = material is MeshStandardMaterial ? scene.environment : null;
+  WebGLParameters getParameters(Material material, LightState lights, List<Light> shadows, Scene scene, Object3D object) {
+    final fog = scene.fog;
+    final geometry = object.geometry;
+    final environment = material is MeshStandardMaterial ? scene.environment : null;
 
     Texture? envMap;
     if (material is MeshStandardMaterial) {
@@ -65,9 +58,9 @@ class WebGLPrograms {
       envMap = cubemaps.get(material.envMap ?? environment);
     }
 
-    var cubeUVHeight = (envMap != null) && (envMap.mapping == CubeUVReflectionMapping) ? envMap.image.height : null;
+    final cubeUVHeight = (envMap != null) && (envMap.mapping == CubeUVReflectionMapping) ? envMap.image.height : null;
 
-    var shaderID = shaderIDs[material.shaderID];
+    final shaderID = shaderIDs[material.shaderID];
 
     // heuristics to create shader parameters according to lights in the scene
     // (not to blow over maxLights budget)
@@ -80,23 +73,23 @@ class WebGLPrograms {
       }
     }
 
-    var morphAttribute =
-        geometry.morphAttributes["position"] ?? geometry.morphAttributes["normal"] ?? geometry.morphAttributes["color"];
-    var morphTargetsCount = (morphAttribute != null) ? morphAttribute.length : 0;
+    final morphAttribute = geometry?.morphAttributes["position"] ?? geometry?.morphAttributes["normal"] ?? geometry?.morphAttributes["color"];
+    final morphTargetsCount = (morphAttribute != null) ? morphAttribute.length : 0;
 
-    var morphTextureStride = 0;
+    int morphTextureStride = 0;
 
-    if (geometry.morphAttributes["position"] != null) morphTextureStride = 1;
-    if (geometry.morphAttributes["normal"] != null) morphTextureStride = 2;
-    if (geometry.morphAttributes["color"] != null) morphTextureStride = 3;
+    if (geometry?.morphAttributes["position"] != null) morphTextureStride = 1;
+    if (geometry?.morphAttributes["normal"] != null) morphTextureStride = 2;
+    if (geometry?.morphAttributes["color"] != null) morphTextureStride = 3;
 
     //
 
     String? vertexShader, fragmentShader;
-    var customVertexShaderID, customFragmentShaderID;
+    dynamic customVertexShaderID;
+    dynamic customFragmentShaderID;
 
     if (shaderID != null) {
-      var shader = shaderLib[shaderID];
+      final shader = shaderLib[shaderID];
       vertexShader = shader["vertexShader"];
       fragmentShader = shader["fragmentShader"];
     } else {
@@ -111,12 +104,12 @@ class WebGLPrograms {
 
     // print(" WebGLPrograms material : ${material.type} ${material.shaderID} ${material.id} object: ${object.type} ${object.id} shaderID: ${shaderID} vertexColors: ${material.vertexColors} ");
 
-    var currentRenderTarget = renderer.getRenderTarget();
+    final currentRenderTarget = renderer.getRenderTarget();
 
-    var useAlphaTest = material.alphaTest > 0;
-    var useClearcoat = material.clearcoat > 0;
+    final useAlphaTest = material.alphaTest > 0;
+    final useClearcoat = material.clearcoat > 0;
 
-    var parameters = WebGLParameters.create();
+    final parameters = WebGLParameters.create();
 
     parameters.isWebGL2 = isWebGL2;
     parameters.shaderID = shaderID;
@@ -233,7 +226,7 @@ class WebGLPrograms {
     parameters.numClippingPlanes = clipping.numPlanes;
     parameters.numClipIntersection = clipping.numIntersection;
     parameters.dithering = material.dithering;
-    parameters.shadowMapEnabled = renderer.shadowMap.enabled && shadows.length > 0;
+    parameters.shadowMapEnabled = renderer.shadowMap.enabled && shadows.isNotEmpty;
     parameters.shadowMapType = renderer.shadowMap.type;
     parameters.toneMapping = material.toneMapped ? renderer.toneMapping : NoToneMapping;
     parameters.physicallyCorrectLights = renderer.physicallyCorrectLights;
@@ -267,7 +260,7 @@ class WebGLPrograms {
     }
 
     if (parameters.defines != null) {
-      for (var name in parameters.defines!.keys) {
+      for (final name in parameters.defines!.keys) {
         array.add(name);
         array.add(parameters.defines![name].toString());
       }
@@ -285,7 +278,7 @@ class WebGLPrograms {
     return array.join();
   }
 
-  getProgramCacheKeyParameters(array, parameters) {
+  void getProgramCacheKeyParameters(array, WebGLParameters parameters) {
     array.add(parameters.precision);
     array.add(parameters.outputEncoding);
     array.add(parameters.envMapMode);
@@ -309,7 +302,7 @@ class WebGLPrograms {
     array.add(parameters.depthPacking);
   }
 
-  getProgramCacheKeyBooleans(array, parameters) {
+  void getProgramCacheKeyBooleans(array, WebGLParameters parameters) {
     _programLayers.disableAll();
 
     if (parameters.isWebGL2) _programLayers.enable(0);
@@ -382,7 +375,7 @@ class WebGLPrograms {
     Map<String, dynamic> uniforms;
 
     if (shaderID != null) {
-      var shader = shaderLib[shaderID];
+      final shader = shaderLib[shaderID];
       uniforms = cloneUniforms(shader["uniforms"]);
     } else {
       uniforms = material.uniforms;
@@ -391,12 +384,12 @@ class WebGLPrograms {
     return uniforms;
   }
 
-  acquireProgram(WebGLParameters parameters, String cacheKey) {
+  WebGLProgram? acquireProgram(WebGLParameters parameters, String cacheKey) {
     WebGLProgram? program;
 
     // Check if code has been already compiled
-    for (var p = 0, pl = programs.length; p < pl; p++) {
-      var preexistingProgram = programs[p];
+    for (int p = 0, pl = programs.length; p < pl; p++) {
+      final preexistingProgram = programs[p];
 
       if (preexistingProgram.cacheKey == cacheKey) {
         program = preexistingProgram;
@@ -414,10 +407,10 @@ class WebGLPrograms {
     return program;
   }
 
-  releaseProgram(program) {
+  void releaseProgram(WebGLProgram program) {
     if (--program.usedTimes == 0) {
       // Remove from unordered set
-      var i = programs.indexOf(program);
+      final i = programs.indexOf(program);
       programs[i] = programs[programs.length - 1];
       programs.removeLast();
 
@@ -426,11 +419,11 @@ class WebGLPrograms {
     }
   }
 
-  releaseShaderCache(material) {
+  void releaseShaderCache(Material material) {
     _customShaders.remove(material);
   }
 
-  dispose() {
+  void dispose() {
     _customShaders.dispose();
   }
 }

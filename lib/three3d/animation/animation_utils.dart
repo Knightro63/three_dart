@@ -1,29 +1,27 @@
-import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/animation/index.dart';
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/dart_helpers.dart';
+import 'package:flutter_gl/native-array/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
+import 'package:three_dart/three3d/dart_helpers.dart';
+import '../constants.dart';
+import 'animation_clip.dart';
+import 'keyframe_track.dart';
 
 class AnimationUtils {
   // same as Array.prototype.slice, but also works on typed arrays
-  static arraySlice(array, [int? from, int? to]) {
+  static List<T> arraySlice<T>(List<T> array, [int from = 0, int? to]) {
     // if ( AnimationUtils.isTypedArray( array ) ) {
-    if (array! is List) {
-      print(" AnimationUtils.arraySlice array: $array ");
-
+    if (array.runtimeType.toString() != "List<num>") {
+      print(" AnimationUtils.arraySlice array: ${array.runtimeType.toString()} ");
       // 	// in ios9 array.subarray(from, null) will return empty array
       // 	// but array.subarray(from) or array.subarray(from, len) is correct
       // 	return new array.constructor( array.subarray( from, to != null ? to : array.length ) );
-
     }
 
-    return array.slice(from, to);
+    return array.sublist(from, to);
   }
 
   // converts an array to a specific type
-  static convertArray(array, String type, [bool forceClone = false]) {
+  static List<num> convertArray(array, String type, [bool forceClone = false]) {
     // var 'null' and 'null' pass
-    // TODO runtimeType on web release mode will not same as debug
     if (array == null || !forceClone && array.runtimeType.toString() == type) {
       return array;
     }
@@ -40,8 +38,8 @@ class AnimationUtils {
     return slice(array, 0); // create Array
   }
 
-  static isTypedArray(object) {
-    print("AnimationUtils isTypedArray object: $object");
+  static bool isTypedArray(object) {
+    print("AnimationUtils isTypedArray object: ${object.runtimeType.toString()}");
     return false;
 
     // return ArrayBuffer.isView( object ) &&
@@ -49,14 +47,14 @@ class AnimationUtils {
   }
 
   // returns an array by which times and values can be sorted
-  static getKeyframeOrder(times) {
-    compareTime(i, j) {
-      return times[i] - times[j];
+  static List<int> getKeyframeOrder(List<num> times) {
+    int compareTime(int i, int j) {
+      return (times[i] - times[j]).toInt();
     }
 
-    var n = times.length;
-    var result = List<int>.filled(n, 0);
-    for (var i = 0; i != n; ++i) {
+    int  n = times.length;
+    List<int> result = List<int>.filled(n, 0);
+    for (int i = 0; i != n; ++i) {
       result[i] = i;
     }
 
@@ -68,14 +66,14 @@ class AnimationUtils {
   }
 
   // uses the array previously returned by 'getKeyframeOrder' to sort data
-  static sortedArray(List<num> values, stride, order) {
-    var nValues = values.length;
-    var result = List<num>.filled(nValues, 0);
+  static List<num> sortedArray(List<num> values, int stride, List<int> order) {
+    final nValues = values.length;
+    final result = List<num>.filled(nValues, 0);
 
-    for (var i = 0, dstOffset = 0; dstOffset != nValues; ++i) {
-      var srcOffset = order[i] * stride;
+    for (int i = 0, dstOffset = 0; dstOffset != nValues; ++i) {
+      int srcOffset = order[i] * stride;
 
-      for (var j = 0; j != stride; ++j) {
+      for (int j = 0; j != stride; ++j) {
         result[dstOffset++] = values[srcOffset + j];
       }
     }
@@ -84,89 +82,92 @@ class AnimationUtils {
   }
 
   // function for parsing AOS keyframe formats
-  static flattenJSON(jsonKeys, times, values, valuePropertyName) {
-    var i = 1, key = jsonKeys[0];
+  // this does nothing in Dart
+  // static void flattenJSON(List<String> jsonKeys, List<num> times, List<num> values, String valuePropertyName) {
+    // int i = 1;
+    // String key = jsonKeys[0];
 
-    while (key != null && key[valuePropertyName] == null) {
-      key = jsonKeys[i++];
-    }
+    // while (key != null && key[valuePropertyName] == null) {
+    //   key = jsonKeys[i++];
+    // }
 
-    if (key == null) return; // no data
+    // if (key == null) return; // no data
 
-    var value = key[valuePropertyName];
-    if (value == null) return; // no data
+    // var value = key[valuePropertyName];
+    // if (value == null) return; // no data
 
-    if (value is List) {
-      do {
-        value = key[valuePropertyName];
+    // // if ( Array.isArray( value ) ) {
+    // if (value.runtimeType.toString() == "List<num>") {
+    //   do {
+    //     value = key[valuePropertyName];
 
-        if (value != null) {
-          times.push(key.time);
-          values.push.apply(values, value); // push all elements
+    //     if (value != null) {
+    //       times.add(key.time);
+    //       values.add.apply(values, value); // push all elements
 
-        }
+    //     }
 
-        key = jsonKeys[i++];
-      } while (key != null);
-    } else if (value.toArray != null) {
-      // ...assume three.Math-ish
+    //     key = jsonKeys[i++];
+    //   } while (key != null);
+    // } 
+    // else if (value.toArray != null) {
+    //   // ...assume THREE.Math-ish
 
-      do {
-        value = key[valuePropertyName];
+    //   do {
+    //     value = key[valuePropertyName];
 
-        if (value != null) {
-          times.push(key.time);
-          value.toArray(values, values.length);
-        }
+    //     if (value != null) {
+    //       times.add(key.time);
+    //       value.toArray(values, values.length);
+    //     }
 
-        key = jsonKeys[i++];
-      } while (key != null);
-    } else {
-      // otherwise push as-is
+    //     key = jsonKeys[i++];
+    //   } while (key != null);
+    // } 
+    // else {
+    //   do {
+    //     value = key[valuePropertyName];
 
-      do {
-        value = key[valuePropertyName];
+    //     if (value != null) {
+    //       times.add(key.time);
+    //       values.add(value);
+    //     }
 
-        if (value != null) {
-          times.push(key.time);
-          values.push(value);
-        }
+    //     key = jsonKeys[i++];
+    //   } while (key != null);
+    // }
+  // }
 
-        key = jsonKeys[i++];
-      } while (key != null);
-    }
-  }
-
-  subclip(sourceClip, name, startFrame, endFrame, {int fps = 30}) {
-    var clip = sourceClip.clone();
+  AnimationClip subclip(AnimationClip sourceClip, String name, int startFrame, int endFrame, {int fps = 30}) {
+    final clip = sourceClip.clone();
 
     clip.name = name;
 
-    var tracks = [];
+    final List<KeyframeTrack> tracks = [];
 
-    for (var i = 0; i < clip.tracks.length; ++i) {
-      var track = clip.tracks[i];
-      var valueSize = track.getValueSize();
+    for (int i = 0; i < clip.tracks.length; ++i) {
+      final track = clip.tracks[i];
+      final valueSize = track.getValueSize();
 
-      var times = [];
-      var values = [];
+      final times = [];
+      final values = [];
 
-      for (var j = 0; j < track.times.length; ++j) {
-        var frame = track.times[j] * fps;
+      for (int j = 0; j < track.times.length; ++j) {
+        final frame = track.times[j] * fps;
 
         if (frame < startFrame || frame >= endFrame) continue;
 
         times.add(track.times[j]);
 
-        for (var k = 0; k < valueSize; ++k) {
+        for (int k = 0; k < valueSize; ++k) {
           values.add(track.values[j * valueSize + k]);
         }
       }
 
       if (times.isEmpty) continue;
 
-      track.times = AnimationUtils.convertArray(times, track.times.constructor);
-      track.values = AnimationUtils.convertArray(values, track.values.constructor);
+      track.times = AnimationUtils.convertArray(times, track.times.runtimeType.toString());
+      track.values = AnimationUtils.convertArray(values, track.values.runtimeType.toString());
 
       tracks.add(track);
     }
@@ -175,17 +176,17 @@ class AnimationUtils {
 
     // find minimum .times value across all tracks in the trimmed clip
 
-    var minStartTime = double.infinity;
+    double minStartTime = double.infinity;
 
-    for (var i = 0; i < clip.tracks.length; ++i) {
+    for (int i = 0; i < clip.tracks.length; ++i) {
       if (minStartTime > clip.tracks[i].times[0]) {
-        minStartTime = clip.tracks[i].times[0];
+        minStartTime = clip.tracks[i].times[0].toDouble();
       }
     }
 
     // shift all tracks such that clip begins at t=0
 
-    for (var i = 0; i < clip.tracks.length; ++i) {
+    for (int i = 0; i < clip.tracks.length; ++i) {
       clip.tracks[i].shift(-1 * minStartTime);
     }
 
@@ -194,18 +195,18 @@ class AnimationUtils {
     return clip;
   }
 
-  makeClipAdditive(AnimationClip targetClip, {int referenceFrame = 0, AnimationClip? referenceClip, int fps = 30}) {
+  AnimationClip makeClipAdditive(AnimationClip targetClip,{int referenceFrame = 0, AnimationClip? referenceClip, int fps = 30}) {
     referenceClip ??= targetClip;
 
     if (fps <= 0) fps = 30;
 
-    var numTracks = referenceClip.tracks.length;
-    var referenceTime = referenceFrame / fps;
+    final numTracks = referenceClip.tracks.length;
+    final referenceTime = referenceFrame / fps;
 
     // Make each track's values relative to the values at the reference frame
-    for (var i = 0; i < numTracks; ++i) {
-      var referenceTrack = referenceClip.tracks[i];
-      var referenceTrackType = referenceTrack.valueTypeName;
+    for (int i = 0; i < numTracks; ++i) {
+      final referenceTrack = referenceClip.tracks[i];
+      final referenceTrackType = referenceTrack.valueTypeName;
 
       // Skip this track if it's non-numeric
       if (referenceTrackType == 'bool' || referenceTrackType == 'string') {
@@ -213,72 +214,78 @@ class AnimationUtils {
       }
 
       // Find the track in the target clip whose name and type matches the reference track
-      var targetTrack = targetClip.tracks.cast<KeyframeTrack?>().firstWhere((track) {
-        return track?.name == referenceTrack.name && track?.valueTypeName == referenceTrackType;
-      }, orElse: () => null);
+      KeyframeTrack? targetTrack = targetClip.tracks.firstWhere((track) {
+        return track.name == referenceTrack.name && track.valueTypeName == referenceTrackType;
+      });
 
       if (targetTrack == null) continue;
 
-      var referenceOffset = 0;
-      var referenceValueSize = referenceTrack.getValueSize();
+      final referenceOffset = 0;
+      final referenceValueSize = referenceTrack.getValueSize();
 
       print("AnimationUtils isInterpolantFactoryMethodGLTFCubicSpline todo ");
       // if ( referenceTrack.createInterpolant.isInterpolantFactoryMethodGLTFCubicSpline ) {
       // 	referenceOffset = referenceValueSize / 3;
       // }
 
-      var targetOffset = 0;
-      var targetValueSize = targetTrack.getValueSize();
+      final targetOffset = 0;
+      final targetValueSize = targetTrack.getValueSize();
 
       print("AnimationUtils isInterpolantFactoryMethodGLTFCubicSpline todo ");
       // if ( targetTrack.createInterpolant.isInterpolantFactoryMethodGLTFCubicSpline ) {
       // 	targetOffset = targetValueSize / 3;
       // }
 
-      var lastIndex = referenceTrack.times.length - 1;
-      List<num> referenceValue;
+      final lastIndex = referenceTrack.times.length - 1;
+      late List<num> referenceValue;
 
       // Find the value to subtract out of the track
       if (referenceTime <= referenceTrack.times[0]) {
         // Reference frame is earlier than the first keyframe, so just use the first keyframe
-        var startIndex = referenceOffset;
-        var endIndex = referenceValueSize - referenceOffset;
-        referenceValue = AnimationUtils.arraySlice(referenceTrack.values, startIndex, endIndex);
+        final startIndex = referenceOffset;
+        final endIndex = referenceValueSize - referenceOffset;
+        referenceValue = AnimationUtils.arraySlice(
+            referenceTrack.values, startIndex, endIndex);
       } else if (referenceTime >= referenceTrack.times[lastIndex]) {
         // Reference frame is after the last keyframe, so just use the last keyframe
-        int startIndex = (lastIndex * referenceValueSize + referenceOffset).toInt();
-        int endIndex = (startIndex + referenceValueSize - referenceOffset).toInt();
-        referenceValue = AnimationUtils.arraySlice(referenceTrack.values, startIndex, endIndex);
+        int startIndex =
+            (lastIndex * referenceValueSize + referenceOffset).toInt();
+        int endIndex =
+            (startIndex + referenceValueSize - referenceOffset).toInt();
+        referenceValue = AnimationUtils.arraySlice(
+            referenceTrack.values, startIndex, endIndex);
       } else {
         // Interpolate to the reference value
-        var interpolant = referenceTrack.createInterpolant!();
-        var startIndex = referenceOffset;
-        var endIndex = referenceValueSize - referenceOffset;
+        final interpolant = referenceTrack.createInterpolant!();
+        final startIndex = referenceOffset;
+        final endIndex = referenceValueSize - referenceOffset;
         interpolant.evaluate(referenceTime);
-        referenceValue = AnimationUtils.arraySlice(interpolant.resultBuffer, startIndex, endIndex);
+        referenceValue = AnimationUtils.arraySlice(
+            interpolant.resultBuffer, startIndex, endIndex);
       }
 
       // Conjugate the quaternion
       if (referenceTrackType == 'quaternion') {
-        var referenceQuat = Quaternion().fromArray(referenceValue).normalize().conjugate();
+        final referenceQuat =
+            Quaternion().fromArray(referenceValue).normalize().conjugate();
         referenceQuat.toArray(referenceValue);
       }
 
       // Subtract the reference value from all of the track values
 
-      var numTimes = targetTrack.times.length;
-      for (var j = 0; j < numTimes; ++j) {
+      final numTimes = targetTrack.times.length;
+      for (int j = 0; j < numTimes; ++j) {
         int valueStart = (j * targetValueSize + targetOffset).toInt();
 
         if (referenceTrackType == 'quaternion') {
           // Multiply the conjugate for quaternion track types
-          Quaternion.multiplyQuaternionsFlat(
-              targetTrack.values, valueStart, referenceValue, 0, targetTrack.values, valueStart);
+          Quaternion.multiplyQuaternionsFlat(targetTrack.values, valueStart,
+              referenceValue, 0, targetTrack.values, valueStart);
         } else {
-          var valueEnd = targetValueSize - targetOffset * 2;
+          final valueEnd = targetValueSize - targetOffset * 2;
 
           // Subtract each value for all other numeric track types
-          for (var k = 0; k < valueEnd; ++k) {
+          for (int k = 0; k < valueEnd; ++k) {
             targetTrack.values[valueStart + k] -= referenceValue[k];
           }
         }

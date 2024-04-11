@@ -1,8 +1,8 @@
 import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/math/euler.dart';
-import 'package:three_dart/three3d/math/math.dart';
-import 'package:three_dart/three3d/math/math_utils.dart';
-import 'package:three_dart/three3d/math/vector3.dart';
+import 'math_utils.dart';
+import 'math.dart';
+import 'euler.dart';
+import 'vector3.dart';
 
 class Quaternion {
   String type = "Quaternion";
@@ -32,13 +32,15 @@ class Quaternion {
     return [_x, _y, _z, _w];
   }
 
-  static Quaternion staticSlerp(Quaternion qa, Quaternion qb, Quaternion qm, num t) {
+  static Quaternion staticSlerp(
+      Quaternion qa, Quaternion qb, Quaternion qm, num t) {
     print(
-        'three.Quaternion: Static .slerp() has been deprecated. Use is now qm.slerpQuaternions( qa, qb, t ) instead.');
+        'THREE.Quaternion: Static .slerp() has been deprecated. Use is now qm.slerpQuaternions( qa, qb, t ) instead.');
     return qm.slerpQuaternions(qa, qb, t);
   }
 
-  static void slerpFlat(dst, num dstOffset, src0, num srcOffset0, src1, num srcOffset1, num t) {
+  static void slerpFlat(
+      dst, num dstOffset, src0, num srcOffset0, src1, num srcOffset1, num t) {
     // fuzz-free, array-based Quaternion SLERP operation
 
     double x0 = src0[srcOffset0 + 0].toDouble(),
@@ -68,19 +70,19 @@ class Quaternion {
     }
 
     if (w0 != w1 || x0 != x1 || y0 != y1 || z0 != z1) {
-      var s = 1 - t;
+      num s = 1 - t;
       double cos = x0 * x1 + y0 * y1 + z0 * z1 + w0 * w1;
-      var dir = (cos >= 0 ? 1 : -1), sqrSin = 1 - cos * cos;
+      final dir = (cos >= 0 ? 1 : -1), sqrSin = 1 - cos * cos;
 
       // Skip the Slerp for tiny steps to avoid numeric problems:
       if (sqrSin > Math.epsilon) {
-        var sin = Math.sqrt(sqrSin), len = Math.atan2(sin, cos * dir);
+        final sin = Math.sqrt(sqrSin), len = Math.atan2(sin, cos * dir);
 
         s = Math.sin(s * len) / sin;
         t = Math.sin(t * len) / sin;
       }
 
-      var tDir = t * dir;
+      final tDir = t * dir;
 
       x0 = x0 * s + x1 * tDir;
       y0 = y0 * s + y1 * tDir;
@@ -89,7 +91,7 @@ class Quaternion {
 
       // Normalize in case we just did a lerp:
       if (s == 1 - t) {
-        var f = 1 / Math.sqrt(x0 * x0 + y0 * y0 + z0 * z0 + w0 * w0);
+        final f = 1 / Math.sqrt(x0 * x0 + y0 * y0 + z0 * z0 + w0 * w0);
 
         x0 *= f;
         y0 *= f;
@@ -104,16 +106,17 @@ class Quaternion {
     dst[dstOffset + 3] = w0;
   }
 
-  static multiplyQuaternionsFlat(dst, num dstOffset, src0, num srcOffset0, src1, num srcOffset1) {
-    var x0 = src0[srcOffset0];
-    var y0 = src0[srcOffset0 + 1];
-    var z0 = src0[srcOffset0 + 2];
-    var w0 = src0[srcOffset0 + 3];
+  static multiplyQuaternionsFlat(
+      dst, num dstOffset, src0, num srcOffset0, src1, num srcOffset1) {
+    final x0 = src0[srcOffset0];
+    final y0 = src0[srcOffset0 + 1];
+    final z0 = src0[srcOffset0 + 2];
+    final w0 = src0[srcOffset0 + 3];
 
-    var x1 = src1[srcOffset1];
-    var y1 = src1[srcOffset1 + 1];
-    var z1 = src1[srcOffset1 + 2];
-    var w1 = src1[srcOffset1 + 3];
+    final x1 = src1[srcOffset1];
+    final y1 = src1[srcOffset1 + 1];
+    final z1 = src1[srcOffset1 + 2];
+    final w1 = src1[srcOffset1 + 3];
 
     dst[dstOffset] = x0 * w1 + w0 * x1 + y0 * z1 - z0 * y1;
     dst[dstOffset + 1] = y0 * w1 + w0 * y1 + z0 * x1 - x0 * z1;
@@ -174,25 +177,25 @@ class Quaternion {
   }
 
   Quaternion setFromEuler(Euler euler, [bool update = false]) {
-    var x = euler.x;
-    var y = euler.y;
-    var z = euler.z;
-    var order = euler.order;
+    final x = euler.x;
+    final y = euler.y;
+    final z = euler.z;
+    final order = euler.order;
 
     // http://www.mathworks.com/matlabcentral/fileexchange/
     // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
     //	content/SpinCalc.m
 
-    var cos = Math.cos;
-    var sin = Math.sin;
+    final cos = Math.cos;
+    final sin = Math.sin;
 
-    var c1 = cos(x / 2);
-    var c2 = cos(y / 2);
-    var c3 = cos(z / 2);
+    final c1 = cos(x / 2);
+    final c2 = cos(y / 2);
+    final c3 = cos(z / 2);
 
-    var s1 = sin(x / 2);
-    var s2 = sin(y / 2);
-    var s3 = sin(z / 2);
+    final s1 = sin(x / 2);
+    final s2 = sin(y / 2);
+    final s3 = sin(z / 2);
 
     switch (order) {
       case 'XYZ':
@@ -239,7 +242,7 @@ class Quaternion {
         break;
 
       default:
-        print('three.Quaternion: .setFromEuler() encountered an unknown order: $order');
+        print('THREE.Quaternion: .setFromEuler() encountered an unknown order: $order');
     }
 
     if (update) {
@@ -253,7 +256,7 @@ class Quaternion {
 
     // assumes axis is normalized
 
-    var halfAngle = angle / 2, s = Math.sin(halfAngle);
+    final halfAngle = angle / 2, s = Math.sin(halfAngle);
 
     _x = axis.x * s;
     _y = axis.y * s;
@@ -283,28 +286,28 @@ class Quaternion {
     double trace = m11 + m22 + m33;
 
     if (trace > 0) {
-      var s = 0.5 / Math.sqrt(trace + 1.0);
+      final s = 0.5 / Math.sqrt(trace + 1.0);
 
       _w = 0.25 / s;
       _x = (m32 - m23) * s;
       _y = (m13 - m31) * s;
       _z = (m21 - m12) * s;
     } else if (m11 > m22 && m11 > m33) {
-      var s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
+      final s = 2.0 * Math.sqrt(1.0 + m11 - m22 - m33);
 
       _w = (m32 - m23) / s;
       _x = 0.25 * s;
       _y = (m12 + m21) / s;
       _z = (m13 + m31) / s;
     } else if (m22 > m33) {
-      var s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
+      final s = 2.0 * Math.sqrt(1.0 + m22 - m11 - m33);
 
       _w = (m13 - m31) / s;
       _x = (m12 + m21) / s;
       _y = 0.25 * s;
       _z = (m23 + m32) / s;
     } else {
-      var s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
+      final s = 2.0 * Math.sqrt(1.0 + m33 - m11 - m22);
 
       _w = (m21 - m12) / s;
       _x = (m13 + m31) / s;
@@ -320,7 +323,7 @@ class Quaternion {
   Quaternion setFromUnitVectors(Vector3 vFrom, Vector3 vTo) {
     // assumes direction vectors vFrom and vTo are normalized
 
-    var r = vFrom.dot(vTo) + 1;
+    double r = vFrom.dot(vTo) + 1;
 
     if (r < Math.epsilon) {
       r = 0;
@@ -353,11 +356,11 @@ class Quaternion {
   }
 
   Quaternion rotateTowards(Quaternion q, double step) {
-    var angle = angleTo(q);
+    final angle = angleTo(q);
 
     if (angle == 0) return this;
 
-    var t = Math.min(1, step / angle);
+    final t = Math.min(1, step / angle);
 
     slerp(q, t);
 
@@ -397,7 +400,7 @@ class Quaternion {
   }
 
   Quaternion normalize() {
-    var l = length();
+    double l = length();
 
     if (l == 0) {
       _x = 0;
@@ -420,7 +423,8 @@ class Quaternion {
 
   Quaternion multiply(Quaternion q, {Quaternion? p}) {
     if (p != null) {
-      print('three.Quaternion: .multiply() now only accepts one argument. Use .multiplyQuaternions( a, b ) instead.');
+      print(
+          'THREE.Quaternion: .multiply() now only accepts one argument. Use .multiplyQuaternions( a, b ) instead.');
       return multiplyQuaternions(q, p);
     }
 
@@ -434,8 +438,8 @@ class Quaternion {
   Quaternion multiplyQuaternions(Quaternion a, Quaternion b) {
     // from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
 
-    var qax = a._x, qay = a._y, qaz = a._z, qaw = a._w;
-    var qbx = b._x, qby = b._y, qbz = b._z, qbw = b._w;
+    final qax = a._x, qay = a._y, qaz = a._z, qaw = a._w;
+    final qbx = b._x, qby = b._y, qbz = b._z, qbw = b._w;
 
     _x = qax * qbw + qaw * qbx + qay * qbz - qaz * qby;
     _y = qay * qbw + qaw * qby + qaz * qbx - qax * qbz;
@@ -451,11 +455,11 @@ class Quaternion {
     if (t == 0) return this;
     if (t == 1) return copy(qb);
 
-    var x = _x, y = _y, z = _z, w = _w;
+    final x = _x, y = _y, z = _z, w = _w;
 
     // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
 
-    var cosHalfTheta = w * qb._w + x * qb._x + y * qb._y + z * qb._z;
+    num cosHalfTheta = w * qb._w + x * qb._x + y * qb._y + z * qb._z;
 
     if (cosHalfTheta < 0) {
       _w = -qb._w;
@@ -477,10 +481,10 @@ class Quaternion {
       return this;
     }
 
-    var sqrSinHalfTheta = 1.0 - cosHalfTheta * cosHalfTheta;
+    final sqrSinHalfTheta = 1.0 - cosHalfTheta * cosHalfTheta;
 
     if (sqrSinHalfTheta <= Math.epsilon) {
-      var s = 1 - t;
+      final s = 1 - t;
       _w = s * w + t * _w;
       _x = s * x + t * _x;
       _y = s * y + t * _y;
@@ -492,9 +496,10 @@ class Quaternion {
       return this;
     }
 
-    var sinHalfTheta = Math.sqrt(sqrSinHalfTheta);
-    var halfTheta = Math.atan2(sinHalfTheta, cosHalfTheta);
-    var ratioA = Math.sin((1 - t) * halfTheta) / sinHalfTheta, ratioB = Math.sin(t * halfTheta) / sinHalfTheta;
+    final sinHalfTheta = Math.sqrt(sqrSinHalfTheta);
+    final halfTheta = Math.atan2(sinHalfTheta, cosHalfTheta);
+    final ratioA = Math.sin((1 - t) * halfTheta) / sinHalfTheta,
+        ratioB = Math.sin(t * halfTheta) / sinHalfTheta;
 
     _w = (w * ratioA + _w * ratioB);
     _x = (x * ratioA + _x * ratioB);
@@ -515,13 +520,13 @@ class Quaternion {
     // Note, this source uses w, x, y, z ordering,
     // so we swap the order below.
 
-    var u1 = Math.random();
-    var sqrt1u1 = Math.sqrt(1 - u1);
-    var sqrtu1 = Math.sqrt(u1);
+    final u1 = Math.random();
+    final sqrt1u1 = Math.sqrt(1 - u1);
+    final sqrtu1 = Math.sqrt(u1);
 
-    var u2 = 2 * Math.pi * Math.random();
+    final u2 = 2 * Math.pi * Math.random();
 
-    var u3 = 2 * Math.pi * Math.random();
+    final u3 = 2 * Math.pi * Math.random();
 
     return set(
       sqrt1u1 * Math.cos(u2),
@@ -532,7 +537,10 @@ class Quaternion {
   }
 
   bool equals(Quaternion quaternion) {
-    return (quaternion._x == _x) && (quaternion._y == _y) && (quaternion._z == _z) && (quaternion._w == _w);
+    return (quaternion._x == _x) &&
+        (quaternion._y == _y) &&
+        (quaternion._z == _z) &&
+        (quaternion._w == _w);
   }
 
   Quaternion fromArray(List<num> array, [int offset = 0]) {

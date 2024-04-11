@@ -7,7 +7,7 @@ String commonGlsl = """
 #define EPSILON 1e-6
 
 #ifndef saturate
-// <tonemapping_pars_fragment> may have defined saturate() already
+// <tonemappingParsFragment> may have defined saturate() already
 #define saturate( a ) clamp( a, 0.0, 1.0 )
 #endif
 #define whiteComplement( a ) ( 1.0 - saturate( a ) )

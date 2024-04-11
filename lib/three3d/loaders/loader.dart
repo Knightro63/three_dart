@@ -1,4 +1,6 @@
-import 'package:three_dart/three3d/loaders/loading_manager.dart';
+part of three_loaders;
+
+Map<String,dynamic> loading = {};
 
 abstract class Loader {
   late LoadingManager manager;
@@ -9,11 +11,9 @@ abstract class Loader {
   late Map<String, dynamic> requestHeader;
   String responseType = "text";
   late String mimeType;
+  //bool flipY = false;
 
-  // 加载纹理时  是否需要垂直翻转
-  bool flipY = false;
-
-  Loader([manager]) {
+  Loader([LoadingManager? manager]) {
     this.manager = (manager != null) ? manager : defaultLoadingManager;
 
     crossOrigin = 'anonymous';
@@ -23,38 +23,63 @@ abstract class Loader {
     requestHeader = {};
   }
 
-  load(url, Function onLoad, [Function? onProgress, Function? onError]) {
+  Future fromNetwork(Uri uri) async{
+    throw (" load need implement ............. ");
+  }
+  Future fromFile(File file) async{
+    throw (" load need implement ............. ");
+  }
+  Future fromPath(String filePath) async{
+    throw (" load need implement ............. ");
+  }
+  Future fromBlob(Blob blob) async{
+    throw (" load need implement ............. ");
+  }
+  Future fromAsset(String asset, {String? package}) async{
+    throw (" load need implement ............. ");
+  }
+  Future fromBytes(Uint8List bytes) async{
     throw (" load need implement ............. ");
   }
 
-  loadAsync(url) async {
+  @Deprecated("Please use ImageLoader with type.")
+  dynamic load(url,Function onLoad, [Function? onProgress, Function? onError]) {
+    throw (" load need implement ............. ");
+  }
+  @Deprecated("Please use ImageLoader with type.")
+  Future loadAsync(url) async {
     throw (" loadAsync need implement ............. ");
   }
 
-  parse(json, [String? path, Function? onLoad, Function? onError]) {}
+  //void parse(Map<String,dynamic> json, [String path = '', Function? onLoad, Function? onError]){}
 
-  setCrossOrigin(crossOrigin) {
+  Loader setCrossOrigin(String crossOrigin) {
     this.crossOrigin = crossOrigin;
     return this;
   }
 
-  setWithCredentials(value) {
+  Loader setWithCredentials(bool value) {
     withCredentials = value;
     return this;
   }
 
-  setPath(path) {
+  Loader setPath(String path) {
     this.path = path;
     return this;
   }
 
-  setResourcePath(resourcePath) {
+  Loader setResourcePath(String? resourcePath) {
     this.resourcePath = resourcePath;
     return this;
   }
 
-  setRequestHeader(requestHeader) {
+  Loader setRequestHeader(Map<String, dynamic> requestHeader) {
     this.requestHeader = requestHeader;
     return this;
+  }
+
+
+  void dispose(){
+    loading.clear();
   }
 }

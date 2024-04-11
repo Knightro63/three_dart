@@ -1,6 +1,6 @@
-import 'package:three_dart/three3d/materials/material.dart';
-import 'package:three_dart/three3d/materials/mesh_standard_material.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import './material.dart';
+import 'mesh_standard_material.dart';
+import '../math/index.dart';
 
 class MeshPhysicalMaterial extends MeshStandardMaterial {
   MeshPhysicalMaterial([parameters]) : super(parameters) {
@@ -25,10 +25,14 @@ class MeshPhysicalMaterial extends MeshStandardMaterial {
   }
 
   @override
-  set reflectivity(value) {
+  set reflectivity(num? value){
+    value ??= 0;
     ior = (1 + 0.4 * value) / (1 - 0.4 * value);
   }
-
+  @override
+  MeshPhysicalMaterial clone() {
+    return MeshPhysicalMaterial(<String, dynamic>{}).copy(this);
+  }
   @override
   MeshPhysicalMaterial copy(Material source) {
     super.copy(source);

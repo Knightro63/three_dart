@@ -1,21 +1,19 @@
-import 'package:three_dart/three3d/renderers/webgl/web_gl_capabilities.dart';
-import 'package:three_dart/three3d/renderers/webgl/web_gl_extensions.dart';
-import 'package:three_dart/three3d/renderers/webgl/web_gl_info.dart';
+part of three_webgl;
 
 class BaseWebGLBufferRenderer {
-  setIndex(value) {
+  void setIndex(value) {
     throw (" BaseWebGLBufferRenderer.setIndex value: $value  ");
   }
 
-  render(start, count) {
+  void render(num start, num count) {
     throw (" BaseWebGLBufferRenderer.render start: $start $count  ");
   }
 
-  renderInstances(start, count, primcount) {
+  void renderInstances(num start, num count, int? primcount) {
     throw (" BaseWebGLBufferRenderer.renderInstances start: $start $count primcount: $primcount  ");
   }
 
-  setMode(value) {
+  void setMode(value) {
     throw (" BaseWebGLBufferRenderer.setMode value: $value ");
   }
 }
@@ -33,31 +31,32 @@ class WebGLBufferRenderer extends BaseWebGLBufferRenderer {
   }
 
   @override
-  setMode(value) {
+  void setMode(value) {
     mode = value;
   }
 
   @override
-  void render(start, count) {
+  void render(num start, num count) {
     gl.drawArrays(mode, start, count);
     info.update(count, mode, 1);
   }
 
   @override
-  void renderInstances(start, count, primcount) {
+  void renderInstances(num start, num count, int? primcount) {
     if (primcount == 0) return;
 
-    var extension, methodName;
+    dynamic extension;
+    String methodName;
 
     if (isWebGL2) {
       gl.drawArraysInstanced(mode, start, count, primcount);
-    } else {
+    } 
+    else {
       extension = extensions.get('ANGLE_instanced_arrays');
       methodName = 'drawArraysInstancedANGLE';
 
       if (extension == null) {
-        print(
-            'three.WebGLBufferRenderer: using three.InstancedBufferGeometry but hardware does not support extension ANGLE_instanced_arrays.');
+        print('three.WebGLBufferRenderer: using three.InstancedBufferGeometry but hardware does not support extension ANGLE_instanced_arrays.');
         return;
       }
       extension[methodName](mode, start, count, primcount);

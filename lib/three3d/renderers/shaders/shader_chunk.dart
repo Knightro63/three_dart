@@ -1,5 +1,4 @@
-import 'shader_chunk/index.dart';
-import 'shader_lib/index.dart';
+part of three_shaders;
 
 Map<String, String> shaderChunk = {
   "alphamap_fragment": alphamapFragment,
@@ -9,7 +8,7 @@ Map<String, String> shaderChunk = {
   "alphatest_pars_fragment": alphatestParsFragment,
   "aomap_pars_fragment": aomapParsFragment,
   "begin_vertex": beginVertex,
-  "beginnormal_vertex": beginnormalCertex,
+  "beginnormal_vertex": beginnormalVertex,
   "bsdfs": bsdfs,
   "bumpmap_pars_fragment": bumpmapParsFragment,
   "clipping_planes_fragment": clippingPlanesFragment,
@@ -26,7 +25,7 @@ Map<String, String> shaderChunk = {
   "displacementmap_pars_vertex": displacementmapParsVertex,
   "displacementmap_vertex": displacementmapVertex,
   "emissivemap_fragment": emissivemapFragment,
-  "emissivemap_pars_fragment": emissivemapParseFragment,
+  "emissivemap_pars_fragment": emissivemapParsFragment,
   "encodings_fragment": encodingsFragment,
   "encodings_pars_fragment": encodingsParsFragment,
   "envmap_fragment": envmapFragment,
@@ -75,7 +74,7 @@ Map<String, String> shaderChunk = {
   "normalmap_pars_fragment": normalmapParsFragment,
   "output_fragment": outputFragment,
   "clearcoat_normal_fragment_begin": clearcoatNormalFragmentBegin,
-  "clearcoat_normal_fragment_maps": clearcoatMormalFragmentMaps,
+  "clearcoat_normal_fragment_maps": clearcoatNormalFragmentMaps,
   "clearcoat_pars_fragment": clearcoatParsFragment,
   "packing": packingGlsl,
   "premultiplied_alpha_fragment": premultipliedAlphaFragment,

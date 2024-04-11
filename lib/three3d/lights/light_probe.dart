@@ -1,37 +1,34 @@
-import 'package:three_dart/three3d/core/object_3d.dart';
-import 'package:three_dart/three3d/lights/light.dart';
-import 'package:three_dart/three3d/math/spherical_harmonics3.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'package:three_dart/three3d/math/index.dart';
+import 'light.dart';
 
 class LightProbe extends Light {
-  LightProbe(sh, intensity) : super(null, intensity) {
+  LightProbe.create([SphericalHarmonics3? sh, double? intensity]) : super(null, intensity){
     type = 'LightProbe';
-    this.sh = (sh != null) ? sh : SphericalHarmonics3();
+  }
+  
+  factory LightProbe([SphericalHarmonics3? sh, double? intensity]){
+    sh ??= SphericalHarmonics3();
+    return LightProbe.create(sh, intensity);
+  }
+  factory LightProbe.fromJSON(json){
+    SphericalHarmonics3 sh3 = SphericalHarmonics3();
+    sh3.fromArray(json['sh']);
+    return LightProbe.create(sh3, json['intensity']);
   }
 
   @override
-  copy(Object3D source, [bool? recursive]) {
+  LightProbe copy(Object3D source, [bool? recursive]) {
     super.copy(source);
-
     LightProbe source1 = source as LightProbe;
-
     sh!.copy(source1.sh!);
-
-    return this;
-  }
-
-  LightProbe fromJSON(json) {
-    intensity = json.intensity; // TODO: Move this bit to Light.fromJSON();
-    sh!.fromArray(json.sh);
-
     return this;
   }
 
   @override
   Map<String, dynamic> toJSON({Object3dMeta? meta}) {
-    var data = super.toJSON(meta: meta);
-
+    Map<String, dynamic> data = super.toJSON(meta: meta);
     data["object"]['sh'] = sh!.toArray([]);
-
     return data;
   }
 }

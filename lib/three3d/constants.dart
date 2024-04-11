@@ -2,20 +2,19 @@
 
 const REVISION = '124';
 
-class MOUSE {
-  static const int LEFT = 0;
-  static const int MIDDLE = 1;
-  static const int RIGHT = 2;
-  static const int ROTATE = 0;
-  static const int DOLLY = 1;
-  static const int PAN = 2;
+class Mouse {
+  static const int left = 0;
+  static const int middle = 1;
+  static const int right = 2;
+  static const int rotate = 0;
+  static const int dolly = 1;
+  static const int pan = 2;
 }
-
-class TOUCH {
-  static const int ROTATE = 0;
-  static const int PAN = 1;
-  static const int DOLLY_PAN = 2;
-  static const int DOLLY_ROTATE = 3;
+class Touch {
+  static const int rotate = 0;
+  static const int pan = 1;
+  static const int dollyPan = 2;
+  static const int dollyRotate = 3;
 }
 
 const CullFaceNone = 0;
@@ -174,8 +173,8 @@ const ObjectSpaceNormalMap = 1;
 
 // Color space string identifiers, matching CSS Color Module Level 4 and WebGPU names where available.
 const NoColorSpace = '';
-const SRGBColorSpace = 'srgb';
-const LinearSRGBColorSpace = 'srgb-linear';
+// const SRGBColorSpace = 'srgb';
+// const LinearSRGBColorSpace = 'srgb-linear';
 
 const ZeroStencilOp = 0;
 const KeepStencilOp = 7680;

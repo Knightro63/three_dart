@@ -1,5 +1,5 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/materials/material.dart';
+import './material.dart';
+import '../constants.dart';
 
 class MeshDepthMaterial extends Material {
   MeshDepthMaterial([Map<String, dynamic>? parameters]) : super() {
@@ -14,7 +14,6 @@ class MeshDepthMaterial extends Material {
 
     setValues(parameters);
   }
-
   @override
   MeshDepthMaterial copy(Material source) {
     super.copy(source);

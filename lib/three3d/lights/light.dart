@@ -1,7 +1,6 @@
-import 'package:three_dart/three3d/core/object_3d.dart';
-import 'package:three_dart/three3d/lights/light_shadow.dart';
-import 'package:three_dart/three3d/math/color.dart';
-import 'package:three_dart/three3d/math/spherical_harmonics3.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'package:three_dart/three3d/math/index.dart';
+import 'light_shadow.dart';
 
 class Light extends Object3D {
   late double intensity;
@@ -25,21 +24,16 @@ class Light extends Object3D {
 
   Color? groundColor;
 
-  Light(color, [double? intensity]) : super() {
-    type = "Light";
-
-    if (color is Color) {
-      this.color = color;
-    } else if (color is int) {
+  Light(int? color, [double? intensity]) : super() {
+    if(color != null){
       this.color = Color.fromHex(color);
-    } else {
-      throw ("Light init color type is not support $color ");
     }
-
     this.intensity = intensity ?? 1.0;
+    type = "Light";
   }
 
-  Light.fromJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON) : super.fromJSON(json, rootJSON) {
+  Light.fromJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON):super.fromJSON(json, rootJSON) {
+    type = "Light";
     if (json["color"] != null) {
       color = Color(0, 0, 0).setHex(json["color"]);
     }
@@ -47,7 +41,7 @@ class Light extends Object3D {
   }
 
   @override
-  copy(Object3D source, [bool? recursive]) {
+  Light copy(Object3D source, [bool? recursive]) {
     super.copy(source, false);
 
     Light source1 = source as Light;
@@ -60,7 +54,7 @@ class Light extends Object3D {
 
   @override
   Map<String, dynamic> toJSON({Object3dMeta? meta}) {
-    var data = super.toJSON(meta: meta);
+    Map<String, dynamic> data = super.toJSON(meta: meta);
 
     data["object"]["color"] = color!.getHex();
     data["object"]["intensity"] = intensity;
@@ -90,12 +84,12 @@ class Light extends Object3D {
   }
 
   @override
-  dispose() {
+  void dispose() {
     // Empty here in base class; some subclasses override.
   }
 
   @override
-  getProperty(propertyName) {
+  dynamic getProperty(String propertyName) {
     if (propertyName == "color") {
       return color;
     } else if (propertyName == "intensity") {
@@ -106,7 +100,7 @@ class Light extends Object3D {
   }
 
   @override
-  Light setProperty(String propertyName, value) {
+  Light setProperty(String propertyName, dynamic value) {
     if (propertyName == "intensity") {
       intensity = value;
     } else {

@@ -1,12 +1,10 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/interleaved_buffer.dart';
+import 'interleaved_buffer.dart';
 
 class InstancedInterleavedBuffer extends InterleavedBuffer {
-  late int meshPerAttribute;
-
   bool isInstancedInterleavedBuffer = true;
-
-  InstancedInterleavedBuffer(NativeArray array, stride, meshPerAttribute) : super(array, stride) {
+  
+  InstancedInterleavedBuffer(NativeArray array, stride, meshPerAttribute):super(array, stride) {
     this.meshPerAttribute = meshPerAttribute ?? 1;
     type = "InstancedInterleavedBuffer";
   }
@@ -21,17 +19,16 @@ class InstancedInterleavedBuffer extends InterleavedBuffer {
   }
 
   @override
-  InstancedInterleavedBuffer clone(data) {
-    InstancedInterleavedBuffer ib = super.clone(data) as InstancedInterleavedBuffer;
-
+  InstancedInterleavedBuffer clone(InterleavedBuffer data) {
+    //if(data is InterleavedBuffer) throw('data must be InstancedInterleavedBuffer'); 
+    final ib = super.clone(data);
     ib.meshPerAttribute = meshPerAttribute;
-
-    return ib;
+    return ib as InstancedInterleavedBuffer;
   }
 
   @override
   Map<String,dynamic> toJSON(data) {
-    Map<String,dynamic> json = super.toJSON(data);
+    final json = super.toJSON(data);
 
     json["isInstancedInterleavedBuffer"] = true;
     json["meshPerAttributes"] = meshPerAttribute;

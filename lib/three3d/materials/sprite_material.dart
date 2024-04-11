@@ -1,8 +1,8 @@
-import 'package:three_dart/three3d/materials/material.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import './material.dart';
+import '../math/index.dart';
 
 class SpriteMaterial extends Material {
-  SpriteMaterial([parameters]) : super() {
+  SpriteMaterial([Map<String, dynamic>? parameters]) : super() {
     type = 'SpriteMaterial';
     transparent = true;
     color = Color(1, 1, 1);
@@ -10,7 +10,9 @@ class SpriteMaterial extends Material {
     setValues(parameters);
   }
 
-  SpriteMaterial.fromJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON) : super.fromJSON(json, rootJSON);
+  SpriteMaterial.fromJSON(
+      Map<String, dynamic> json, Map<String, dynamic> rootJSON)
+      : super.fromJSON(json, rootJSON);
 
   @override
   SpriteMaterial copy(Material source) {

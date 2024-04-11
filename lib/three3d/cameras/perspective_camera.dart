@@ -1,12 +1,11 @@
 import 'dart:convert';
-
-import 'package:three_dart/three3d/cameras/camera.dart';
 import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
+import 'camera.dart';
 
 class PerspectiveCamera extends Camera {
-  // near 设置太小 导致 画面异常 精度问题？ 浮点运算问题？？
-  PerspectiveCamera([num fov = 50, num aspect = 1, num near = 0.1, num far = 2000]) : super() {
+  PerspectiveCamera([num fov = 50, num aspect = 1, num near = 0.1, num far = 2000])
+      : super() {
     type = "PerspectiveCamera";
     this.fov = fov;
     this.aspect = aspect;
@@ -16,7 +15,8 @@ class PerspectiveCamera extends Camera {
     updateProjectionMatrix();
   }
 
-  PerspectiveCamera.fromJSON(Map<String, dynamic> json, Map<String, dynamic> rootJSON)
+  PerspectiveCamera.fromJSON(
+      Map<String, dynamic> json, Map<String, dynamic> rootJSON)
       : super.fromJSON(json, rootJSON) {
     type = "PerspectiveCamera";
     fov = json["fov"];
@@ -100,66 +100,60 @@ class PerspectiveCamera extends Camera {
     return filmGauge / Math.max(aspect, 1);
   }
 
-  /// Sets an offset in a larger frustum. This is useful for multi-window or
-  /// multi-monitor/multi-machine setups.
-  ///
-  /// For example, if you have 3x2 monitors and each monitor is 1920x1080 and
-  /// the monitors are in grid like this
-  ///
-  ///   +---+---+---+
-  ///   | A | B | C |
-  ///   +---+---+---+
-  ///   | D | E | F |
-  ///   +---+---+---+
-  ///
-  /// then for each monitor you would call it like this
-  ///
-  ///   const w = 1920;
-  ///   const h = 1080;
-  ///   const fullWidth = w * 3;
-  ///   const fullHeight = h * 2;
-  ///
-  ///   --A--
-  ///   camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 0, w, h );
-  ///   --B--
-  ///   camera.setViewOffset( fullWidth, fullHeight, w * 1, h * 0, w, h );
-  ///   --C--
-  ///   camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 0, w, h );
-  ///   --D--
-  ///   camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 1, w, h );
-  ///   --E--
-  ///   camera.setViewOffset( fullWidth, fullHeight, w * 1, h * 1, w, h );
-  ///   --F--
-  ///   camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 1, w, h );
-  ///
-  ///   Note there is no reason monitors have to be the same size or in a grid.
+  /**
+	 * Sets an offset in a larger frustum. This is useful for multi-window or
+	 * multi-monitor/multi-machine setups.
+	 *
+	 * For example, if you have 3x2 monitors and each monitor is 1920x1080 and
+	 * the monitors are in grid like this
+	 *
+	 *   +---+---+---+
+	 *   | A | B | C |
+	 *   +---+---+---+
+	 *   | D | E | F |
+	 *   +---+---+---+
+	 *
+	 * then for each monitor you would call it like this
+	 *
+	 *   const w = 1920;
+	 *   const h = 1080;
+	 *   const fullWidth = w * 3;
+	 *   const fullHeight = h * 2;
+	 *
+	 *   --A--
+	 *   camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 0, w, h );
+	 *   --B--
+	 *   camera.setViewOffset( fullWidth, fullHeight, w * 1, h * 0, w, h );
+	 *   --C--
+	 *   camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 0, w, h );
+	 *   --D--
+	 *   camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 1, w, h );
+	 *   --E--
+	 *   camera.setViewOffset( fullWidth, fullHeight, w * 1, h * 1, w, h );
+	 *   --F--
+	 *   camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 1, w, h );
+	 *
+	 *   Note there is no reason monitors have to be the same size or in a grid.
+	 */
   void setViewOffset(fullWidth, fullHeight, x, y, width, height) {
     aspect = fullWidth / fullHeight;
 
-    view ??= {
-      "enabled": true,
-      "fullWidth": 1,
-      "fullHeight": 1,
-      "offsetX": 0,
-      "offsetY": 0,
-      "width": 1,
-      "height": 1,
-    };
+    view ??= CameraView();
 
-    view!["enabled"] = true;
-    view!["fullWidth"] = fullWidth;
-    view!["fullHeight"] = fullHeight;
-    view!["offsetX"] = x;
-    view!["offsetY"] = y;
-    view!["width"] = width;
-    view!["height"] = height;
+    view!.enabled = true;
+    view!.fullWidth = fullWidth;
+    view!.fullHeight = fullHeight;
+    view!.offsetX = x;
+    view!.offsetY = y;
+    view!.width = width;
+    view!.height = height;
 
     updateProjectionMatrix();
   }
 
   void clearViewOffset() {
     if (view != null) {
-      view!["enabled"] = false;
+      view!.enabled = false;
     }
     updateProjectionMatrix();
   }
@@ -172,20 +166,21 @@ class PerspectiveCamera extends Camera {
     num width = aspect * height;
     num left = -0.5 * width;
 
-    if (view != null && view!["enabled"]) {
-      var fullWidth = view!["fullWidth"]!;
-      var fullHeight = view!["fullHeight"]!;
+    if (view != null && view!.enabled) {
+      final fullWidth = view!.fullWidth;
+      final fullHeight = view!.fullHeight;
 
-      left += view!["offsetX"]! * width / fullWidth;
-      top -= view!["offsetY"]! * height / fullHeight;
-      width *= view!["width"]! / fullWidth;
-      height *= view!["height"]! / fullHeight;
+      left += view!.offsetX * width / fullWidth;
+      top -= view!.offsetY * height / fullHeight;
+      width *= view!.width / fullWidth;
+      height *= view!.height / fullHeight;
     }
 
     num skew = filmOffset;
     if (skew != 0) left += near * skew / getFilmWidth();
 
-    projectionMatrix.makePerspective(left, left + width, top, top - height, near, far);
+    projectionMatrix.makePerspective(
+        left, left + width, top, top - height, near, far);
     projectionMatrixInverse.copy(projectionMatrix).invert();
   }
 
@@ -203,7 +198,7 @@ class PerspectiveCamera extends Camera {
 
     object["aspect"] = aspect;
 
-    if (view != null) object["view"] = json.decode(json.encode(view));
+    if (view != null) object["view"] = json.decode(json.encode(view!.toMap));
 
     object["filmGauge"] = filmGauge;
     object["filmOffset"] = filmOffset;

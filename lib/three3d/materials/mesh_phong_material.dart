@@ -1,6 +1,6 @@
-import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/materials/material.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import './material.dart';
+import '../math/index.dart';
+import '../constants.dart';
 
 class MeshPhongMaterial extends Material {
   MeshPhongMaterial([Map<String, dynamic>? parameters]) : super() {
@@ -52,7 +52,7 @@ class MeshPhongMaterial extends Material {
 
   @override
   MeshPhongMaterial clone() {
-    return MeshPhongMaterial().copy(this);
+    return MeshPhongMaterial(<String, dynamic>{}).copy(this);
   }
 
   @override

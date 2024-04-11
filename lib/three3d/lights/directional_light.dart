@@ -1,11 +1,11 @@
-import 'package:three_dart/three3d/core/object_3d.dart';
-import 'package:three_dart/three3d/lights/directional_light_shadow.dart';
-import 'package:three_dart/three3d/lights/light.dart';
+import 'package:three_dart/three3d/core/index.dart';
+import 'light.dart';
+import 'directional_light_shadow.dart';
 
 class DirectionalLight extends Light {
   bool isDirectionalLight = true;
 
-  DirectionalLight(color, [double? intensity]) : super(color, intensity) {
+  DirectionalLight(int? color, [double? intensity]) : super(color, intensity) {
     type = "DirectionalLight";
     position.copy(Object3D.defaultUp);
     updateMatrix();

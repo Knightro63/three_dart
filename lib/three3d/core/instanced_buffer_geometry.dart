@@ -1,6 +1,6 @@
-import 'package:three_dart/three3d/core/buffer_geometry.dart';
-import 'package:three_dart/three3d/core/object_3d.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import '../math/index.dart';
+import 'buffer_geometry.dart';
+import 'object_3d.dart';
 
 class InstancedBufferGeometry extends BufferGeometry {
   InstancedBufferGeometry() : super() {
@@ -22,7 +22,7 @@ class InstancedBufferGeometry extends BufferGeometry {
 
   @override
   Map<String, dynamic> toJSON({Object3dMeta? meta}) {
-    Map<String, dynamic> data = super.toJSON(meta: meta);
+    final data = super.toJSON(meta: meta);
     data['instanceCount'] = instanceCount;
     data['isInstancedBufferGeometry'] = true;
     return data;

@@ -1,77 +1,78 @@
 import 'package:flutter_gl/flutter_gl.dart';
-import 'package:three_dart/three3d/core/index.dart';
-import 'package:three_dart/three3d/math/index.dart';
+import '../core/index.dart';
+import '../math/index.dart';
 
 class WireframeGeometry extends BufferGeometry {
-  NativeArray? verticesArray;
-
   WireframeGeometry(BufferGeometry geometry) : super() {
     type = "WireframeGeometry";
     // buffer
 
     List<double> vertices = [];
-    var edges = <dynamic>{};
+    final edges = <dynamic>{};
 
     // helper variables
 
-    var start = Vector3();
-    var end = Vector3();
+    final start = Vector3();
+    final end = Vector3();
 
     if (geometry.index != null) {
       // indexed BufferGeometry
 
-      var position = geometry.attributes.positionBuffer;
-      var indices = geometry.index;
-      var groups = geometry.groups;
+      final position = geometry.attributes["position"];
+      final indices = geometry.index;
+      List<Map<String,dynamic>> groups = geometry.groups;
 
       if (groups.isEmpty) {
-        groups = [
-          GroupGeometry(start: 0, count: indices!.count, materialIndex: 0)
-        ];
+        groups = [{"start": 0, "count": indices!.count, "materialIndex": 0}];
       }
 
       // create a data structure that contains all eges without duplicates
 
-      for (var o = 0, ol = groups.length; o < ol; ++o) {
-        var group = groups[o];
+      for (int o = 0, ol = groups.length; o < ol; ++o) {
+        final group = groups[o];
 
-        var groupStart = group.start;
-        var groupCount = group.count;
+        final groupStart = group["start"]!;
+        final groupCount = group["count"]!;
 
-        for (var i = groupStart, l = (groupStart + groupCount); i < l; i += 3) {
-          for (var j = 0; j < 3; j++) {
+        for (int i = groupStart, l = (groupStart + groupCount); i < l; i += 3) {
+          for (int j = 0; j < 3; j++) {
             int index1 = indices!.getX(i + j)!.toInt();
             int index2 = indices.getX(i + (j + 1) % 3)!.toInt();
 
-            start.fromBufferAttribute(position!, index1);
+            start.fromBufferAttribute(position, index1);
             end.fromBufferAttribute(position, index2);
 
             if (isUniqueEdge(start, end, edges) == true) {
-              vertices.addAll([start.x.toDouble(), start.y.toDouble(), start.z.toDouble()]);
-              vertices.addAll([end.x.toDouble(), end.y.toDouble(), end.z.toDouble()]);
+              vertices.addAll(
+                  [start.x.toDouble(), start.y.toDouble(), start.z.toDouble()]);
+              vertices.addAll(
+                  [end.x.toDouble(), end.y.toDouble(), end.z.toDouble()]);
             }
           }
         }
       }
-    } else {
+    } 
+    else {
       // non-indexed BufferGeometry
 
-      var position = geometry.attributes.positionBuffer!;
+      final position = geometry.attributes["position"];
 
-      for (var i = 0, l = (position.count / 3); i < l; i++) {
-        for (var j = 0; j < 3; j++) {
+      for (int i = 0, l = (position.count / 3); i < l; i++) {
+        for (int j = 0; j < 3; j++) {
           // three edges per triangle, an edge is represented as (index1, index2)
           // e.g. the first triangle has the following edges: (0,1),(1,2),(2,0)
 
-          var index1 = 3 * i + j;
-          var index2 = 3 * i + ((j + 1) % 3);
+          final index1 = 3 * i + j;
+          final index2 = 3 * i + ((j + 1) % 3);
 
           start.fromBufferAttribute(position, index1);
           end.fromBufferAttribute(position, index2);
 
           if (isUniqueEdge(start, end, edges) == true) {
-            vertices.addAll([start.x.toDouble(), start.y.toDouble(), start.z.toDouble()]);
-            vertices.addAll([end.x.toDouble(), end.y.toDouble(), end.z.toDouble()]);
+            vertices.addAll(
+                [start.x.toDouble(), start.y.toDouble(), start.z.toDouble()]);
+            vertices
+                .addAll([end.x.toDouble(), end.y.toDouble(), end.z.toDouble()]);
           }
         }
       }
@@ -79,19 +80,14 @@ class WireframeGeometry extends BufferGeometry {
 
     // build geometry
 
-    setAttribute(AttributeTypes.position, Float32BufferAttribute(verticesArray = Float32Array.from(vertices), 3, false));
-  }
-
-  @override
-  void dispose() {
-    verticesArray?.dispose();
-    super.dispose();
+    setAttribute('position',Float32BufferAttribute(Float32Array.from(vertices), 3, false));
   }
 }
 
-isUniqueEdge(start, end, edges) {
-  var hash1 = "${start.x},${start.y},${start.z}-${end.x},${end.y},${end.z}";
-  var hash2 = "${end.x},${end.y},${end.z}-${start.x},${start.y},${start.z}"; // coincident edge
+bool isUniqueEdge(Vector3 start, Vector3 end, edges) {
+  final hash1 = "${start.x},${start.y},${start.z}-${end.x},${end.y},${end.z}";
+  final hash2 =
+      "${end.x},${end.y},${end.z}-${start.x},${start.y},${start.z}"; // coincident edge
 
   if (edges.contains(hash1) == true || edges.contains(hash2) == true) {
     return false;

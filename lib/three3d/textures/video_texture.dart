@@ -1,9 +1,20 @@
 import 'package:three_dart/three3d/constants.dart';
-import 'package:three_dart/three3d/textures/texture.dart';
+import './texture.dart';
 
 class VideoTexture extends Texture {
-  VideoTexture(video, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy)
-      : super(video, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, null) {
+  VideoTexture(
+    video, 
+    [
+      int? mapping, 
+      int? wrapS, 
+      int? wrapT, 
+      int? magFilter, 
+      int? minFilter, 
+      int? format, 
+      int? type,
+      int? anisotropy
+    ]
+  ):super(video, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy) {
     isVideoTexture = true;
     this.minFilter = minFilter ?? LinearFilter;
     this.magFilter = magFilter ?? LinearFilter;
@@ -13,7 +24,7 @@ class VideoTexture extends Texture {
 
   @override
   VideoTexture clone() {
-    return VideoTexture(image, null, null, null, null, null, null, null, null)..copy(this);
+    return VideoTexture(image)..copy(this);
   }
 
   void update() {

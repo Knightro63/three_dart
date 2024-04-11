@@ -1,7 +1,4 @@
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/textures/index.dart';
-
-/// Uniform Utilities
+part of three_shaders;
 
 Map<String, dynamic> cloneUniforms(Map<String, dynamic> src) {
   var dst = <String, dynamic>{};

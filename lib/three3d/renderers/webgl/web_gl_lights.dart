@@ -1,9 +1,4 @@
-import 'package:three_dart/three3d/dart_helpers.dart';
-import 'package:three_dart/three3d/lights/index.dart';
-import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/renderers/shaders/index.dart';
-import 'package:three_dart/three3d/renderers/webgl/web_gl_capabilities.dart';
-import 'package:three_dart/three3d/renderers/webgl/web_gl_extensions.dart';
+part of three_webgl;
 
 class UniformsCache {
   UniformsCache();
@@ -35,20 +30,11 @@ class UniformsCache {
         break;
 
       case 'PointLight':
-        uniforms = {
-          "position": Vector3(),
-          "color": Color(1, 1, 1),
-          "distance": 0,
-          "decay": 0
-        };
+        uniforms = {"position": Vector3(), "color": Color(1, 1, 1), "distance": 0, "decay": 0};
         break;
 
       case 'HemisphereLight':
-        uniforms = {
-          "direction": Vector3(),
-          "skyColor": Color(0, 0, 0),
-          "groundColor": Color(0, 0, 0)
-        };
+        uniforms = {"direction": Vector3(), "skyColor": Color(0, 0, 0), "groundColor": Color(0, 0, 0)};
         break;
 
       case 'RectAreaLight':
@@ -79,21 +65,11 @@ class ShadowUniformsCache {
 
     switch (light.type) {
       case 'DirectionalLight':
-        uniforms = {
-          "shadowBias": 0,
-          "shadowNormalBias": 0,
-          "shadowRadius": 1,
-          "shadowMapSize": Vector2()
-        };
+        uniforms = {"shadowBias": 0, "shadowNormalBias": 0, "shadowRadius": 1, "shadowMapSize": Vector2()};
         break;
 
       case 'SpotLight':
-        uniforms = {
-          "shadowBias": 0,
-          "shadowNormalBias": 0,
-          "shadowRadius": 1,
-          "shadowMapSize": Vector2()
-        };
+        uniforms = {"shadowBias": 0, "shadowNormalBias": 0, "shadowRadius": 1, "shadowMapSize": Vector2()};
         break;
 
       case 'PointLight':
@@ -117,7 +93,7 @@ class ShadowUniformsCache {
   }
 }
 
-var nextVersion = 0;
+int nextVersion = 0;
 
 shadowCastingLightsFirst(Light lightA, Light lightB) {
   return (lightB.castShadow ? 1 : 0) - (lightA.castShadow ? 1 : 0);
@@ -183,51 +159,51 @@ class WebGLLights {
     num g = 0.0;
     num b = 0.0;
 
-    for (var i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
       state.probe[i].set(0, 0, 0);
     }
 
-    var directionalLength = 0;
-    var pointLength = 0;
-    var spotLength = 0;
-    var rectAreaLength = 0;
-    var hemiLength = 0;
+    int directionalLength = 0;
+    int pointLength = 0;
+    int spotLength = 0;
+    int rectAreaLength = 0;
+    int hemiLength = 0;
 
-    var numDirectionalShadows = 0;
-    var numPointShadows = 0;
-    var numSpotShadows = 0;
+    int numDirectionalShadows = 0;
+    int numPointShadows = 0;
+    int numSpotShadows = 0;
 
     lights.sort((a, b) => shadowCastingLightsFirst(a, b));
 
     // artist-friendly light intensity scaling factor
     num scaleFactor = (physicallyCorrectLights != true) ? Math.pi : 1.0;
 
-    for (var i = 0, l = lights.length; i < l; i++) {
-      var light = lights[i];
+    for (int i = 0, l = lights.length; i < l; i++) {
+      final light = lights[i];
 
-      var color = light.color!;
-      var intensity = light.intensity;
-      var distance = light.distance;
+      final color = light.color!;
+      final intensity = light.intensity;
+      final distance = light.distance;
 
-      var shadowMap = (light.shadow != null && light.shadow!.map != null) ? light.shadow!.map!.texture : null;
+      final shadowMap = (light.shadow != null && light.shadow!.map != null) ? light.shadow!.map!.texture : null;
 
       if (light.type == "AmbientLight") {
         r += color.r * intensity * scaleFactor;
         g += color.g * intensity * scaleFactor;
         b += color.b * intensity * scaleFactor;
       } else if (light.type == "LightProbe") {
-        for (var j = 0; j < 9; j++) {
+        for (int j = 0; j < 9; j++) {
           state.probe[j].addScaledVector(light.sh!.coefficients[j], intensity);
         }
       } else if (light.type == "DirectionalLight") {
-        var uniforms = cache.get(light);
+        final uniforms = cache.get(light);
 
         uniforms["color"].copy(light.color).multiplyScalar(light.intensity * scaleFactor);
 
         if (light.castShadow) {
-          var shadow = light.shadow!;
+          final shadow = light.shadow!;
 
-          var shadowUniforms = shadowCache.get(light);
+          final shadowUniforms = shadowCache.get(light);
 
           shadowUniforms["shadowBias"] = shadow.bias;
           shadowUniforms["shadowNormalBias"] = shadow.normalBias;
@@ -251,7 +227,7 @@ class WebGLLights {
 
         directionalLength++;
       } else if (light.type == "SpotLight") {
-        var uniforms = cache.get(light);
+        final uniforms = cache.get(light);
 
         uniforms["position"].setFromMatrixPosition(light.matrixWorld);
         uniforms["color"].copy(color).multiplyScalar(intensity * scaleFactor);
@@ -263,9 +239,9 @@ class WebGLLights {
         uniforms["decay"] = light.decay;
 
         if (light.castShadow) {
-          var shadow = light.shadow!;
+          final shadow = light.shadow!;
 
-          var shadowUniforms = shadowCache.get(light);
+          final shadowUniforms = shadowCache.get(light);
 
           shadowUniforms["shadowBias"] = shadow.bias;
           shadowUniforms["shadowNormalBias"] = shadow.normalBias;
@@ -290,7 +266,7 @@ class WebGLLights {
 
         spotLength++;
       } else if (light.type == "RectAreaLight") {
-        var uniforms = cache.get(light);
+        final uniforms = cache.get(light);
 
         // (a) intensity is the total visible light emitted
         //uniforms.color.copy( color ).multiplyScalar( intensity / ( light.width * light.height * Math.PI ) );
@@ -306,7 +282,7 @@ class WebGLLights {
 
         rectAreaLength++;
       } else if (light.type == "PointLight") {
-        var uniforms = cache.get(light);
+        final uniforms = cache.get(light);
 
         uniforms["color"].copy(light.color).multiplyScalar(light.intensity * scaleFactor);
 
@@ -315,9 +291,9 @@ class WebGLLights {
         uniforms["decay"] = light.decay;
 
         if (light.castShadow) {
-          var shadow = light.shadow!;
+          final shadow = light.shadow!;
 
-          var shadowUniforms = shadowCache.get(light);
+          final shadowUniforms = shadowCache.get(light);
 
           shadowUniforms["shadowBias"] = shadow.bias;
           shadowUniforms["shadowNormalBias"] = shadow.normalBias;
@@ -343,7 +319,7 @@ class WebGLLights {
 
         pointLength++;
       } else if (light.type == "HemisphereLight") {
-        var uniforms = cache.get(light);
+        final uniforms = cache.get(light);
 
         uniforms["skyColor"].copy(light.color).multiplyScalar(intensity * scaleFactor);
         uniforms["groundColor"].copy(light.groundColor).multiplyScalar(intensity * scaleFactor);
@@ -382,7 +358,7 @@ class WebGLLights {
     state.ambient[1] = g.toDouble();
     state.ambient[2] = b.toDouble();
 
-    var hash = state.hash;
+    final hash = state.hash;
 
     if (hash["directionalLength"] != directionalLength ||
         hash["pointLength"] != pointLength ||
@@ -423,19 +399,19 @@ class WebGLLights {
   }
 
   setupView(List<Light> lights, camera) {
-    var directionalLength = 0;
-    var pointLength = 0;
-    var spotLength = 0;
-    var rectAreaLength = 0;
-    var hemiLength = 0;
+    int directionalLength = 0;
+    int pointLength = 0;
+    int spotLength = 0;
+    int rectAreaLength = 0;
+    int hemiLength = 0;
 
-    var viewMatrix = camera.matrixWorldInverse;
+    final viewMatrix = camera.matrixWorldInverse;
 
-    for (var i = 0, l = lights.length; i < l; i++) {
-      var light = lights[i];
+    for (int i = 0, l = lights.length; i < l; i++) {
+      final light = lights[i];
 
       if (light.type == "DirectionalLight") {
-        var uniforms = state.directional[directionalLength];
+        final uniforms = state.directional[directionalLength];
 
         uniforms["direction"].setFromMatrixPosition(light.matrixWorld);
         vector3.setFromMatrixPosition(light.target!.matrixWorld);
@@ -444,7 +420,7 @@ class WebGLLights {
 
         directionalLength++;
       } else if (light.type == "SpotLight") {
-        var uniforms = state.spot[spotLength];
+        final uniforms = state.spot[spotLength];
 
         uniforms["position"].setFromMatrixPosition(light.matrixWorld);
         uniforms["position"].applyMatrix4(viewMatrix);
@@ -456,7 +432,7 @@ class WebGLLights {
 
         spotLength++;
       } else if (light.type == "RectAreaLight") {
-        var uniforms = state.rectArea[rectAreaLength];
+        final uniforms = state.rectArea[rectAreaLength];
 
         uniforms["position"].setFromMatrixPosition(light.matrixWorld);
         uniforms["position"].applyMatrix4(viewMatrix);
@@ -475,14 +451,14 @@ class WebGLLights {
 
         rectAreaLength++;
       } else if (light.type == "PointLight") {
-        var uniforms = state.point[pointLength];
+        final uniforms = state.point[pointLength];
 
         uniforms["position"].setFromMatrixPosition(light.matrixWorld);
         uniforms["position"].applyMatrix4(viewMatrix);
 
         pointLength++;
       } else if (light.type == "HemisphereLight") {
-        var uniforms = state.hemi[hemiLength];
+        final uniforms = state.hemi[hemiLength];
 
         uniforms["direction"].setFromMatrixPosition(light.matrixWorld);
         uniforms["direction"].transformDirection(viewMatrix);

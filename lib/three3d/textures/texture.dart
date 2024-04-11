@@ -1,10 +1,9 @@
-import 'dart:convert';
 import 'dart:typed_data';
-
+import 'dart:convert';
+import 'package:three_dart/three3d/constants.dart';
 import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/textures/source.dart';
-import 'package:three_dart/three3d/constants.dart';
+import './source.dart';
 
 int textureId = 0;
 
@@ -19,9 +18,8 @@ class Texture with EventDispatcher {
   bool isCompressedTexture = false;
   bool isOpenGLTexture = false;
   bool isRenderTargetTexture = false; // indicates whether a texture belongs to a render target or not
-  bool needsPMREMUpdate =
-      false; // indicates whether this texture should be processed by PMREMGenerator or not (only relevant for render target textures)
-
+  bool needsPMREMUpdate = false; // indicates whether this texture should be processed by PMREMGenerator or not (only relevant for render target textures)
+  
   late Source source;
 
   int id = textureId++;
@@ -49,10 +47,9 @@ class Texture with EventDispatcher {
   bool generateMipmaps = true;
   bool premultiplyAlpha = false;
   bool flipY = true;
-  int unpackAlignment =
-      4; // valid values: 1, 2, 4, 8 (see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glPixelStorei.xml)
+  int unpackAlignment = 4; // valid values: 1, 2, 4, 8 (see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glPixelStorei.xml)
 
-  // Values of encoding !== three.LinearEncoding only supported on map, envMap and emissiveMap.
+  // Values of encoding !== THREE.LinearEncoding only supported on map, envMap and emissiveMap.
   //
   // Also changing the encoding after already used by a Material will not automatically make the Material
   // update. You need to explicitly call Material.needsUpdate to trigger it to recompile.
@@ -66,17 +63,8 @@ class Texture with EventDispatcher {
 
   List mipmaps = [];
 
-  Texture(
-      [image,
-      int? mapping,
-      int? wrapS,
-      int? wrapT,
-      int? magFilter,
-      int? minFilter,
-      int? format,
-      int? type,
-      int? anisotropy,
-      int? encoding]) {
+  Texture([image, int? mapping, int? wrapS, int? wrapT, int? magFilter,
+      int? minFilter, int? format, int? type, int? anisotropy, int? encoding]) {
     source = Source(image);
     this.mapping = mapping ?? Texture.defaultMapping;
 
@@ -105,7 +93,8 @@ class Texture with EventDispatcher {
   }
 
   updateMatrix() {
-    matrix.setUvTransform(offset.x, offset.y, repeat.x, repeat.y, rotation, center.x, center.y);
+    matrix.setUvTransform(
+        offset.x, offset.y, repeat.x, repeat.y, rotation, center.x, center.y);
   }
 
   Texture clone() {
@@ -158,10 +147,14 @@ class Texture with EventDispatcher {
     }
 
     Map<String, dynamic> output = {
-      "metadata": {"version": 4.5, "type": 'Texture', "generator": 'Texture.toJSON'},
+      "metadata": {
+        "version": 4.5,
+        "type": 'Texture',
+        "generator": 'Texture.toJSON'
+      },
       "uuid": uuid,
       "name": name,
-      "image": source.toJSON(meta).uuid,
+      "image": source.toJSON(meta)['uuid'],
       "mapping": mapping,
       "repeat": [repeat.x, repeat.y],
       "offset": [offset.x, offset.y],
@@ -189,7 +182,7 @@ class Texture with EventDispatcher {
   }
 
   void dispose() {
-    dispatchEvent(Event({"type": "dispose"}));
+    dispatchEvent(Event(type: "dispose"));
     if (image is List) {
       image.forEach((img) {
         img.dispose();
@@ -262,3 +255,4 @@ class ImageDataInfo {
 
   ImageDataInfo(this.data, this.width, this.height, this.depth);
 }
+

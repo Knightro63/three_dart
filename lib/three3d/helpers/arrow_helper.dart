@@ -3,19 +3,18 @@ import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/geometries/index.dart';
 import 'package:three_dart/three3d/materials/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
-import 'package:three_dart/three3d/objects/line.dart';
-import 'package:three_dart/three3d/objects/mesh.dart';
+import 'package:three_dart/three3d/objects/index.dart';
 
-var _axis = /*@__PURE__*/ Vector3();
-var _lineGeometry, _coneGeometry;
+BufferGeometry? _lineGeometry;
 
 class ArrowHelper extends Object3D {
   late Line line;
   late Mesh cone;
+  final _axis = Vector3();
+  CylinderGeometry? _coneGeometry;
+  
 
-  NativeArray? positionArray;
-
-  ArrowHelper(dir, origin, length, color, headLength, headWidth) : super() {
+  ArrowHelper([Vector3? dir, Vector3? origin, double? length, int? color, double? headLength, double? headWidth]) : super() {
     // dir is assumed to be normalized
 
     type = 'ArrowHelper';
@@ -29,20 +28,24 @@ class ArrowHelper extends Object3D {
 
     if (_lineGeometry == null) {
       _lineGeometry = BufferGeometry();
-      _lineGeometry.setAttribute(
-          'position', Float32BufferAttribute(positionArray = Float32Array.from([0, 0, 0, 0, 1, 0]), 3, false));
+      _lineGeometry!.setAttribute(
+          'position',
+          Float32BufferAttribute(
+              Float32Array.from([0, 0, 0, 0, 1, 0]), 3, false));
 
       _coneGeometry = CylinderGeometry(0, 0.5, 1, 5, 1);
-      _coneGeometry.translate(0, -0.5, 0);
+      _coneGeometry!.translate(0, -0.5, 0);
     }
 
     position.copy(origin);
 
-    line = Line(_lineGeometry, LineBasicMaterial({"color": color, "toneMapped": false}));
+    line = Line(_lineGeometry,
+        LineBasicMaterial({"color": color, "toneMapped": false}));
     line.matrixAutoUpdate = false;
     add(line);
 
-    cone = Mesh(_coneGeometry, MeshBasicMaterial({"color": color, "toneMapped": false}));
+    cone = Mesh(_coneGeometry,
+        MeshBasicMaterial({"color": color, "toneMapped": false}));
     cone.matrixAutoUpdate = false;
     add(cone);
 
@@ -50,7 +53,7 @@ class ArrowHelper extends Object3D {
     setLength(length, headLength, headWidth);
   }
 
-  setDirection(dir) {
+  void setDirection(Vector3 dir) {
     // dir is assumed to be normalized
 
     if (dir.y > 0.99999) {
@@ -60,13 +63,13 @@ class ArrowHelper extends Object3D {
     } else {
       _axis.set(dir.z, 0, -dir.x).normalize();
 
-      var radians = Math.acos(dir.y);
+      final radians = Math.acos(dir.y);
 
       quaternion.setFromAxisAngle(_axis, radians);
     }
   }
 
-  setLength(length, headLength, headWidth) {
+  void setLength(double length, [double? headLength, double? headWidth]) {
     headLength ??= 0.2 * length;
     headWidth ??= 0.2 * headLength;
 
@@ -74,7 +77,7 @@ class ArrowHelper extends Object3D {
     line.updateMatrix();
 
     cone.scale.set(headWidth, headLength, headWidth);
-    cone.position.y = length;
+    cone.position.y = length.toDouble();
     cone.updateMatrix();
   }
 
@@ -91,15 +94,5 @@ class ArrowHelper extends Object3D {
       cone.copy(source.cone, false);
     }
     return this;
-  }
-
-  @override
-  void dispose() {
-    positionArray?.dispose();
-
-    line.dispose();
-    cone.dispose();
-
-    super.dispose();
   }
 }

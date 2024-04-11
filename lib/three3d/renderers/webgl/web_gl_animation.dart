@@ -1,18 +1,20 @@
+part of three_webgl;
+
 class WebGLAnimation {
   var context;
-  var isAnimating = false;
+  bool isAnimating = false;
   var animationLoop;
   var requestId;
 
   WebGLAnimation();
 
-  onAnimationFrame(time, frame) {
+  void onAnimationFrame(double time, int frame) {
     animationLoop(time, frame);
 
     requestId = context.requestAnimationFrame(onAnimationFrame);
   }
 
-  start() {
+  void start() {
     if (isAnimating == true) return;
     if (animationLoop == null) return;
 
@@ -21,17 +23,17 @@ class WebGLAnimation {
     isAnimating = true;
   }
 
-  stop() {
+  void stop() {
     context.cancelAnimationFrame(requestId);
 
     isAnimating = false;
   }
 
-  setAnimationLoop(callback) {
+  void setAnimationLoop(callback) {
     animationLoop = callback;
   }
 
-  setContext(value) {
+  void setContext(value) {
     context = value;
   }
 }

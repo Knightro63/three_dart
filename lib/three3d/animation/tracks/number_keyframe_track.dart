@@ -1,9 +1,12 @@
-import 'package:three_dart/three3d/animation/keyframe_track.dart';
+import '../keyframe_track.dart';
 
 /// A Track of numeric keyframe values.
-
 class NumberKeyframeTrack extends KeyframeTrack {
-  NumberKeyframeTrack(name, times, values, [interpolation]) : super(name, times, values, interpolation) {
+  NumberKeyframeTrack(String name, List<num> times, List<num> values, [int? interpolation]): super(name, times, values, interpolation){
     valueTypeName = "number";
+  }
+  @override
+  NumberKeyframeTrack clone(){
+    return NumberKeyframeTrack(name, times, values);
   }
 }

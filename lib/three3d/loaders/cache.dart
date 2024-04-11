@@ -1,28 +1,26 @@
+part of three_loaders;
+
 class Cache {
   static bool enabled = false;
   static Map<String, dynamic> files = {};
 
-  static add(key, file) {
+  static void add(String key, dynamic file) {
     if (enabled == false) return;
-
-    // console.log( 'three.Cache', 'Adding key:', key );
-
+    //print( 'THREE.Cache Adding key: $key');
     files[key] = file;
   }
 
-  static get(key) {
+  static dynamic get(String key) {
     if (enabled == false) return;
-
-    // console.log( 'three.Cache', 'Checking key:', key );
-
+    //print('THREE.Cache Checking key: $key');
     return files[key];
   }
 
-  static remove(key) {
+  static void remove(key) {
     files.remove(key);
   }
 
-  static clear() {
+  static void clear() {
     files.clear();
   }
 }

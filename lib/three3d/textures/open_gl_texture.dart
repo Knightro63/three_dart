@@ -1,11 +1,22 @@
-import 'package:three_dart/three3d/textures/texture.dart';
 import 'package:three_dart/three3d/constants.dart';
+import './texture.dart';
 
 class OpenGLTexture extends Texture {
   dynamic openGLTexture;
 
-  OpenGLTexture(this.openGLTexture, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy)
-      : super(null, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, null) {
+  OpenGLTexture(
+    this.openGLTexture,
+    [ 
+      int? mapping, 
+      int? wrapS, 
+      int? wrapT, 
+      int? magFilter, 
+      int? minFilter,
+      int? format, 
+      int? type, 
+      int? anisotropy
+    ]
+  ):super(null, mapping, wrapS, wrapT, magFilter, minFilter, format, type,anisotropy) {
     isOpenGLTexture = true;
 
     this.format = format ?? RGBAFormat;
@@ -18,7 +29,7 @@ class OpenGLTexture extends Texture {
 
   @override
   OpenGLTexture clone() {
-    return OpenGLTexture(image, null, null, null, null, null, null, null, null)..copy(this);
+    return OpenGLTexture(image)..copy(this);
   }
 
   void update() {

@@ -1,3 +1,5 @@
+part of three_webgl;
+
 class WebGLInfo {
   dynamic gl;
 
@@ -5,12 +7,12 @@ class WebGLInfo {
 
   Map<String, num> render = {"frame": 0.0, "calls": 0.0, "triangles": 0.0, "points": 0.0, "lines": 0.0};
 
-  var programs;
+  dynamic programs;
   bool autoReset = true;
 
   WebGLInfo(this.gl);
 
-  update(count, mode, instanceCount) {
+  void update(count, mode, instanceCount) {
     render["calls"] = render["calls"]! + 1;
 
     if (mode == gl.TRIANGLES) {
@@ -28,7 +30,7 @@ class WebGLInfo {
     }
   }
 
-  reset() {
+  void reset() {
     render["frame"] = render["frame"]! + 1;
     render["calls"] = 0;
     render["triangles"] = 0;

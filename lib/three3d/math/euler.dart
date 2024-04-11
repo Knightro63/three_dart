@@ -1,12 +1,19 @@
-import 'package:three_dart/three3d/math/math.dart';
-import 'package:three_dart/three3d/math/math_utils.dart';
-import 'package:three_dart/three3d/math/matrix4.dart';
-import 'package:three_dart/three3d/math/quaternion.dart';
-import 'package:three_dart/three3d/math/vector3.dart';
+import 'math_utils.dart';
+import 'math.dart';
+import 'matrix4.dart';
+import 'quaternion.dart';
+import 'vector3.dart';
 
 class Euler {
   static const String defaultOrder = 'XYZ';
-  static const List<String> rotationOrders = ['XYZ', 'YZX', 'ZXY', 'XZY', 'YXZ', 'ZYX'];
+  static const List<String> rotationOrders = [
+    'XYZ',
+    'YZX',
+    'ZXY',
+    'XZY',
+    'YXZ',
+    'ZYX'
+  ];
 
   String type = "Euler";
 
@@ -48,10 +55,10 @@ class Euler {
     onChangeCallback();
   }
 
-  Euler set(num x, num y, num z, [String? order]) {
-    _x = x.toDouble();
-    _y = y.toDouble();
-    _z = z.toDouble();
+  Euler set(double x, double y, double z, [String? order]) {
+    _x = x;
+    _y = y;
+    _z = z;
     _order = order ?? _order;
 
     onChangeCallback();
@@ -75,7 +82,7 @@ class Euler {
   }
 
   Euler setFromRotationMatrix(m, [String? order, bool? update]) {
-    //var clamp = MathUtils.clamp;
+    //final clamp = MathUtils.clamp;
 
     // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
 
@@ -166,7 +173,7 @@ class Euler {
         break;
 
       default:
-        print('three.Euler: .setFromRotationMatrix() encountered an unknown order: $order');
+        print('THREE.Euler: .setFromRotationMatrix() encountered an unknown order: $order');
     }
 
     _order = order;
@@ -188,14 +195,15 @@ class Euler {
 
   Euler reorder(String newOrder) {
     // WARNING: this discards revolution information -bhouston
-
     _quaternion.setFromEuler(this, false);
-
     return setFromQuaternion(_quaternion, newOrder, false);
   }
 
   bool equals(Euler euler) {
-    return (euler._x == _x) && (euler._y == _y) && (euler._z == _z) && (euler._order == _order);
+    return (euler._x == _x) &&
+        (euler._y == _y) &&
+        (euler._z == _z) &&
+        (euler._order == _order);
   }
 
   Euler fromArray(List<double> array) {
@@ -209,14 +217,13 @@ class Euler {
     return this;
   }
 
-  List<num> toJSON() {
+  List<num> toList() {
     int orderNo = rotationOrders.indexOf(_order);
     return [_x, _y, _z, orderNo];
   }
 
   List<num> toArray([List<num>? array, int offset = 0]) {
     array ??= List<num>.filled(offset + 4, 0);
-
     array[offset] = _x;
     array[offset + 1] = _y;
     array[offset + 2] = _z;
@@ -226,10 +233,11 @@ class Euler {
   }
 
   Vector3 toVector3([Vector3? optionalResult]) {
-    print(" three.Euler: .toVector3() has been removed. Use Vector3.setFromEuler() instead ");
+    print("THREE.Euler: .toVector3() has been removed. Use Vector3.setFromEuler() instead ");
     if (optionalResult != null) {
       return optionalResult.set(_x, _y, _z);
-    } else {
+    } 
+    else {
       return Vector3(_x, _y, _z);
     }
   }
@@ -239,5 +247,5 @@ class Euler {
   }
 }
 
-var _matrix = Matrix4();
-var _quaternion = Quaternion();
+final _matrix = Matrix4();
+final _quaternion = Quaternion();

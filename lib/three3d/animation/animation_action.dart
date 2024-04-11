@@ -1,12 +1,13 @@
-import 'package:three_dart/three3d/animation/animation_clip.dart';
-import 'package:three_dart/three3d/animation/animation_mixer.dart';
-import 'package:three_dart/three3d/animation/property_mixer.dart';
-import 'package:three_dart/three3d/constants.dart';
 import 'package:three_dart/three3d/core/index.dart';
 import 'package:three_dart/three3d/math/index.dart';
+import '../constants.dart';
+
+import 'animation_mixer.dart';
+import 'animation_clip.dart';
+import 'property_mixer.dart';
 
 class AnimationAction {
-  late num time;
+  late double time;
   late num timeScale;
   late AnimationMixer mixer;
   late AnimationClip clip;
@@ -15,15 +16,15 @@ class AnimationAction {
   late Map _interpolantSettings;
   late List<Interpolant?> interpolants;
   late List<PropertyMixer?> propertyBindings;
-  late dynamic cacheIndex;
-  late dynamic byClipCacheIndex;
-  late dynamic _timeScaleInterpolant;
-  late dynamic _weightInterpolant;
+  late int? cacheIndex;
+  late int? byClipCacheIndex;
+  late Interpolant? _timeScaleInterpolant;
+  late Interpolant? _weightInterpolant;
   late int loop;
   late int _loopCount;
   late num? _startTime;
   late num _effectiveTimeScale;
-  late num weight;
+  late int weight;
   late num _effectiveWeight;
   late num repetitions;
   late bool paused;
@@ -32,25 +33,28 @@ class AnimationAction {
   late bool zeroSlopeAtStart;
   late bool zeroSlopeAtEnd;
 
-  AnimationAction(
-    this.mixer,
-    this.clip, {
-    this.localRoot,
-    int? blendMode,
-  }) : blendMode = blendMode ?? clip.blendMode {
-    var tracks = clip.tracks, nTracks = tracks.length;
+  AnimationAction(this.mixer, this.clip,{this.localRoot, int? blendMode}) {
+    this.blendMode = blendMode ?? clip.blendMode;
 
-    interpolants = List<Interpolant?>.filled(nTracks, null);
+    final tracks = clip.tracks; 
+    final nTracks = tracks.length;
 
-    var interpolantSettings = {"endingStart": ZeroCurvatureEnding, "endingEnd": ZeroCurvatureEnding};
+    final interpolants = List<Interpolant?>.filled(nTracks, null);
 
-    for (var i = 0; i != nTracks; ++i) {
-      var interpolant = tracks[i].createInterpolant!(null);
+    final interpolantSettings = {
+      "endingStart": ZeroCurvatureEnding,
+      "endingEnd": ZeroCurvatureEnding
+    };
+
+    for (int i = 0; i != nTracks; ++i) {
+      final interpolant = tracks[i].createInterpolant!(null);
       interpolants[i] = interpolant;
       interpolant.settings = interpolantSettings;
     }
 
     _interpolantSettings = interpolantSettings;
+
+    this.interpolants = interpolants; // bound by the mixer
 
     // inside: PropertyMixer (managed by the mixer)
     propertyBindings = List<PropertyMixer?>.filled(nTracks, null);
@@ -91,19 +95,19 @@ class AnimationAction {
 
   // State & Scheduling
 
-  play() {
+  AnimationAction play() {
     mixer.activateAction(this);
 
     return this;
   }
 
-  stop() {
+  AnimationAction stop() {
     mixer.deactivateAction(this);
 
     return reset();
   }
 
-  reset() {
+  AnimationAction reset() {
     paused = false;
     enabled = true;
 
@@ -114,22 +118,26 @@ class AnimationAction {
     return stopFading().stopWarping();
   }
 
-  isRunning() {
-    return enabled && !paused && timeScale != 0 && _startTime == null && mixer.isActiveAction(this);
+  bool isRunning() {
+    return enabled &&
+        !paused &&
+        timeScale != 0 &&
+        _startTime == null &&
+        mixer.isActiveAction(this);
   }
 
   // return true when play has been called
-  isScheduled() {
+  bool isScheduled() {
     return mixer.isActiveAction(this);
   }
 
-  startAt(time) {
+  AnimationAction startAt(time) {
     _startTime = time;
 
     return this;
   }
 
-  setLoop(mode, repetitions) {
+  AnimationAction setLoop(int mode, num repetitions) {
     loop = mode;
     this.repetitions = repetitions;
 
@@ -141,7 +149,7 @@ class AnimationAction {
   // set the weight stopping any scheduled fading
   // although .enabled = false yields an effective weight of zero, this
   // method does *not* change .enabled, because it would be confusing
-  setEffectiveWeight(weight) {
+  AnimationAction setEffectiveWeight(int weight) {
     this.weight = weight;
 
     // note: same logic as when updated at runtime
@@ -151,24 +159,24 @@ class AnimationAction {
   }
 
   // return the weight considering fading and .enabled
-  getEffectiveWeight() {
+  num getEffectiveWeight() {
     return _effectiveWeight;
   }
 
-  fadeIn(duration) {
+  AnimationAction fadeIn(num duration) {
     return _scheduleFading(duration, 0, 1);
   }
 
-  fadeOut(duration) {
+  AnimationAction fadeOut(num duration) {
     return _scheduleFading(duration, 1, 0);
   }
 
-  crossFadeFrom(fadeOutAction, duration, warp) {
+  AnimationAction crossFadeFrom(AnimationAction fadeOutAction, num duration, bool warp) {
     fadeOutAction.fadeOut(duration);
     fadeIn(duration);
 
     if (warp) {
-      var fadeInDuration = clip.duration,
+      final fadeInDuration = clip.duration,
           fadeOutDuration = fadeOutAction.clip.duration,
           startEndRatio = fadeOutDuration / fadeInDuration,
           endStartRatio = fadeInDuration / fadeOutDuration;
@@ -180,12 +188,12 @@ class AnimationAction {
     return this;
   }
 
-  crossFadeTo(fadeInAction, duration, warp) {
+  AnimationAction crossFadeTo(AnimationAction fadeInAction, num duration, bool warp) {
     return fadeInAction.crossFadeFrom(this, duration, warp);
   }
 
-  stopFading() {
-    var weightInterpolant = _weightInterpolant;
+  AnimationAction stopFading() {
+    final weightInterpolant = _weightInterpolant;
 
     if (weightInterpolant != null) {
       _weightInterpolant = null;
@@ -200,7 +208,7 @@ class AnimationAction {
   // set the time scale stopping any scheduled warping
   // although .paused = true yields an effective time scale of zero, this
   // method does *not* change .paused, because it would be confusing
-  setEffectiveTimeScale(timeScale) {
+  AnimationAction setEffectiveTimeScale(num timeScale) {
     this.timeScale = timeScale;
     _effectiveTimeScale = paused ? 0 : timeScale;
 
@@ -208,38 +216,39 @@ class AnimationAction {
   }
 
   // return the time scale considering warping and .paused
-  getEffectiveTimeScale() {
+  num getEffectiveTimeScale() {
     return _effectiveTimeScale;
   }
 
-  setDuration(duration) {
+  AnimationAction setDuration(num duration) {
     timeScale = clip.duration / duration;
 
     return stopWarping();
   }
 
-  syncWith(action) {
+  AnimationAction syncWith(AnimationAction action) {
     time = action.time;
     timeScale = action.timeScale;
 
     return stopWarping();
   }
 
-  halt(duration) {
+  AnimationAction halt(num duration) {
     return warp(_effectiveTimeScale, 0, duration);
   }
 
-  warp(startTimeScale, endTimeScale, duration) {
-    var now = mixer.time, timeScale = this.timeScale;
+  AnimationAction warp(num startTimeScale, num endTimeScale, num duration) {
+    final mixer = this.mixer, now = mixer.time, timeScale = this.timeScale;
 
-    var interpolant = _timeScaleInterpolant;
+    Interpolant? interpolant = _timeScaleInterpolant;
 
     if (interpolant == null) {
       interpolant = mixer.lendControlInterpolant();
       _timeScaleInterpolant = interpolant;
     }
 
-    var times = interpolant.parameterPositions, values = interpolant.sampleValues;
+    final List<num> times = interpolant.parameterPositions;
+    final List<num> values = interpolant.sampleValues;
 
     times[0] = now;
     times[1] = now + duration;
@@ -250,8 +259,8 @@ class AnimationAction {
     return this;
   }
 
-  stopWarping() {
-    var timeScaleInterpolant = _timeScaleInterpolant;
+  AnimationAction stopWarping() {
+    final timeScaleInterpolant = _timeScaleInterpolant;
 
     if (timeScaleInterpolant != null) {
       _timeScaleInterpolant = null;
@@ -263,21 +272,21 @@ class AnimationAction {
 
   // Object Accessors
 
-  getMixer() {
+  AnimationMixer getMixer() {
     return mixer;
   }
 
-  getClip() {
+  AnimationClip getClip() {
     return clip;
   }
 
-  getRoot() {
+  Object3D getRoot() {
     return localRoot ?? mixer.root;
   }
 
   // Interna
 
-  update(time, deltaTime, timeDirection, accuIndex) {
+  void update(num time, num deltaTime, num timeDirection, int accuIndex) {
     // called by the mixer
 
     if (!enabled) {
@@ -287,12 +296,12 @@ class AnimationAction {
       return;
     }
 
-    var startTime = _startTime;
+    final startTime = _startTime;
 
     if (startTime != null) {
       // check for scheduled start of action
 
-      var timeRunning = (time - startTime) * timeDirection;
+      final timeRunning = (time - startTime) * timeDirection;
       if (timeRunning < 0 || timeDirection == 0) {
         return; // yet to come / don't decide when delta = 0
 
@@ -307,19 +316,20 @@ class AnimationAction {
     // apply time scale and advance time
 
     deltaTime *= _updateTimeScale(time);
-    var clipTime = _updateTime(deltaTime);
+    final clipTime = _updateTime(deltaTime);
 
     // note: _updateTime may disable the action resulting in
     // an effective weight of 0
 
-    var weight = _updateWeight(time);
+    int weight = _updateWeight(time);
 
     if (weight > 0) {
-      var propertyMixers = propertyBindings;
+      final interpolants = this.interpolants;
+      final propertyMixers = propertyBindings;
 
       switch (blendMode) {
         case AdditiveAnimationBlendMode:
-          for (var j = 0, m = interpolants.length; j != m; ++j) {
+          for (int j = 0, m = interpolants.length; j != m; ++j) {
             // print("AnimationAction j: ${j} ${interpolants[ j ]} ${propertyMixers[ j ]} ");
 
             interpolants[j]!.evaluate(clipTime);
@@ -330,7 +340,7 @@ class AnimationAction {
 
         case NormalAnimationBlendMode:
         default:
-          for (var j = 0, m = interpolants.length; j != m; ++j) {
+          for (int j = 0, m = interpolants.length; j != m; ++j) {
             // print("AnimationAction22 j: ${j} ${interpolants[ j ]} ${propertyMixers[ j ]} ");
 
             interpolants[j]!.evaluate(clipTime);
@@ -343,15 +353,15 @@ class AnimationAction {
     }
   }
 
-  _updateWeight(time) {
-    num weight = 0;
+  int _updateWeight(num time) {
+    int weight = 0;
 
     if (enabled) {
       weight = this.weight;
-      var interpolant = _weightInterpolant;
+      final interpolant = _weightInterpolant;
 
       if (interpolant != null) {
-        var interpolantValue = interpolant.evaluate(time)[0];
+        int interpolantValue = interpolant.evaluate(time)?[0].toInt();
 
         weight *= interpolantValue;
 
@@ -370,16 +380,16 @@ class AnimationAction {
     return weight;
   }
 
-  _updateTimeScale(time) {
+  num _updateTimeScale(num time) {
     num timeScale = 0;
 
     if (!paused) {
       timeScale = this.timeScale;
 
-      var interpolant = _timeScaleInterpolant;
+      final interpolant = _timeScaleInterpolant;
 
       if (interpolant != null) {
-        var interpolantValue = interpolant.evaluate(time)[0];
+        final interpolantValue = interpolant.evaluate(time)?[0];
 
         timeScale *= interpolantValue;
 
@@ -401,14 +411,14 @@ class AnimationAction {
     return timeScale;
   }
 
-  _updateTime(deltaTime) {
-    var duration = clip.duration;
-    var loop = this.loop;
+  double _updateTime(num deltaTime) {
+    num duration = clip.duration;
+    final loop = this.loop;
 
-    var time = this.time + deltaTime;
-    var loopCount = _loopCount;
+    double time = this.time + deltaTime;
+    int loopCount = _loopCount;
 
-    var pingPong = (loop == LoopPingPong);
+    final pingPong = (loop == LoopPingPong);
 
     if (deltaTime == 0) {
       if (loopCount == -1) return time;
@@ -427,7 +437,7 @@ class AnimationAction {
       handle_stop:
       {
         if (time >= duration) {
-          time = duration;
+          time = duration.toDouble();
         } else if (time < 0) {
           time = 0;
         } else {
@@ -444,11 +454,17 @@ class AnimationAction {
 
         this.time = time;
 
-        mixer.dispatchEvent(Event({"type": 'finished', "action": this, "direction": deltaTime < 0 ? -1 : 1}));
+        mixer.dispatchEvent(
+          Event(
+            type: 'finished',
+            action: this,
+            direction: deltaTime < 0 ? -1 : 1
+          )
+        );
       }
-    } else {
+    } 
+    else {
       // repetitive Repeat or PingPong
-
       if (loopCount == -1) {
         // just started
 
@@ -456,26 +472,22 @@ class AnimationAction {
           loopCount = 0;
 
           _setEndings(true, repetitions == 0, pingPong);
-        } else {
+        } 
+        else {
           // when looping in reverse direction, the initial
           // transition through zero counts as a repetition,
           // so leave loopCount at -1
-
           _setEndings(repetitions == 0, true, pingPong);
         }
       }
 
       if (time >= duration || time < 0) {
-        // wrap around
-
-        print(" duration: $duration ");
-
         int loopDelta = Math.floor(time / duration); // signed
         time -= duration * loopDelta;
 
         loopCount += loopDelta.abs();
 
-        var pending = repetitions - loopCount;
+        final pending = repetitions - loopCount;
 
         if (pending <= 0) {
           // have to stop (switch state, clamp time, fire event)
@@ -486,18 +498,24 @@ class AnimationAction {
             enabled = false;
           }
 
-          time = deltaTime > 0 ? duration : 0;
+          time = deltaTime > 0 ? duration.toDouble() : 0;
 
           this.time = time;
 
-          mixer.dispatchEvent(Event({"type": 'finished', "action": this, "direction": deltaTime > 0 ? 1 : -1}));
+          mixer.dispatchEvent(
+            Event(
+              type: 'finished',
+              action: this,
+              direction: deltaTime > 0 ? 1 : -1
+            )
+          );
         } else {
           // keep running
 
           if (pending == 1) {
             // entering the last round
 
-            var atStart = deltaTime < 0;
+            final atStart = deltaTime < 0;
             _setEndings(atStart, !atStart, pingPong);
           } else {
             _setEndings(false, false, pingPong);
@@ -507,7 +525,13 @@ class AnimationAction {
 
           this.time = time;
 
-          mixer.dispatchEvent(Event({"type": 'loop', "action": this, "loopDelta": loopDelta}));
+          mixer.dispatchEvent(
+            Event(
+              type: 'loop', 
+              action: this, 
+              loopDelta: loopDelta
+            )
+          );
         }
       } else {
         this.time = time;
@@ -523,8 +547,8 @@ class AnimationAction {
     return time;
   }
 
-  _setEndings(atStart, atEnd, pingPong) {
-    var settings = _interpolantSettings;
+  void _setEndings(bool atStart,bool atEnd,bool pingPong) {
+    final settings = _interpolantSettings;
 
     if (pingPong) {
       settings["endingStart"] = ZeroSlopeEnding;
@@ -533,29 +557,33 @@ class AnimationAction {
       // assuming for LoopOnce atStart == atEnd == true
 
       if (atStart) {
-        settings["endingStart"] = zeroSlopeAtStart ? ZeroSlopeEnding : ZeroCurvatureEnding;
+        settings["endingStart"] =
+            zeroSlopeAtStart ? ZeroSlopeEnding : ZeroCurvatureEnding;
       } else {
         settings["endingStart"] = WrapAroundEnding;
       }
 
       if (atEnd) {
-        settings["endingEnd"] = zeroSlopeAtEnd ? ZeroSlopeEnding : ZeroCurvatureEnding;
+        settings["endingEnd"] =
+            zeroSlopeAtEnd ? ZeroSlopeEnding : ZeroCurvatureEnding;
       } else {
         settings["endingEnd"] = WrapAroundEnding;
       }
     }
   }
 
-  _scheduleFading(duration, weightNow, weightThen) {
-    var now = mixer.time;
-    var interpolant = _weightInterpolant;
+  AnimationAction _scheduleFading(num duration, num weightNow, num weightThen) {
+    final AnimationMixer mixer = this.mixer;
+    final num now = mixer.time;
+    Interpolant? interpolant = _weightInterpolant;
 
     if (interpolant == null) {
       interpolant = mixer.lendControlInterpolant();
       _weightInterpolant = interpolant;
     }
 
-    var times = interpolant.parameterPositions, values = interpolant.sampleValues;
+    final times = interpolant.parameterPositions;
+    final values = interpolant.sampleValues;
 
     times[0] = now;
     values[0] = weightNow;
