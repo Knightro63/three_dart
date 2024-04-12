@@ -14,7 +14,7 @@ dependencies:
   three_dart:
     path: ../
   three_dart_jsm:
-    path: ../../three_dart_jsm/
+    path: ../../three_dart_jsm-upgrades/
   # three_dart:
   #   git:
   #     url: 'https://github.com/Knightro63/three_dart.git'
